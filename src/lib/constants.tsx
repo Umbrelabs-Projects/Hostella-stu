@@ -5,14 +5,12 @@ export const navLinks: NavLink[] = [
   { link: "/about-us", text: "About Us" },
   { link: "/services", text: "Services" },
   { link: "/blog", text: "Blog" },
-  { link: "/projects", text: "Projects" },
 ];
 export const footerSections: FooterSection[] = [
   {
     title: "Discover",
     links: [
       { text: "blog", link: "/blog" },
-      { text: "careers", link: "/careers" },
     ],
   },
   {

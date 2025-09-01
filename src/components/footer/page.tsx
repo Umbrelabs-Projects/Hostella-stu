@@ -15,9 +15,9 @@ export default function Footer() {
               src="/assets/svgs/logo.svg"
               width={100}
               height={80}
-              alt="MechAfricaLOGO"
+              alt="HostellaLOGO"
             />
-            <p className="text-sm max-w-60">MechAfrica</p>
+            <p className="text-sm max-w-60">Hostella</p>
           </div>
 
           {/* Footer Sections */}
@@ -63,7 +63,7 @@ export default function Footer() {
 
         {/* Footer copyright */}
         <div className="mt-10 text-sm text-[#DFDFDF] text-center">
-          Copyright © 2025 MechAfrica. All Rights Reserved.
+          © 2025 Hostella. Book easy, book smart.
         </div>
       </div>
     </footer>

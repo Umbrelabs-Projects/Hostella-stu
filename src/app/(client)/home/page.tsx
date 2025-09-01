@@ -1,5 +1,10 @@
 import React from "react";
+import ComingSoonPage from "./_components/coming-soon";
 
 export default function HomePage() {
-  return <div>Welcome to Hostella</div>;
+  return (
+    <div>
+      <ComingSoonPage />
+    </div>
+  );
 }

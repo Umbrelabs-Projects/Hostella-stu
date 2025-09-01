@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MenuIcon } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,15 +18,10 @@ import { navLinks } from "@/lib/constants";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const isHomePage = pathname === "/";
 
   return (
-    <nav
-      className={`w-full z-10 lg:py-4 font-poppins transition-colors duration-200 ${
-        isHomePage ? "bg-black" : "text-black shadow-sm"
-      }`}
-    >
-      <div className="max-width-wrapper flex justify-between items-center">
+    <nav className="w-full z-10 bg-white/80 backdrop-blur-md border-b border-lime-100 font-poppins">
+      <div className="max-width-wrapper  flex justify-between items-center py-4">
         <Link href={"/"}>
           <Image
             src="/assets/svgs/logo.svg"
@@ -38,7 +32,7 @@ export default function Navbar() {
         </Link>
 
         {/* nav links */}
-        <div className="hidden items-center gap-4 text-sm md:flex">
+        <div className="hidden items-center gap-6 text-sm md:flex">
           {navLinks.map((navLink, index) => {
             const isActive =
               pathname === navLink.link ||
@@ -48,12 +42,10 @@ export default function Navbar() {
               <Link
                 key={index}
                 href={navLink.link}
-                className={`link transition-colors ${
+                className={`transition-colors ${
                   isActive
-                    ? "text-yellow-500 underline underline-offset-4"
-                    : isHomePage
-                    ? "text-white hover:text-yellow-500"
-                    : "text-black hover:text-yellow-500"
+                    ? "text-lime-600 font-semibold underline underline-offset-4"
+                    : "text-slate-700 hover:text-lime-600"
                 }`}
               >
                 {navLink.text}
@@ -62,24 +54,19 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* nav buttons */}
-        <div className="hidden items-center gap-2 sm:flex">
+        {/* nav button */}
+        <div className="hidden items-center gap-2 sm:flex mr-6">
           <Link href={"/signup"}>
-            <Button
-              variant={"outline"}
-              className={`rounded-full h-12 w-44 cursor-pointer hover:text-white 
-                  bg-[#003E23] border-none text-white hover:bg-[#2e4b3e]
-              `}
-            >
-              Contact Us
+            <Button className="rounded-full cursor-pointer h-11 px-6 bg-lime-500 text-white hover:bg-lime-600 shadow-md hover:shadow-lg">
+              Get Started
             </Button>
           </Link>
         </div>
 
         {/* mobile menu */}
         <Sheet>
-          <SheetTrigger className="sm:hidden border p-2 rounded-md">
-            <MenuIcon className={`w-6 h-6 `} />
+          <SheetTrigger className="sm:hidden border p-2 rounded-md border-lime-200">
+            <MenuIcon className="w-6 h-6 text-lime-600" />
           </SheetTrigger>
           <SheetContent side="left" className="pl-7">
             <SheetHeader>
@@ -92,7 +79,7 @@ export default function Navbar() {
                 />
               </SheetTitle>
 
-              <div className="flex flex-col items-start gap-4 pt-16">
+              <div className="flex flex-col items-start gap-6 pt-12">
                 {navLinks.map((navLink, index) => {
                   const isActive =
                     pathname === navLink.link ||
@@ -101,10 +88,10 @@ export default function Navbar() {
                   return (
                     <SheetClose asChild key={index}>
                       <Link
-                        className={`text-2xl w-full text-left font-poppins font-medium tracking-tighter transition-colors ${
+                        className={`text-xl w-full text-left font-medium tracking-tight transition-colors ${
                           isActive
-                            ? "text-yellow-500 underline"
-                            : "hover:text-primary"
+                            ? "text-lime-600 underline"
+                            : "text-slate-700 hover:text-lime-600"
                         }`}
                         href={navLink.link}
                       >
@@ -115,12 +102,7 @@ export default function Navbar() {
                 })}
 
                 <Link href={"/signup"}>
-                  <Button
-                    variant={"outline"}
-                    className={`rounded-full mt-50 h-12 w-44 cursor-pointer hover:text-white 
-                  bg-[#003E23] border-none text-white hover:bg-[#2e4b3e]
-              `}
-                  >
+                  <Button className="rounded-full cursor-pointer h-11 px-6 bg-lime-500 text-white hover:bg-lime-600 shadow-md hover:shadow-lg">
                     Get Started
                   </Button>
                 </Link>

@@ -2,9 +2,9 @@ import { FooterSection, NavLink } from "@/types/common";
 
 export const navLinks: NavLink[] = [
   { link: "/", text: "Home" },
+  { link: "/gallery", text: "Gallery" },
+  { link: "/about-us", text: "About Us" },
   { link: "/contact-us", text: "Contact Us" },
-  { link: "/sign-in", text: "Sign in" },
-  { link: "/sign-up", text: "Sign up" },
 ];
 export const footerSections: FooterSection[] = [
   {

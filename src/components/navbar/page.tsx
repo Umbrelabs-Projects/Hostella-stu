@@ -1,28 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MenuIcon } from "lucide-react";
+import { MenuIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { images } from "@/lib/images";
 import { navLinks } from "@/lib/constants";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="fixed inset-x-0 top-12 z-30 pointer-events-auto">
-      <div className="mx-auto max-w-2xl relative">
+      <div className="mx-2 md:mx-auto max-w-2xl relative">
         <div
           className="w-full bg-white/85 backdrop-blur-md border border-gray-100 rounded-r-3xl
                      shadow-sm flex items-center justify-between"
@@ -34,7 +40,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* CENTER: Nav links (desktop only) */}
+          {/* CENTER: Desktop Nav */}
           <div className="hidden md:flex items-center gap-6 text-sm">
             {navLinks.map((navLink, i) => {
               const isActive =
@@ -59,73 +65,72 @@ export default function Navbar() {
 
           {/* RIGHT: Book Now (desktop only) */}
           <div className="hidden sm:flex items-center gap-3">
-            <Link href="/book">
+            <Link href="/signup">
               <Button className="h-11 cursor-pointer px-4 rounded-full bg-yellow-400 text-black hover:bg-yellow-500 hover:text-white shadow-md">
                 Book Now
               </Button>
             </Link>
           </div>
 
-          {/* MOBILE MENU (bottom drawer) */}
-          <div className="md:hidden flex items-center pr-3">
-            <Sheet>
-              <SheetTrigger className="p-2 rounded-md border border-gray-200 hover:bg-gray-100 transition">
-                <MenuIcon className="w-5 h-5 text-gray-700" />
-              </SheetTrigger>
+          {/* MOBILE MENU (Foinda-style dropdown) */}
+          <div className="sm:hidden relative pr-3" ref={dropdownRef}>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 border rounded-md bg-white/80 backdrop-blur-md"
+            >
+              {isOpen ? (
+                <X className="w-6 h-6 text-gray-700" />
+              ) : (
+                <MenuIcon className="w-6 h-6 text-gray-700" />
+              )}
+            </button>
 
-              <SheetContent
-                side="bottom"
-                className="bg-white/95 backdrop-blur-md border-t border-gray-200 rounded-t-3xl shadow-2xl pt-6 pb-10 transition-all duration-300"
-              >
-                <SheetHeader>
-                  <SheetTitle>
-                    <div className="flex justify-center mb-3">
-                      <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-                    </div>
-                    <div className="flex justify-center">
-                      <Link href="/" className="flex items-center">
-                        <Image
-                          src={images.hostellaLogo}
-                          alt="hostellaLogo"
-                          className="h-auto w-32"
-                        />
-                      </Link>
-                    </div>
-                  </SheetTitle>
-                </SheetHeader>
-
-                <div className="flex flex-col items-center gap-6 pt-8">
-                  {navLinks.map((navLink, index) => {
-                    const isActive =
-                      pathname === navLink.link ||
-                      pathname.startsWith(navLink.link + "/");
-
-                    return (
-                      <SheetClose asChild key={index}>
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute right-0 mt-2 w-[24.5rem] bg-white shadow-lg rounded-lg border overflow-hidden z-50"
+                >
+                  <div className="flex flex-col">
+                    {navLinks.map((navLink, index) => {
+                      const isActive =
+                        pathname === navLink.link ||
+                        pathname.startsWith(navLink.link + "/");
+                      return (
                         <Link
+                          key={index}
                           href={navLink.link}
-                          className={`text-lg font-medium transition-colors ${
+                          onClick={() => setIsOpen(false)}
+                          className={`px-4 py-3 text-left text-sm transition-colors ${
                             isActive
-                              ? "text-yellow-500 underline"
+                              ? "text-yellow-500 font-medium"
                               : "text-gray-700 hover:text-yellow-500"
                           }`}
                         >
                           {navLink.text}
                         </Link>
-                      </SheetClose>
-                    );
-                  })}
+                      );
+                    })}
 
-                  <SheetClose asChild>
-                    <Link href="/book" className="w-full px-6">
-                      <Button className="w-full rounded-full h-11 bg-yellow-400 text-black hover:bg-yellow-500 hover:text-white shadow-sm">
-                        Book Now
-                      </Button>
-                    </Link>
-                  </SheetClose>
-                </div>
-              </SheetContent>
-            </Sheet>
+                    <Button
+                      onClick={() => {
+                        setIsOpen(false);
+                        const footer = document.getElementById("footer");
+                        if (footer) {
+                          footer.scrollIntoView({ behavior: "smooth" });
+                        }
+                      }}
+                      className="mx-4 my-2 h-10 w-[9rem] text-white bg-yellow-500 hover:bg-yellow-600 border-none rounded-md"
+                    >
+                      Book Now
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

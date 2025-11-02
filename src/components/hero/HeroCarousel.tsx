@@ -60,9 +60,9 @@ export function HeroCarousel() {
       </div>
 
       {/* Arrows */}
-      <div className="absolute inset-y-1/2 -translate-y-1/2 flex justify-between w-full px-4 sm:px-8 md:px-12 lg:px-[8%]">
+      <div className="absolute hidden inset-y-1/2 -translate-y-1/2 md:flex justify-between w-full px-4 sm:px-8 md:px-12 lg:px-[8%]">
         <Button
-          className="rounded-full cursor-pointer border border-gray-400 bg-white/40 hover:bg-gray-100  shadow-md backdrop-blur-md"
+          className="rounded-full  cursor-pointer border border-gray-400 bg-white/40 hover:bg-gray-100  shadow-md backdrop-blur-md"
           size="icon"
           variant="ghost"
           onClick={scrollPrev}

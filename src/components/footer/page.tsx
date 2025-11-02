@@ -2,21 +2,22 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { footerSections } from "@/lib/constants";
+import { images } from "@/lib/images";
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-green-100 py-10 text-slate-700 font-poppins">
+    <footer className="bg-[#0E0B0B] border-t border-green-100 py-10 text-slate-700 font-poppins">
       <div className="max-width-wrapper px-4">
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12">
           {/* Logo */}
           <div className="space-y-3 lg:col-span-3">
             <Image
-              src="/assets/svgs/logo.svg"
+              src={images.hostellaLogo}
               width={100}
               height={80}
               alt="HostellaLOGO"
             />
-            <p className="text-sm max-w-60 text-slate-600">
+            <p className="text-sm max-w-60 text-white">
               Your gateway to amazing hostel experiences
             </p>
           </div>
@@ -24,12 +25,12 @@ export default function Footer() {
           {/* Footer Sections */}
           {footerSections.map((section, index) => (
             <div key={index} className="flex flex-col gap-3 lg:col-span-2">
-              <h4 className="font-semibold text-lime-500">{section.title}</h4>
+              <h4 className="font-semibold text-yellow-500">{section.title}</h4>
 
               {section.links?.map((link, linkIndex) => (
                 <Link
                   key={linkIndex}
-                  className="text-sm text-slate-600 hover:text-lime-500 transition-colors"
+                  className="text-sm text-white hover:text-yellow-400 transition-colors"
                   href={link.link}
                 >
                   {link.text}
@@ -61,7 +62,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-10 text-sm text-slate-500 text-center">
+        <div className="mt-10 text-sm text-white text-center">
           © 2025 Hostella. Book easy, book smart.
         </div>
       </div>

@@ -10,7 +10,7 @@ export const footerSections: FooterSection[] = [
   {
     title: "Discover",
     links: [
-      { text: "blog", link: "/blog" },
+      { text: "blog", link: "/blog" }
     ],
   },
   {

@@ -1,10 +1,10 @@
 import React from "react";
-import ComingSoonPage from "./_components/coming-soon";
+import HeroSection from "@/components/hero/page";
 
 export default function HomePage() {
   return (
     <div>
-      <ComingSoonPage />
+      <HeroSection />
     </div>
   );
 }

@@ -8,11 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { images } from "@/lib/images";
 
-const slides = [
-  images.room1,
-  images.room2,
-  "/assets/images/room3.jpg",
-];
+const slides = [images.room1, images.room2, images.room3];
 
 export function HeroCarousel() {
   const autoplay = React.useMemo(
@@ -47,7 +43,10 @@ export function HeroCarousel() {
       <div className="w-full h-full overflow-hidden" ref={emblaRef}>
         <div className="flex">
           {slides.map((img, index) => (
-            <div key={index} className="min-w-0 flex-[0_0_100%] relative h-[85vh]">
+            <div
+              key={index}
+              className="min-w-0 flex-[0_0_100%] relative h-[85vh]"
+            >
               <Image
                 src={img}
                 alt={`Hostella room ${index + 1}`}
@@ -63,22 +62,22 @@ export function HeroCarousel() {
       {/* Arrows */}
       <div className="absolute inset-y-1/2 -translate-y-1/2 flex justify-between w-full px-4 sm:px-8 md:px-12 lg:px-[8%]">
         <Button
-          className="rounded-full border border-yellow-400 bg-white/60 hover:bg-yellow-100 shadow-md backdrop-blur-md"
+          className="rounded-full cursor-pointer border border-gray-400 bg-white/40 hover:bg-gray-100  shadow-md backdrop-blur-md"
           size="icon"
           variant="ghost"
           onClick={scrollPrev}
           disabled={!prevEnabled}
         >
-          <ChevronLeft className="w-6 h-6 text-yellow-600" />
+          <ChevronLeft className="w-6 h-6" />
         </Button>
         <Button
-          className="rounded-full border border-yellow-400 bg-white/60 hover:bg-yellow-100 shadow-md backdrop-blur-md"
+          className="rounded-full cursor-pointer border border-gray-400 bg-white/40 hover:bg-gray-100 shadow-md backdrop-blur-md"
           size="icon"
           variant="ghost"
           onClick={scrollNext}
           disabled={!nextEnabled}
         >
-          <ChevronRight className="w-6 h-6 text-yellow-600" />
+          <ChevronRight className="w-6 h-6 " />
         </Button>
       </div>
 

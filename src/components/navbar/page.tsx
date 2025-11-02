@@ -18,7 +18,10 @@ export default function Navbar() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -66,7 +69,7 @@ export default function Navbar() {
           {/* RIGHT: Book Now (desktop only) */}
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/signup">
-              <Button className="h-11 cursor-pointer px-4 rounded-full bg-yellow-400 text-black hover:bg-yellow-500 hover:text-white shadow-md">
+              <Button className="h-11 cursor-pointer px-4 rounded-full bg-yellow-400 text-white hover:bg-yellow-500 hover:text-white shadow-md">
                 Book Now
               </Button>
             </Link>
@@ -114,19 +117,20 @@ export default function Navbar() {
                         </Link>
                       );
                     })}
-
-                    <Button
-                      onClick={() => {
-                        setIsOpen(false);
-                        const footer = document.getElementById("footer");
-                        if (footer) {
-                          footer.scrollIntoView({ behavior: "smooth" });
-                        }
-                      }}
-                      className="mx-4 my-2 h-10 w-[9rem] text-white bg-yellow-500 hover:bg-yellow-600 border-none rounded-md"
-                    >
-                      Book Now
-                    </Button>
+                    <Link href="/signup">
+                      <Button
+                        onClick={() => {
+                          setIsOpen(false);
+                          const footer = document.getElementById("footer");
+                          if (footer) {
+                            footer.scrollIntoView({ behavior: "smooth" });
+                          }
+                        }}
+                        className="mx-4 my-2 h-10 w-[9rem] text-white bg-yellow-500 hover:bg-yellow-600 border-none rounded-md"
+                      >
+                        Book Now
+                      </Button>
+                    </Link>
                   </div>
                 </motion.div>
               )}

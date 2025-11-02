@@ -3,10 +3,11 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { HeroCarousel } from "./HeroCarousel";
+import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full h-[85vh] flex flex-col justify-center items-center text-center font-poppins overflow-hidden">
+    <section className="relative w-full h-screen flex flex-col justify-center items-center text-center font-poppins overflow-hidden">
       {/* Background Carousel */}
       <HeroCarousel />
 
@@ -19,9 +20,11 @@ export default function HeroSection() {
           Enjoy an unforgettable stay at Hostella with our premium rooms,
           top-tier service, and cozy atmosphere for your perfect getaway.
         </p>
-        <Button className="bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer text-lg font-semibold px-10 py-6 rounded-full shadow-lg">
-          BOOK NOW
-        </Button>
+        <Link href="/signup">
+          <Button className="bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer text-lg font-semibold px-10 py-6 rounded-full shadow-lg">
+            BOOK NOW
+          </Button>
+        </Link>
       </div>
     </section>
   );

@@ -38,14 +38,14 @@ export function HeroCarousel() {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="relative w-full h-[85vh] overflow-hidden group">
+    <section className="relative w-full h-screen overflow-hidden group">
       {/* Carousel */}
       <div className="w-full h-full overflow-hidden" ref={emblaRef}>
         <div className="flex">
           {slides.map((img, index) => (
             <div
               key={index}
-              className="min-w-0 flex-[0_0_100%] relative h-[85vh]"
+              className="min-w-0 flex-[0_0_100%] relative h-screen"
             >
               <Image
                 src={img}

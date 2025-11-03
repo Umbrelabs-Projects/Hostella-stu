@@ -12,6 +12,7 @@ import hostel3 from "../../public/hostels/hostel3.png"
 import johnDoe from "../../public/testimonials/John.png"
 import esther from "../../public/testimonials/Esther.png"
 import paul from "../../public/testimonials/Paul.png"
+import dashboardImg from "../../public/dashboard/dashboardImg.png"
 export const images = {
     hostellaLogo,
     room1,
@@ -27,4 +28,5 @@ export const images = {
     johnDoe,
     esther,
     paul,
+    dashboardImg
 }

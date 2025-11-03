@@ -110,6 +110,7 @@ export default function SignUpForm() {
         {/* Submit */}
         <button
           type="submit"
+          onClick={() => window.location.href = "/dashboard"}
           className="w-full cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200"
         >
           Sign Up

@@ -1,22 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import ContactField from "./contact/ContactField";
+import { contactSchema, ContactFormData } from "./contact/contactSchema";
 
 const ContactFormSection = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
+  const onSubmit = async (data: ContactFormData) => {
+    console.log("Form submitted:", data);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    reset();
   };
 
   return (
@@ -26,73 +28,48 @@ const ContactFormSection = () => {
       </h2>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        {/* Name */}
-        <div>
-          <label className="text-sm font-medium text-gray-800">
-            Your Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="name"
-            type="text"
-            placeholder="Enter your first name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full mt-2 border-b border-gray-300 focus:border-[#F4B400] outline-none py-2 text-sm transition-colors"
-          />
-        </div>
+        <ContactField
+          name="name"
+          label="Your Name"
+          placeholder="Enter your full name"
+          register={register}
+          error={errors.name}
+        />
+        <ContactField
+          name="email"
+          label="Your Email"
+          placeholder="Enter your email address"
+          type="email"
+          register={register}
+          error={errors.email}
+        />
+        <ContactField
+          name="phone"
+          label="Phone Number"
+          placeholder="Enter your phone number"
+          type="tel"
+          register={register}
+          error={errors.phone}
+        />
+        <ContactField
+          name="message"
+          label="Message"
+          placeholder="Type here..."
+          register={register}
+          error={errors.message}
+          fullWidth
+        />
 
-        {/* Email */}
-        <div>
-          <label className="text-sm font-medium text-gray-800">
-            Your Email <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="email"
-            type="email"
-            placeholder="Enter your email address"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full mt-2 border-b border-gray-300 focus:border-[#F4B400] outline-none py-2 text-sm transition-colors"
-          />
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="text-sm font-medium text-gray-800">
-            Phone Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="phone"
-            type="tel"
-            placeholder="Enter your phone number"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full mt-2 border-b border-gray-300 focus:border-[#F4B400] outline-none py-2 text-sm transition-colors"
-          />
-        </div>
-
-        {/* Message */}
-        <div className="md:col-span-2">
-          <label className="text-sm font-medium text-gray-800">Message</label>
-          <textarea
-            name="message"
-            placeholder="Type here..."
-            value={formData.message}
-            onChange={handleChange}
-            className="w-full mt-2 border-b border-gray-300 focus:border-[#F4B400] outline-none py-2 text-sm min-h-[80px] transition-colors"
-          />
-        </div>
-
-        {/* Button */}
         <div className="md:col-span-2 flex justify-end">
           <button
             type="submit"
-            className="bg-[#F4B400] cursor-pointer hover:bg-[#dba600] text-black font-medium py-2.5 px-10 rounded-md shadow-sm transition-all"
+            disabled={isSubmitting}
+            className="bg-[#F4B400] cursor-pointer hover:bg-[#dba600] text-black font-medium py-2.5 px-10 rounded-md shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Send
+            {isSubmitting ? "Sending..." : "Send"}
           </button>
         </div>
       </form>

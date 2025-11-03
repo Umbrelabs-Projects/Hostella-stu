@@ -25,8 +25,8 @@ export default function WhyChooseUs() {
   ];
   return (
     <div className="flex flex-col my-12 justify-center items-center">
-      <h1 className="text-2xl font-bold">Why Choose Us?</h1>
-      <div className="flex flex-wrap gap-6 my-8 justify-center">
+      <h1 className="text-2xl md:text-5xl font-bold">Why Choose Us?</h1>
+      <div className="flex flex-wrap gap-6 my-12 justify-center">
         {features.map((feature, index) => (
           <FeatureCard key={index} {...feature} />
         ))}

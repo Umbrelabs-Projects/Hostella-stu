@@ -39,7 +39,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center mt-12 md:mt-0 justify-center">
       <div className="w-full ">
         {/* Header */}
         <div className="text-center">

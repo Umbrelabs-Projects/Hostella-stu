@@ -131,7 +131,7 @@ export default function SignUpForm() {
       </form>
 
       {/* Already have an account */}
-      <div className="text-center text-sm text-gray-600 pt-6 border-t mt-6">
+      <div className="justify-center flex text-sm text-gray-600 pt-6 border-t mt-6">
         Already have an account?{" "}
         <Link
           href="/login"

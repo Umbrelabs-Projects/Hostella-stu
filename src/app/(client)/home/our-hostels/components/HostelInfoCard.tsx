@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -26,7 +25,7 @@ export default function HostelInfoCard({
       <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
       <Link
         href="/signup"
-        className="bg-yellow-400 hover:bg-yellow-500 transition-colors duration-200 text-black font-semibold py-3 px-8 rounded-md shadow-md"
+        className="bg-yellow-400 hover:bg-yellow-500 transition-colors duration-200 text-white font-semibold py-3 px-8 rounded-md shadow-md"
       >
         {buttonText}
       </Link>

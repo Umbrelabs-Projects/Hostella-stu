@@ -7,7 +7,7 @@ export default function AuthLayout({
 }>) {
   return (
     <>
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row md:h-screen ">
         {/* Left Side - Image */}
         <div
           className=" md:w-1/2 bg-cover bg-center h-[20rem] md:h-screen "

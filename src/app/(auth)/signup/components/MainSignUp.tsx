@@ -47,7 +47,7 @@ export default function MainSignUp() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 flex-1 mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 md:space-y-4 flex-1 mt-6">
           {/* Email Field */}
           <FormField
             label="Email"
@@ -70,7 +70,7 @@ export default function MainSignUp() {
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
                 placeholder="Enter your password"
-                className={`w-full border rounded-lg p-3 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
+                className={`w-full border rounded-lg p-3 md:p-2 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 }`}
               />
@@ -96,7 +96,7 @@ export default function MainSignUp() {
                 type={showRePassword ? "text" : "password"}
                 {...register("confirmPassword")}
                 placeholder="Retype your password"
-                className={`w-full border rounded-lg p-3 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
+                className={`w-full border rounded-lg p-3 md:p-2 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
                   errors.confirmPassword ? "border-red-500" : "border-gray-300"
                 }`}
               />

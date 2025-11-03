@@ -67,7 +67,7 @@ const ContactFormSection = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-[#F4B400] cursor-pointer hover:bg-[#dba600] text-black font-medium py-2.5 px-10 rounded-md shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="bg-[#F4B400] cursor-pointer hover:bg-[#dba600] text-white font-medium py-2.5 px-10 rounded-md shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Sending..." : "Send"}
           </button>

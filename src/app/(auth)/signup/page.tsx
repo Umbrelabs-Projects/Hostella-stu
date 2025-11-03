@@ -1,9 +1,7 @@
 "use client";
 
-export default function MembershipForm() {
-  return (
-    <div className="min-h-screen bg-white font-poppins">
-      Sign Up
-    </div>
-  );
+import MainSignUp from "./components/MainSignUp";
+
+export default function SignUpPage() {
+  return <MainSignUp />;
 }

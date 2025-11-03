@@ -1,18 +1,4 @@
-/**
- * AuthLayout component
- *
- * This component is a layout wrapper for authentication-related pages.
- * It includes a home navbar and footer, with the main content rendered
- * in between.
- * The auth layout is actually the same as the home layout but let's use auth layout for seperation of concerns.
- * @param {object} props - The properties object.
- * @param {React.ReactNode} props.children - The content to be rendered within the layout.
- */
-
-import Footer from "@/components/footer/page";
-import Navbar from "@/components/navbar/page";
-
-
+import { images } from "@/lib/images";
 
 export default function AuthLayout({
   children,
@@ -21,9 +7,20 @@ export default function AuthLayout({
 }>) {
   return (
     <>
-      <Navbar />
-      {children}
-      <Footer />
+      <div className="flex flex-col md:flex-row">
+        {/* Left Side - Image */}
+        <div
+          className=" md:w-1/2 bg-cover bg-center h-[20rem] md:h-screen "
+          style={{
+            backgroundImage: `url(${images.room2.src})`,
+          }}
+        ></div>
+
+        {/* Right Side - Form */}
+        <div className="absolute md:relative rounded-t-2xl md:rounded-none w-full mt-[12rem] md:my-8 md:w-1/2 flex items-center justify-center bg-white">
+          {children}
+        </div>
+      </div>
     </>
   );
 }

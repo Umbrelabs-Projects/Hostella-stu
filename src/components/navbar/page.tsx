@@ -95,7 +95,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
-                  className="absolute right-0 mt-2 w-[24.5rem] bg-white shadow-lg rounded-lg border overflow-hidden z-50"
+                  className="absolute right-0 mt-2 w-[20rem] bg-white shadow-lg rounded-lg border overflow-hidden z-50"
                 >
                   <div className="flex flex-col">
                     {navLinks.map((navLink, index) => {

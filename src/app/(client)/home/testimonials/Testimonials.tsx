@@ -83,6 +83,7 @@ export function Testimonials() {
 
   return (
     <section className="md:px-[5%] text-white">
+      <h1 className="text-2xl md:text-5xl font-bold text-center text-black">Testimonials</h1>
       <div className="relative w-full py-12 text-center space-y-6">
         {/* Carousel */}
         <div className="overflow-hidden w-[70%] mx-auto" ref={emblaRef}>
@@ -99,7 +100,7 @@ export function Testimonials() {
         </div>
 
         {/* Arrows */}
-        <div className="absolute inset-y-1/2 -translate-y-1/2 hidden md:flex justify-between w-full px-4 md:px-[4%] lg:px-[8%]">
+        <div className="absolute pb-12 inset-y-1/2 -translate-y-1/2 hidden md:flex justify-between w-full px-4 md:px-[4%] lg:px-[8%]">
           <Button
             className="rounded-full border border-[#FFB636] cursor-pointer hover:text-white"
             size="icon"

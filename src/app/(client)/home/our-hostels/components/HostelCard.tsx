@@ -38,7 +38,7 @@ export default function HostelCard({
   );
 
   return (
-    <div className="relative w-full my-10">
+    <div className="relative w-full my-10 overflow-hidden">
       {/* ===== Desktop View ===== */}
       <div className="hidden md:block relative w-full h-[30rem] overflow-hidden ">
         {/* Background Image */}

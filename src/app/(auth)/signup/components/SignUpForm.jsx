@@ -87,20 +87,6 @@ export default function SignUpForm() {
           </FormField>
         </div>
 
-        {/* School */}
-        <FormField label="School" name="school" register={register} error={errors.school}>
-          <select
-            {...register("school")}
-            className={`mt-1 w-full p-2.5 border rounded-lg text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none ${
-              errors.school ? "border-red-500" : "border-gray-300"
-            }`}
-          >
-            <option value="">Select your school</option>
-            <option value="KNUST">Kwame Nkrumah University of Science and Technology</option>
-            <option value="UG">University of Ghana</option>
-          </select>
-        </FormField>
-
         <div className="flex justify-between gap-3 flex-col md:flex-row w-full">
             {/* Student ID */}
         <FormField
@@ -129,18 +115,6 @@ export default function SignUpForm() {
           Sign Up
         </button>
       </form>
-
-      {/* Already have an account */}
-      <div className="justify-center flex text-sm text-gray-600 pt-6 border-t mt-6">
-        Already have an account?{" "}
-        <Link
-          href="/login"
-          className="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium transition"
-        >
-          <LogIn className="w-4 h-4 mr-1" />
-          Sign In
-        </Link>
-      </div>
     </div>
   );
 }

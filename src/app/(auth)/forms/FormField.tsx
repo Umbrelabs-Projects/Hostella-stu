@@ -37,7 +37,7 @@ export default function FormField<T extends FieldValues>({
           {...register(name)}
           {...props}
           className={`mt-1 ${
-            isEmail ? "w-full md:w-[21rem]" : "w-full md:w-[16rem]"
+            isEmail ? "w-[22rem]" : "w-full md:w-[16rem]"
           } p-3 border rounded-lg focus:ring-1 focus:ring-yellow-400 outline-none ${
             error ? "border-red-500" : "border-gray-300"
           }`}

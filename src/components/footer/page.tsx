@@ -39,22 +39,22 @@ export default function Footer() {
 
               {section.iconLink && (
                 <div className="flex gap-4 mt-2">
-                  {section.iconLink.map((iconItem, iconIndex) => (
-                    <Link
-                      key={iconIndex}
-                      href={iconItem.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Image
-                        src={iconItem.icon}
-                        alt="social"
-                        width={18}
-                        height={18}
-                        className="hover:opacity-70 transition-opacity"
-                      />
-                    </Link>
-                  ))}
+                  {section.iconLink.map((iconItem, iconIndex) => {
+                    const Icon = iconItem.icon;
+                    return (
+                      <Link
+                        key={iconIndex}
+                        href={iconItem.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Icon
+                          size={18}
+                          className="text-white hover:text-yellow-400 transition-colors"
+                        />
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -7,7 +7,7 @@ export interface SidebarTab {
 }
 
 export interface socialIconLink {
-  icon: string;
+  icon: LucideIcon;
   link: string;
 }
 export interface FooterLink {

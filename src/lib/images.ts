@@ -9,6 +9,9 @@ import hostel0 from "../../public/hostels/hostel0.png"
 import hostel1 from "../../public/hostels/hostel1.png"
 import hostel2 from "../../public/hostels/hostel2.png"
 import hostel3 from "../../public/hostels/hostel3.png"
+import johnDoe from "../../public/testimonials/John.png"
+import esther from "../../public/testimonials/Esther.png"
+import paul from "../../public/testimonials/Paul.png"
 export const images = {
     hostellaLogo,
     room1,
@@ -21,4 +24,7 @@ export const images = {
     hostel1,
     hostel2,
     hostel3,
+    johnDoe,
+    esther,
+    paul,
 }

@@ -101,7 +101,7 @@ export default function SignUpForm() {
           </select>
         </FormField>
 
-        <div className="flex justify-between flex-col md:flex-row w-full">
+        <div className="flex justify-between gap-3 flex-col md:flex-row w-full">
             {/* Student ID */}
         <FormField
           label="Student ID"

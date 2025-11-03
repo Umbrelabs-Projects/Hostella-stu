@@ -18,7 +18,7 @@ export default function FormField({
         <input
           {...register(name)}
           {...props}
-          className={`mt-1 w-full p-2 border rounded-lg focus:ring-1 focus:ring-yellow-400 outline-none ${
+          className={`mt-1 w-full md:w-[16rem] p-2 border rounded-lg focus:ring-1 focus:ring-yellow-400 outline-none ${
             error ? "border-red-500" : ""
           }`}
         />

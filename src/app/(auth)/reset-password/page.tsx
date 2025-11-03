@@ -11,8 +11,7 @@ interface ResetPasswordForm {
 }
 
 export default function ResetPasswordPage() {
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<ResetPasswordForm>();
-  const password = watch("password");
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ResetPasswordForm>();
 
   const onSubmit: SubmitHandler<ResetPasswordForm> = async (data) => {
     if (data.password !== data.confirmPassword) {
@@ -24,7 +23,7 @@ export default function ResetPasswordPage() {
       console.log("Resetting password...");
       // await axios.post("/api/auth/reset-password", data);
       alert("Password reset successful!");
-      
+
     } catch (error) {
       console.error(error);
       alert("Failed to reset password.");
@@ -32,7 +31,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex mt-12 md:mt-0 items-center justify-center bg-gray-50">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="w-full max-w-md bg-white rounded-lg shadow p-8 space-y-6"

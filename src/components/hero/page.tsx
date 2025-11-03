@@ -14,7 +14,7 @@ export default function HeroSection() {
       {/* Overlay content */}
       <div className="absolute z-10 flex flex-col items-center justify-center space-y-6 px-6">
         <h1 className="text-4xl md:text-5xl font-semibold text-white drop-shadow-lg">
-          Experience Comfort. Stay with Style.
+          Book easy, book smart
         </h1>
         <p className="text-white/90 max-w-xl text-sm md:text-base leading-relaxed">
           Enjoy an unforgettable stay at Hostella with our premium rooms,

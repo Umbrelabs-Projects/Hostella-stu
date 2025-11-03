@@ -1,13 +1,7 @@
 "use client";
 
-import { images } from "@/lib/images";
-import SignUpForm from "./components/SignUpForm";
+import MainSignUp from "./components/MainSignUp";
 
 export default function SignUpPage() {
-  return (
-    <div>
-     
-        <SignUpForm />
-    </div>
-  );
+  return <MainSignUp />;
 }

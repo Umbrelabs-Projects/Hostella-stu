@@ -1,4 +1,10 @@
 import { FooterSection, NavLink } from "@/types/common";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedinIcon,
+  Twitter,
+} from "lucide-react";
 
 export const navLinks: NavLink[] = [
   { link: "/", text: "Home" },
@@ -9,9 +15,7 @@ export const navLinks: NavLink[] = [
 export const footerSections: FooterSection[] = [
   {
     title: "Discover",
-    links: [
-      { text: "blog", link: "/blog" }
-    ],
+    links: [{ text: "blog", link: "/blog" }],
   },
   {
     title: "Legal",
@@ -24,10 +28,10 @@ export const footerSections: FooterSection[] = [
   {
     title: "Get Connected",
     iconLink: [
-      { icon: "/assets/pngs/x.png", link: "https://twitter.com" },
-      { icon: "/assets/pngs/linkedIn.png", link: "https://linkedin.com" },
-      { icon: "/assets/pngs/facebook.png", link: "https://facebook.com" },
-      { icon: "/assets/pngs/instagram.png", link: "https://instagram.com" },
+      { icon: Twitter, link: "https://twitter.com" },
+      { icon: LinkedinIcon, link: "https://linkedin.com" },
+      { icon: FacebookIcon, link: "https://facebook.com" },
+      { icon: InstagramIcon, link: "https://instagram.com" },
     ],
   },
 ];

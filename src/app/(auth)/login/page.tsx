@@ -4,10 +4,13 @@ import React, { useState } from "react";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import FormField from "../forms/FormField";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // ✅ Validation schema
 const signInSchema = z.object({
@@ -20,7 +23,12 @@ type SignInData = z.infer<typeof signInSchema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
+  // Zustand store
+  const { signIn, loading } = useAuthStore();
+
+  // Form setup
   const {
     register,
     handleSubmit,
@@ -33,14 +41,20 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (data: SignInData) => {
-    console.log("Sign in:", data);
-    window.location.href = "/dashboard"; // Redirect after login
+  // Handle login
+  const onSubmit = async (data: SignInData) => {
+    try {
+      await signIn(data);
+      toast.success("Welcome back");
+      router.push("/dashboard");
+    } catch {
+      toast.error("Failed to sign in. Please try again.");
+    }
   };
 
   return (
     <div className="flex items-center mt-12 md:mt-0 justify-center mb-4 md:mb-0">
-      <div className="w-full ">
+      <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
@@ -109,12 +123,14 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200"
+            disabled={loading}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200 disabled:opacity-60"
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
-                    {/* Divider */}
-                    <div className="relative flex items-center justify-center">
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center">
             <div className="w-full h-px bg-gray-200"></div>
             <span className="absolute bg-white px-3 text-sm text-gray-400">
               or

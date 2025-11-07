@@ -6,24 +6,29 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 
 import {
-  signupSchema,
+  authSchema,
   SignupFormData,
-} from "@/app/(auth)/validations/signupSchema";
+} from "@/app/(auth)/validations/authSchema";
 import FormField from "../forms/FormField";
 
 export default function MainSignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+  const router = useRouter();
 
-  // Initialize form using unified signupSchema
+  const { updateSignupData, loading } = useAuthStore();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(authSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -31,10 +36,20 @@ export default function MainSignUp() {
     },
   });
 
-  const onSubmit = (data: SignupFormData) => {
-    console.log("Main signup:", data);
-    // Example: redirect after signup success
-    window.location.href = "/signup/verify";
+  const onSubmit = async (data: SignupFormData) => {
+    try {
+      // save partial signup data to Zustand
+      updateSignupData({
+        email: data.email,
+        password: data.password,
+      });
+
+      toast.info("Proceeding to student info...");
+      router.push("/signup/details");
+    } catch (error) {
+      toast.error("Something went wrong, please try again.");
+      console.log(error)
+    }
   };
 
   return (
@@ -105,7 +120,9 @@ export default function MainSignUp() {
                 {...register("confirmPassword")}
                 placeholder="Retype your password"
                 className={`w-full border rounded-lg p-3 md:p-2 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                  errors.confirmPassword
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
               />
               <button
@@ -121,9 +138,10 @@ export default function MainSignUp() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200"
+            disabled={loading}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200 disabled:opacity-70"
           >
-            Sign Up
+            {loading ? "Processing..." : "Continue"}
           </button>
 
           {/* Divider */}
@@ -147,7 +165,7 @@ export default function MainSignUp() {
         </form>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-600 pt-3 border-t ">
+        <div className="text-center text-sm text-gray-600 pt-3 border-t">
           Already have an account?{" "}
           <Link
             href="/login"

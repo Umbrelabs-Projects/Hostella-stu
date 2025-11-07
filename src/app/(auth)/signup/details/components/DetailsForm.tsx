@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
-  signupSchema,
+  authSchema,
   SignupFormData,
-} from "../../../validations/signupSchema";
+} from "../../../validations/authSchema";
 import FormField from "../../../forms/FormField";
 import PdfUploadField from "./PdfUploadField";
 
 export default function DetailsForm() {
   const router = useRouter();
+  const { signUp, signupData, loading } = useAuthStore();
 
   const {
     register,
@@ -21,8 +24,9 @@ export default function DetailsForm() {
     setValue,
     formState: { errors },
   } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(authSchema),
     defaultValues: {
+      ...signupData,
       firstName: "",
       lastName: "",
       gender: "",
@@ -31,26 +35,23 @@ export default function DetailsForm() {
       studentId: "",
       phone: "",
       admissionLetter: null,
-      email: undefined,
-      password: undefined,
-      confirmPassword: undefined,
     },
   });
 
-  // ✅ type-safe error type
   const onError = (errors: FieldErrors<SignupFormData>) => {
-    console.error("❌ Validation errors:", errors);
+    console.error("Validation errors:", errors);
+    toast.error("Please fix the highlighted fields.");
   };
 
-  const onSubmit = (data: SignupFormData) => {
-    console.log("✅ Form submitted:", data);
-    const file = data.admissionLetter?.[0];
-    if (file) {
-      console.log("Uploaded file:", file.name, file.size);
+  const onSubmit = async (data: SignupFormData) => {
+    try {
+      await signUp(data);
+      toast.success("Signup successful! Redirecting...");
+      router.push("/dashboard");
+    } catch (error) {
+      toast.error("Signup failed. Please try again.");
+      console.log(error)
     }
-
-    // Navigate to dashboard
-    router.push("/dashboard");
   };
 
   return (
@@ -167,9 +168,10 @@ export default function DetailsForm() {
 
         <Button
           type="submit"
-          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200"
+          disabled={loading}
+          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200 disabled:opacity-70"
         >
-          Continue
+          {loading ? "Submitting..." : "Continue"}
         </Button>
       </form>
     </div>

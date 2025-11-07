@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Comfortaa, Poppins } from "next/font/google";
-
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -22,12 +22,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} ${comfortaa.variable} antialiased`}>{children}</body>
+      <body className={`${poppins.variable} ${comfortaa.variable} antialiased`}>
+        {children}
+        {/* ✅ Keep Toaster inside <body> and only once here */}
+        <Toaster richColors position="top-center" />
+      </body>
     </html>
   );
 }

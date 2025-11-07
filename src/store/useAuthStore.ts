@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { SignupFormData } from "@/app/(auth)/validations/signupSchema";
+import { SignupFormData } from "@/app/(auth)/validations/authSchema";
 
 interface User {
   id?: string;

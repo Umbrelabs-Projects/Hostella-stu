@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,11 +15,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.replace("/login"); // redirect to your login page
+      router.replace("/login?message=signin-required");
     }
   }, [isAuthenticated, loading, router]);
 
-  // Show loader while checking auth
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-white">
@@ -27,6 +27,5 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Render children if authenticated
   return <>{isAuthenticated ? children : null}</>;
 }

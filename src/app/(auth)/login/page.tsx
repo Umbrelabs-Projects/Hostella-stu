@@ -4,71 +4,54 @@ import React, { useState } from "react";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import FormField from "../forms/FormField";
 import { useAuthStore } from "@/store/useAuthStore";
-
-// ✅ Validation schema
-const signInSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-// ✅ Type for form data
-type SignInData = z.infer<typeof signInSchema>;
+import { signInSchema, SignInFormData } from "@/app/(auth)/validations/signInSchema";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  // Zustand store
   const { signIn, loading } = useAuthStore();
 
-  // Form setup
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignInData>({
+  } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
-  // Handle login
-  const onSubmit = async (data: SignInData) => {
+  const onSubmit = async (data: SignInFormData) => {
     try {
-      await signIn(data);
-      toast.success("Welcome back");
-      router.push("/dashboard");
+      await signIn(data); // ✅ pass the whole object
+      toast.success("Welcome back!");
+      router.push("/dashboard"); // redirect to protected route
     } catch {
       toast.error("Failed to sign in. Please try again.");
     }
   };
 
   return (
-    <div className="flex items-center mt-12 md:mt-0 justify-center mb-4 md:mb-0">
-      <div className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-lg">
         {/* Header */}
-        <div className="text-center">
+        <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
-          <p className="text-gray-500 text-sm mt-2">
-            Sign in to your{" "}
-            <span className="text-yellow-500 font-medium">Hostella</span>{" "}
-            account
+          <p className="text-gray-500 text-sm mt-1">
+            Sign in to your <span className="text-yellow-500 font-medium">Hostella</span> account
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Email */}
-          <FormField<SignInData>
+          <FormField<SignInFormData>
             label="Email"
             name="email"
             register={register}
@@ -78,7 +61,7 @@ export default function LoginPage() {
           />
 
           {/* Password */}
-          <FormField<SignInData>
+          <FormField<SignInFormData>
             label="Password"
             name="password"
             register={register}
@@ -132,9 +115,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative flex items-center justify-center">
             <div className="w-full h-px bg-gray-200"></div>
-            <span className="absolute bg-white px-3 text-sm text-gray-400">
-              or
-            </span>
+            <span className="absolute bg-white px-3 text-sm text-gray-400">or</span>
           </div>
 
           {/* Google Button */}
@@ -143,9 +124,7 @@ export default function LoginPage() {
             variant="outline"
             className="flex items-center justify-center gap-2 h-10 w-full rounded-lg border border-gray-300 shadow-sm hover:bg-gray-100 transition"
           >
-            <span className="text-gray-700 font-medium">
-              Sign In with Google
-            </span>
+            <span className="text-gray-700 font-medium">Sign In with Google</span>
           </Button>
         </form>
 

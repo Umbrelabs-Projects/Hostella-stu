@@ -10,7 +10,7 @@ export default function AuthLayout({
 }>) {
   const pathname = usePathname();
 
-  const showNavbar = pathname === "/signup" || pathname === "login";
+  const showNavbar = pathname === "/signup" || pathname === "/login";
   return (
     <>
       {showNavbar && <Navbar />}

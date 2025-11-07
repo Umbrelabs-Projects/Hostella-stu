@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const authSchema = z
+export const signUpSchema = z
   .object({
     firstName: z.string().min(2, "First name is required"),
     lastName: z.string().min(2, "Last name is required"),
@@ -36,11 +36,9 @@ export const authSchema = z
     confirmPassword: z
       .string()
       .min(6, "Confirm your password")
-      .refine((val) => val.length > 0, {
-        message: "Please confirm your password",
-      }),
+      .refine((val) => val.length > 0, { message: "Please confirm your password" }),
 
-      admissionLetter: z
+    admissionLetter: z
       .any()
       .superRefine((files, ctx) => {
         if (!files || !files.length) {
@@ -50,10 +48,10 @@ export const authSchema = z
           });
           return;
         }
-    
+
         const file = files[0];
         if (!file) return;
-    
+
         if (file.type !== "application/pdf") {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -65,11 +63,11 @@ export const authSchema = z
             message: "File size must be less than 5 MB",
           });
         }
-      }),    
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
-export type SignupFormData = z.infer<typeof authSchema>;
+export type SignUpFormData = z.infer<typeof signUpSchema>;

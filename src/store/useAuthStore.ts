@@ -1,118 +1,115 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { SignupFormData } from "@/app/(auth)/validations/authSchema";
+import { SignInFormData } from "@/app/(auth)/validations/signInSchema";
+import { setAuthToken, apiFetch } from "@/lib/api";
+import { SignUpFormData } from "@/app/(auth)/validations/signUpSchema";
 
 interface User {
-  id?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  token?: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatar?: string;
 }
 
 interface AuthState {
-  // Core state
   user: User | null;
-  isAuthenticated: boolean;
+  token: string | null;
   loading: boolean;
   error: string | null;
 
-  // Signup (onboarding)
-  signupData: Partial<SignupFormData>;
-  updateSignupData: (newData: Partial<SignupFormData>) => void;
+  signupData: Partial<SignUpFormData>;
+  updateSignupData: (newData: Partial<SignUpFormData>) => void;
   resetSignupData: () => void;
 
-  // Auth actions
-  signIn: (credentials: { email: string; password: string }) => Promise<void>;
-  signUp: (data: SignupFormData) => Promise<void>;
-  signOut: () => void;
+  signIn: (data: SignInFormData) => Promise<void>;
+  signUp: (data: SignUpFormData) => Promise<void>;
+  signOut: () => Promise<void>;
+  restoreSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
-      isAuthenticated: false,
+      token: null,
       loading: false,
       error: null,
 
       signupData: {},
       updateSignupData: (newData) =>
-        set((state) => ({
-          signupData: { ...state.signupData, ...newData },
-        })),
+        set((state) => ({ signupData: { ...state.signupData, ...newData } })),
       resetSignupData: () => set({ signupData: {} }),
 
-      // ---- AUTH ACTIONS ----
-      signIn: async (credentials) => {
+      // Sign in using SignInFormData
+      signIn: async (data: SignInFormData) => {
         set({ loading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((res) => setTimeout(res, 1000));
-
-          const mockUser: User = {
-            id: "123",
-            firstName: "John",
-            lastName: "Doe",
-            email: credentials.email,
-            token: "fake-jwt-token",
-          };
-
-          set({
-            user: mockUser,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
+          const res = await apiFetch<{ user: User; token: string }>("/auth/login", {
+            method: "POST",
+            body: JSON.stringify(data),
           });
+
+          setAuthToken(res.token);
+          set({ user: res.user, token: res.token, loading: false });
         } catch (err: unknown) {
-          const message =
-            err instanceof Error ? err.message : "Failed to sign in";
+          const message = err instanceof Error ? err.message : "Login failed";
           set({ error: message, loading: false });
         }
       },
 
-      signUp: async (data) => {
+      // Sign up using SignupFormData
+      signUp: async (data: SignUpFormData) => {
         set({ loading: true, error: null });
         try {
-          await new Promise((res) => setTimeout(res, 1500));
-
-          const mockUser: User = {
-            id: "456",
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            token: "fake-signup-token",
-          };
-
-          set({
-            user: mockUser,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
+          const res = await apiFetch<{ user: User; token: string }>("/auth/register", {
+            method: "POST",
+            body: JSON.stringify(data),
           });
+
+          setAuthToken(res.token);
+          set({ user: res.user, token: res.token, loading: false });
         } catch (err: unknown) {
-          const message =
-            err instanceof Error ? err.message : "Failed to sign up";
+          const message = err instanceof Error ? err.message : "Signup failed";
           set({ error: message, loading: false });
         }
       },
 
-      signOut: () => {
-        set({
-          user: null,
-          isAuthenticated: false,
-          signupData: {},
-          loading: false,
-          error: null,
-        });
+      signOut: async () => {
+        setAuthToken(null);
+        set({ user: null, token: null });
+        localStorage.removeItem("auth-storage");
+      },
+
+      restoreSession: async () => {
+        set({ loading: true });
+        try {
+          const stored = localStorage.getItem("auth-storage");
+          if (stored) {
+            const parsed: { state?: { token?: string; user?: User } } = JSON.parse(stored);
+            if (parsed.state?.token) {
+              setAuthToken(parsed.state.token);
+
+              // Fetch latest user info
+              const user = await apiFetch<User>("/auth/me");
+              set({ user, token: parsed.state.token, loading: false });
+              return;
+            }
+          }
+          set({ loading: false });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Failed to restore session";
+          console.error("Restore session error:", message);
+          set({ user: null, token: null, loading: false });
+          setAuthToken(null);
+        }
       },
     }),
     {
-      name: "auth-storage", // 🗄️ Key name in localStorage
+      name: "auth-storage",
       partialize: (state) => ({
-        // Only persist these keys
+        token: state.token,
         user: state.user,
-        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

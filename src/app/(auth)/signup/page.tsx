@@ -9,34 +9,31 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-
-import {
-  authSchema,
-  SignupFormData,
-} from "@/app/(auth)/validations/authSchema";
 import FormField from "../forms/FormField";
+import { SignUpFormData, signUpSchema } from "../validations/signUpSchema";
 
 export default function MainSignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
   const router = useRouter();
 
-  const { updateSignupData, loading } = useAuthStore();
+  const { updateSignupData, signupData, loading } = useAuthStore();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(authSchema),
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
+      ...signupData,
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: SignupFormData) => {
+  const onSubmit = async (data: SignUpFormData) => {
     try {
       // save partial signup data to Zustand
       updateSignupData({
@@ -48,30 +45,21 @@ export default function MainSignUp() {
       router.push("/signup/details");
     } catch (error) {
       toast.error("Something went wrong, please try again.");
-      console.log(error)
+      console.error(error);
     }
   };
 
   return (
     <div className="flex items-center justify-center mt-12 md:mt-0 mb-4 md:mb-0">
       <div className="w-full flex flex-col justify-between">
-        {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800">
-            Create an Account
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-800">Create an Account</h2>
           <p className="text-gray-500 text-sm mt-2">
-            Sign up to continue to{" "}
-            <span className="text-yellow-500 font-medium">Hostella</span>
+            Sign up to continue to <span className="text-yellow-500 font-medium">Hostella</span>
           </p>
         </div>
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-5 md:space-y-4 flex-1 mt-6"
-        >
-          {/* Email Field */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 md:space-y-4 flex-1 mt-6">
           <FormField
             label="Email"
             name="email"
@@ -81,13 +69,7 @@ export default function MainSignUp() {
             type="email"
           />
 
-          {/* Password Field */}
-          <FormField
-            label="Password"
-            name="password"
-            register={register}
-            error={errors.password}
-          >
+          <FormField label="Password" name="password" register={register} error={errors.password}>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -107,7 +89,6 @@ export default function MainSignUp() {
             </div>
           </FormField>
 
-          {/* Confirm Password Field */}
           <FormField
             label="Re-type Password"
             name="confirmPassword"
@@ -120,9 +101,7 @@ export default function MainSignUp() {
                 {...register("confirmPassword")}
                 placeholder="Retype your password"
                 className={`w-full border rounded-lg p-3 md:p-2 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
-                  errors.confirmPassword
-                    ? "border-red-500"
-                    : "border-gray-300"
+                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
                 }`}
               />
               <button
@@ -135,7 +114,6 @@ export default function MainSignUp() {
             </div>
           </FormField>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -143,28 +121,8 @@ export default function MainSignUp() {
           >
             {loading ? "Processing..." : "Continue"}
           </button>
-
-          {/* Divider */}
-          <div className="relative flex items-center justify-center">
-            <div className="w-full h-px bg-gray-200"></div>
-            <span className="absolute bg-white px-3 text-sm text-gray-400">
-              or
-            </span>
-          </div>
-
-          {/* Google Button */}
-          <Button
-            type="button"
-            variant="outline"
-            className="flex items-center justify-center gap-2 h-10 w-full rounded-lg border border-gray-300 shadow-sm hover:bg-gray-100 transition"
-          >
-            <span className="text-gray-700 font-medium">
-              Sign Up with Google
-            </span>
-          </Button>
         </form>
 
-        {/* Footer */}
         <div className="text-center text-sm text-gray-600 pt-3 border-t">
           Already have an account?{" "}
           <Link

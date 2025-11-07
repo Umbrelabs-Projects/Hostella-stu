@@ -7,12 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
-import {
-  authSchema,
-  SignupFormData,
-} from "../../../validations/authSchema";
+
 import FormField from "../../../forms/FormField";
 import PdfUploadField from "./PdfUploadField";
+import { SignUpFormData, signUpSchema } from "@/app/(auth)/validations/signUpSchema";
 
 export default function DetailsForm() {
   const router = useRouter();
@@ -23,8 +21,8 @@ export default function DetailsForm() {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(authSchema),
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       ...signupData,
       firstName: "",
@@ -38,55 +36,34 @@ export default function DetailsForm() {
     },
   });
 
-  const onError = (errors: FieldErrors<SignupFormData>) => {
+  const onError = (errors: FieldErrors<SignUpFormData>) => {
     console.error("Validation errors:", errors);
     toast.error("Please fix the highlighted fields.");
   };
 
-  const onSubmit = async (data: SignupFormData) => {
+  const onSubmit = async (data: SignUpFormData) => {
     try {
       await signUp(data);
       toast.success("Signup successful! Redirecting...");
       router.push("/dashboard");
     } catch (error) {
       toast.error("Signup failed. Please try again.");
-      console.log(error)
+      console.error(error);
     }
   };
 
   return (
     <div className="w-full max-w-xl bg-white rounded-2xl pt-12 mb-6 md:mb-0 md:pt-0 px-8">
-      <h2 className="text-3xl font-bold text-gray-800 text-center mb-2">
-        Student Info
-      </h2>
+      <h2 className="text-3xl font-bold text-gray-800 text-center mb-2">Student Info</h2>
 
       <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
-        {/* Name Fields */}
         <div className="grid grid-cols-2 gap-4">
-          <FormField
-            label="First Name"
-            name="firstName"
-            register={register}
-            error={errors.firstName}
-            placeholder="Enter first name"
-          />
-          <FormField
-            label="Last Name"
-            name="lastName"
-            register={register}
-            error={errors.lastName}
-            placeholder="Enter last name"
-          />
+          <FormField label="First Name" name="firstName" register={register} error={errors.firstName} placeholder="Enter first name" />
+          <FormField label="Last Name" name="lastName" register={register} error={errors.lastName} placeholder="Enter last name" />
         </div>
 
-        {/* Gender & Level */}
         <div className="grid grid-cols-2 gap-4">
-          <FormField
-            label="Gender"
-            name="gender"
-            register={register}
-            error={errors.gender}
-          >
+          <FormField label="Gender" name="gender" register={register} error={errors.gender}>
             <select
               {...register("gender")}
               className={`mt-1 w-full p-2.5 border rounded-lg text-gray-700 focus:ring-1 focus:ring-yellow-400 outline-none ${
@@ -99,12 +76,7 @@ export default function DetailsForm() {
             </select>
           </FormField>
 
-          <FormField
-            label="Level"
-            name="level"
-            register={register}
-            error={errors.level}
-          >
+          <FormField label="Level" name="level" register={register} error={errors.level}>
             <select
               {...register("level")}
               className={`mt-1 w-full p-2.5 border rounded-lg text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none ${
@@ -120,31 +92,12 @@ export default function DetailsForm() {
           </FormField>
         </div>
 
-        {/* Student ID & Phone */}
         <div className="flex justify-between gap-3 flex-col md:flex-row w-full">
-          <FormField
-            label="Student ID"
-            name="studentId"
-            register={register}
-            error={errors.studentId}
-            placeholder="Enter your student ID"
-          />
-          <FormField
-            label="Phone Number"
-            name="phone"
-            register={register}
-            error={errors.phone}
-            placeholder="Enter your phone number"
-          />
+          <FormField label="Student ID" name="studentId" register={register} error={errors.studentId} placeholder="Enter your student ID" />
+          <FormField label="Phone Number" name="phone" register={register} error={errors.phone} placeholder="Enter your phone number" />
         </div>
 
-        {/* School */}
-        <FormField
-          label="School"
-          name="school"
-          register={register}
-          error={errors.school}
-        >
+        <FormField label="School" name="school" register={register} error={errors.school}>
           <select
             {...register("school")}
             className={`mt-1 w-full p-2.5 border rounded-lg text-gray-700 focus:ring-1 focus:ring-yellow-400 outline-none ${
@@ -152,25 +105,14 @@ export default function DetailsForm() {
             }`}
           >
             <option value="">Select University</option>
-            <option value="KNUST">
-              Kwame Nkrumah University of Science and Technology
-            </option>
+            <option value="KNUST">Kwame Nkrumah University of Science and Technology</option>
             <option value="KsTU">Kumasi Technical University</option>
           </select>
         </FormField>
 
-        <PdfUploadField
-          name="admissionLetter"
-          register={register}
-          setValue={setValue}
-          error={errors.admissionLetter}
-        />
+        <PdfUploadField name="admissionLetter" register={register} setValue={setValue} error={errors.admissionLetter} />
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200 disabled:opacity-70"
-        >
+        <Button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200 disabled:opacity-70">
           {loading ? "Submitting..." : "Continue"}
         </Button>
       </form>

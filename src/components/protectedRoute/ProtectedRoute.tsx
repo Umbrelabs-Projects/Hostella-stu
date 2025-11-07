@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,21 +11,28 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, loading } = useAuthStore();
+  const { user, token, loading, restoreSession } = useAuthStore();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.replace("/login?message=signin-required");
-    }
-  }, [isAuthenticated, loading, router]);
+    const checkAuth = async () => {
+      // Wait for store to restore session from localStorage
+      await restoreSession();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white">
-        Checking authentication...
-      </div>
-    );
+      // If no token or user, redirect immediately
+      if (!user || !token) {
+        toast.error("Please sign in to access this page.");
+        router.replace("/login");
+      }
+    };
+
+    checkAuth();
+  }, [router, restoreSession, user, token]);
+
+  // Block render completely until authentication is confirmed
+  if (loading || !user || !token) {
+    return null;
   }
 
-  return <>{isAuthenticated ? children : null}</>;
+  // Authenticated — render protected content
+  return <>{children}</>;
 }

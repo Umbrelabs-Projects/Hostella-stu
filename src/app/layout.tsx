@@ -30,7 +30,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${comfortaa.variable} antialiased`}>
         {children}
         {/* ✅ Keep Toaster inside <body> and only once here */}
-        <Toaster richColors position="top-center" />
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

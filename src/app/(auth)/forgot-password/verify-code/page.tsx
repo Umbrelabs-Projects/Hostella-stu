@@ -3,7 +3,7 @@
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation"; // ✅ for navigation in Next.js
-import FormField from "../forms/FormField";
+import FormField from "../../forms/FormField";
 
 interface VerifyCodeForm {
   code: string;
@@ -22,7 +22,7 @@ export default function VerifyCodePage() {
       alert("Code verified successfully!");
 
       // ✅ Redirect to reset password page
-      router.push("/reset-password");
+      router.push("/forgot-password/reset-password");
     } catch (error) {
       console.error(error);
       alert("Invalid code, please try again.");

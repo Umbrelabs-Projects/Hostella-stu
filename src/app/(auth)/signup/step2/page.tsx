@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const verificationSchema = z.object({
   otp: z
@@ -14,15 +15,15 @@ const verificationSchema = z.object({
 
 type VerificationData = z.infer<typeof verificationSchema>;
 
-export default function VerificationPage() {
+interface VerificationPageProps {
+  email: string;
+  onNext: () => void;
+}
+
+export default function VerificationPage({ email, onNext }: VerificationPageProps) {
   const [isVerified, setIsVerified] = useState(false);
 
-  const {
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<VerificationData>({
+  const { handleSubmit, setValue, watch, formState: { errors } } = useForm<VerificationData>({
     resolver: zodResolver(verificationSchema),
     defaultValues: { otp: ["", "", "", "", ""] },
   });
@@ -39,8 +40,9 @@ export default function VerificationPage() {
 
   const onSubmit = (data: VerificationData) => {
     console.log("Verifying:", data);
+    // Here you would call your backend OTP verification API
     setIsVerified(true);
-    setTimeout(() => (window.location.href = "/signup/details"), 2000);
+    setTimeout(() => onNext(), 1500); // move to DetailsForm step
   };
 
   return (
@@ -49,7 +51,7 @@ export default function VerificationPage() {
         <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-md text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Verification</h2>
           <p className="text-gray-500 mb-6 text-sm">
-            Enter the OTP code sent to <strong>johndoe@gmail.com</strong>
+            Enter the OTP code sent to <strong>{email}</strong>
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -61,9 +63,7 @@ export default function VerificationPage() {
                   inputMode="numeric"
                   value={digit}
                   maxLength={1}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    handleChange(e.target.value, i)
-                  }
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(e.target.value, i)}
                   className={`w-12 h-12 border rounded-lg text-center text-lg focus:ring-2 focus:ring-yellow-400 outline-none ${
                     errors.otp ? "border-red-500" : "border-gray-300"
                   }`}
@@ -88,9 +88,7 @@ export default function VerificationPage() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">
             Verified Successfully!
           </h2>
-          <p className="text-gray-500 text-sm">
-            Redirecting to your setup page...
-          </p>
+          <p className="text-gray-500 text-sm">Redirecting to your setup page...</p>
         </div>
       )}
     </div>

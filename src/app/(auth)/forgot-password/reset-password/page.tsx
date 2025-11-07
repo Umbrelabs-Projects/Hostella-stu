@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import FormField from "../forms/FormField";
+import FormField from "../../forms/FormField";
 
 
 interface ResetPasswordForm {

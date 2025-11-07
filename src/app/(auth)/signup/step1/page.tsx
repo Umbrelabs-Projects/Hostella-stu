@@ -36,7 +36,7 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
 
   const onSubmit = (data: Step1Data) => {
     updateSignupData(data);
-    toast.info("Proceeding to student info...");
+    toast.info("Otp sent to your email");
     onNext();
   };
 

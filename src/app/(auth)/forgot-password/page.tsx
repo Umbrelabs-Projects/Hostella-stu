@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
       alert("Reset code sent to your email!");
 
       // ✅ Redirect to verify-code page
-      router.push("/verify-code");
+      router.push("/forgot-password/verify-code");
     } catch (error) {
       console.error(error);
       alert("Failed to send reset code.");

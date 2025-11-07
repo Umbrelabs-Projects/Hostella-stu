@@ -41,7 +41,7 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
   };
 
   return (
-    <div className="flex items-center justify-center mt-12 md:mt-0 mb-4 md:mb-0">
+    <div className="flex items-center justify-center mt-12 md:mt-8 mb-4 md:mb-0">
       <div className="w-full flex flex-col justify-between">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-800">
@@ -77,7 +77,7 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
                 placeholder="Enter your password"
-                className={`w-full border rounded-lg p-3 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
+                className={`w-full border rounded-lg p-3 py-2 pr-10 text-gray-700 focus:ring-1 focus:ring-yellow-400 outline-none transition ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 }`}
               />
@@ -102,7 +102,7 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
                 type={showRePassword ? "text" : "password"}
                 {...register("confirmPassword")}
                 placeholder="Retype your password"
-                className={`w-full border rounded-lg p-3 pr-10 text-gray-700 focus:ring-2 focus:ring-yellow-400 outline-none transition ${
+                className={`w-full border rounded-lg p-3 py-2 pr-10 text-gray-700 focus:ring-1 focus:ring-yellow-400 outline-none transition ${
                   errors.confirmPassword ? "border-red-500" : "border-gray-300"
                 }`}
               />
@@ -123,7 +123,24 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
           >
             {loading ? "Processing..." : "Continue"}
           </Button>
+          {/* Divider */}
+          <div className="relative flex items-center justify-center">
+            <div className="w-full h-px bg-gray-200"></div>
+            <span className="absolute bg-white px-3 text-sm text-gray-400">
+              or
+            </span>
+          </div>
 
+          {/* Google Button */}
+          <Button
+            type="button"
+            variant="outline"
+            className="flex items-center justify-center gap-2 h-10 w-full rounded-lg border border-gray-300 shadow-sm hover:bg-gray-100 transition"
+          >
+            <span className="text-gray-700 font-medium">
+              Sign In with Google
+            </span>
+          </Button>
           <div className="flex justify-center text-sm text-gray-600 pt-3 border-t">
             <p> Already have an account?</p>
             <Link

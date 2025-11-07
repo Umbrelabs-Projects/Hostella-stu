@@ -1,4 +1,3 @@
-// store/useAuthStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setAuthToken, apiFetch } from "@/lib/api";
@@ -39,19 +38,23 @@ export const useAuthStore = create<AuthState>()(
       signupData: {},
 
       updateSignupData: (newData) =>
-        set((state) => ({ signupData: { ...state.signupData, ...newData } })),
+        set((state) => {
+          const updated = { ...state.signupData, ...newData };
+          localStorage.setItem("signup-data", JSON.stringify(updated)); // persist manually
+          return { signupData: updated };
+        }),
 
-      resetSignupData: () => set({ signupData: {} }),
+      resetSignupData: () => {
+        localStorage.removeItem("signup-data"); // remove persisted data
+        return set({ signupData: {} });
+      },
 
       signIn: async (data) => {
         set({ loading: true, error: null });
         try {
           const res = await apiFetch<{ user: User; token: string }>(
             "/auth/login",
-            {
-              method: "POST",
-              body: JSON.stringify(data),
-            }
+            { method: "POST", body: JSON.stringify(data) }
           );
 
           setAuthToken(res.token);
@@ -74,15 +77,14 @@ export const useAuthStore = create<AuthState>()(
 
           const res = await apiFetch<{ user: User; token: string }>(
             "/auth/register",
-            {
-              method: "POST",
-              body: formData,
-            }
+            { method: "POST", body: formData }
           );
 
           setAuthToken(res.token);
           set({ user: res.user, token: res.token, loading: false });
+
           get().resetSignupData();
+          localStorage.removeItem("signup-step"); // reset step after signup
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "SignUp failed";
           set({ error: message, loading: false });
@@ -93,6 +95,8 @@ export const useAuthStore = create<AuthState>()(
         setAuthToken(null);
         set({ user: null, token: null });
         localStorage.removeItem("auth-storage");
+        localStorage.removeItem("signup-step");
+        localStorage.removeItem("signup-data");
       },
 
       restoreSession: async () => {
@@ -109,6 +113,13 @@ export const useAuthStore = create<AuthState>()(
               return;
             }
           }
+
+          // Restore persisted signupData if exists
+          const savedSignup = localStorage.getItem("signup-data");
+          if (savedSignup) {
+            set({ signupData: JSON.parse(savedSignup) });
+          }
+
           set({ loading: false });
         } catch {
           set({ user: null, token: null, loading: false });
@@ -121,6 +132,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         token: state.token,
         user: state.user,
+        signupData: state.signupData, // ✅ persist signupData
       }),
     }
   )

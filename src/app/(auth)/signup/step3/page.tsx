@@ -16,7 +16,7 @@ interface DetailsFormProps {
 }
 
 export default function DetailsForm({ onPrev }: DetailsFormProps) {
-  const { signUp, signupData, loading } = useAuthStore();
+  const { signUp, signupData, clearSignupProgress, loading } = useAuthStore();
   const router = useRouter();
 
   const {
@@ -40,7 +40,6 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
 
   const onSubmit = async (data: Step2Data) => {
     try {
-      // Assert Step1 data is present (TypeScript safe)
       if (
         !signupData.email ||
         !signupData.password ||
@@ -59,6 +58,8 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
 
       await signUp(fullData);
       toast.success("Signup successful!");
+
+      clearSignupProgress();
       router.push("/dashboard");
     } catch {
       toast.error("Signup failed. Please try again.");
@@ -177,18 +178,11 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
         />
 
         {/* Buttons */}
-        <div className="flex justify-between gap-3">
-          <Button
-            type="button"
-            onClick={onPrev}
-            className="w-1/3 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg"
-          >
-            Back
-          </Button>
+        <div className="">
           <Button
             type="submit"
             disabled={loading}
-            className="w-2/3 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg disabled:opacity-70"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg disabled:opacity-70"
           >
             {loading ? "Submitting..." : "Submit"}
           </Button>

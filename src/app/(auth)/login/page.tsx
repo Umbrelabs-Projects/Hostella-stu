@@ -39,7 +39,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center mt-12 md:mt-0 justify-center">
+    <div className="flex items-center mt-12 md:mt-0 justify-center mb-4 md:mb-0">
       <div className="w-full ">
         {/* Header */}
         <div className="text-center">
@@ -106,8 +106,15 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Divider */}
-          <div className="relative flex items-center justify-center">
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200"
+          >
+            Sign In
+          </button>
+                    {/* Divider */}
+                    <div className="relative flex items-center justify-center">
             <div className="w-full h-px bg-gray-200"></div>
             <span className="absolute bg-white px-3 text-sm text-gray-400">
               or
@@ -124,14 +131,6 @@ export default function LoginPage() {
               Sign In with Google
             </span>
           </Button>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200"
-          >
-            Sign In
-          </button>
         </form>
 
         {/* Footer */}

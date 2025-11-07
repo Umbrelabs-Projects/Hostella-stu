@@ -5,23 +5,25 @@ import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  mainSignupSchema,
-  MainSignupData,
-} from "../../validations/mainSignupSchema";
-import FormField from "../../forms/FormField";
 import Link from "next/link";
+
+import {
+  signupSchema,
+  SignupFormData,
+} from "@/app/(auth)/validations/signupSchema";
+import FormField from "../../forms/FormField";
 
 export default function MainSignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
 
+  // Initialize form using unified signupSchema
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<MainSignupData>({
-    resolver: zodResolver(mainSignupSchema),
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -29,17 +31,20 @@ export default function MainSignUp() {
     },
   });
 
-  const onSubmit = (data: MainSignupData) => {
+  const onSubmit = (data: SignupFormData) => {
     console.log("Main signup:", data);
+    // Example: redirect after signup success
     window.location.href = "/signup/verify";
   };
 
   return (
-    <div className="flex items-center justify-center mt-12 md:mt-0">
+    <div className="flex items-center justify-center mt-12 md:mt-0 mb-4 md:mb-0">
       <div className="w-full flex flex-col justify-between">
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800">Create an Account</h2>
+          <h2 className="text-3xl font-bold text-gray-800">
+            Create an Account
+          </h2>
           <p className="text-gray-500 text-sm mt-2">
             Sign up to continue to{" "}
             <span className="text-yellow-500 font-medium">Hostella</span>
@@ -47,7 +52,10 @@ export default function MainSignUp() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 md:space-y-4 flex-1 mt-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5 md:space-y-4 flex-1 mt-6"
+        >
           {/* Email Field */}
           <FormField
             label="Email"
@@ -110,6 +118,14 @@ export default function MainSignUp() {
             </div>
           </FormField>
 
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200"
+          >
+            Sign Up
+          </button>
+
           {/* Divider */}
           <div className="relative flex items-center justify-center">
             <div className="w-full h-px bg-gray-200"></div>
@@ -124,17 +140,10 @@ export default function MainSignUp() {
             variant="outline"
             className="flex items-center justify-center gap-2 h-10 w-full rounded-lg border border-gray-300 shadow-sm hover:bg-gray-100 transition"
           >
-          
-            <span className="text-gray-700 font-medium">Sign Up with Google</span>
+            <span className="text-gray-700 font-medium">
+              Sign Up with Google
+            </span>
           </Button>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md transition duration-200"
-          >
-            Continue
-          </button>
         </form>
 
         {/* Footer */}

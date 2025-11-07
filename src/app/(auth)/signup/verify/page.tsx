@@ -44,7 +44,7 @@ export default function VerificationPage() {
   };
 
   return (
-    <div className="flex justify-center items-center bg-gray-50 mt-[12rem] md:mt-0">
+    <div className="flex justify-center items-center bg-gray-50 my-[3rem] md:mt-0">
       {!isVerified ? (
         <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-md text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Verification</h2>

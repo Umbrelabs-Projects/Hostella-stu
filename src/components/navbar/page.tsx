@@ -30,7 +30,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed inset-x-0 top-12 z-30 pointer-events-auto">
+    <nav className="fixed inset-x-0 top-5 z-30 pointer-events-auto">
       <div className="mx-2 md:mx-auto max-w-2xl relative">
         <div
           className="w-full bg-white/85 backdrop-blur-md border border-gray-100 rounded-r-3xl

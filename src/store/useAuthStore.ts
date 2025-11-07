@@ -21,6 +21,7 @@ interface AuthState {
   signupData: Partial<FullSignUpData>;
   updateSignupData: (newData: Partial<FullSignUpData>) => void;
   resetSignupData: () => void;
+  clearSignupProgress: () => void;
 
   signIn: (data: SignInFormData) => Promise<void>;
   signUp: (data: FullSignUpData) => Promise<void>;
@@ -45,8 +46,14 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       resetSignupData: () => {
-        localStorage.removeItem("signup-data"); // remove persisted data
+        localStorage.removeItem("signup-data");
         return set({ signupData: {} });
+      },
+
+      clearSignupProgress: () => {
+        localStorage.removeItem("signup-step");
+        localStorage.removeItem("signup-data");
+        set({ signupData: {} });
       },
 
       signIn: async (data) => {
@@ -83,8 +90,8 @@ export const useAuthStore = create<AuthState>()(
           setAuthToken(res.token);
           set({ user: res.user, token: res.token, loading: false });
 
-          get().resetSignupData();
-          localStorage.removeItem("signup-step"); // reset step after signup
+          // ✅ clear all local storage signup progress
+          get().clearSignupProgress();
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "SignUp failed";
           set({ error: message, loading: false });
@@ -95,8 +102,7 @@ export const useAuthStore = create<AuthState>()(
         setAuthToken(null);
         set({ user: null, token: null });
         localStorage.removeItem("auth-storage");
-        localStorage.removeItem("signup-step");
-        localStorage.removeItem("signup-data");
+        get().clearSignupProgress();
       },
 
       restoreSession: async () => {
@@ -132,7 +138,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         token: state.token,
         user: state.user,
-        signupData: state.signupData, // ✅ persist signupData
+        signupData: state.signupData,
       }),
     }
   )

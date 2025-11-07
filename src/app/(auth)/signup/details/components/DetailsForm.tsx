@@ -1,26 +1,24 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { LogIn } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import {
   signupSchema,
   SignupFormData,
 } from "../../../validations/signupSchema";
 import FormField from "../../../forms/FormField";
 import PdfUploadField from "./PdfUploadField";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 
 export default function DetailsForm() {
   const router = useRouter();
+
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -39,32 +37,29 @@ export default function DetailsForm() {
     },
   });
 
+  // ✅ type-safe error type
+  const onError = (errors: FieldErrors<SignupFormData>) => {
+    console.error("❌ Validation errors:", errors);
+  };
+
   const onSubmit = (data: SignupFormData) => {
-    console.log("Form submitted:", data);
-    // const file = data.admissionLetter?.[0];
-    // if (file) {
-    //   console.log("Uploaded file:", file.name, file.size);
-    // }
+    console.log("✅ Form submitted:", data);
+    const file = data.admissionLetter?.[0];
+    if (file) {
+      console.log("Uploaded file:", file.name, file.size);
+    }
 
     // Navigate to dashboard
     router.push("/dashboard");
   };
 
-  const onError = (errors: any) => {
-    console.error("❌ Validation errors:", errors);
-  };
-  
   return (
     <div className="w-full max-w-xl bg-white rounded-2xl pt-12 mb-6 md:mb-0 md:pt-0 px-8">
       <h2 className="text-3xl font-bold text-gray-800 text-center mb-2">
         Student Info
       </h2>
-      <p className="text-center text-gray-500 text-sm mb-6">
-        Let’s get to know you well
-      </p>
 
       <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
-
         {/* Name Fields */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -142,6 +137,27 @@ export default function DetailsForm() {
           />
         </div>
 
+        {/* School */}
+        <FormField
+          label="School"
+          name="school"
+          register={register}
+          error={errors.school}
+        >
+          <select
+            {...register("school")}
+            className={`mt-1 w-full p-2.5 border rounded-lg text-gray-700 focus:ring-1 focus:ring-yellow-400 outline-none ${
+              errors.school ? "border-red-500" : "border-gray-300"
+            }`}
+          >
+            <option value="">Select University</option>
+            <option value="KNUST">
+              Kwame Nkrumah University of Science and Technology
+            </option>
+            <option value="KsTU">Kumasi Technical University</option>
+          </select>
+        </FormField>
+
         <PdfUploadField
           name="admissionLetter"
           register={register}
@@ -149,11 +165,9 @@ export default function DetailsForm() {
           error={errors.admissionLetter}
         />
 
-        {/* Submit */}
-
         <Button
           type="submit"
-          className="w-full cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200"
+          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200"
         >
           Continue
         </Button>

@@ -53,12 +53,11 @@ export default function PdfUploadField<T extends FieldValues>({
       });
     }
   };
-  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFileName(file.name); 
+      setFileName(file.name);
       updateFileValue(e.target.files);
     } else {
       setFileName("");

@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-      await signIn(data); // ✅ pass the whole object
+      await signIn(data); 
       toast.success("Welcome back!");
       router.push("/dashboard"); // redirect to protected route
     } catch {
@@ -38,8 +38,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-lg">
+    <div className="flex items-center justify-center bg-slate-50">
+      <div className="w-full max-w-md p-6 bg-white">
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>

@@ -23,7 +23,7 @@ export default function AuthLayout({
           }}
         ></div>
 
-        {/* Right Side - Form */}
+        {/* Right Side - Auth pages */}
         <div className="absolute md:relative rounded-t-2xl md:rounded-none w-full mt-[12rem] md:my-8 md:w-1/2 flex items-center justify-center bg-white">
           {children}
         </div>

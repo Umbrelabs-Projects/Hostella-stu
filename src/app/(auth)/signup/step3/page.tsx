@@ -41,7 +41,11 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
   const onSubmit = async (data: Step2Data) => {
     try {
       // Assert Step1 data is present (TypeScript safe)
-      if (!signupData.email || !signupData.password || !signupData.confirmPassword) {
+      if (
+        !signupData.email ||
+        !signupData.password ||
+        !signupData.confirmPassword
+      ) {
         toast.error("Step 1 data is missing.");
         return;
       }
@@ -54,7 +58,7 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
       };
 
       await signUp(fullData);
-      toast.success("Signup successful! Redirecting...");
+      toast.success("Signup successful!");
       router.push("/dashboard");
     } catch {
       toast.error("Signup failed. Please try again.");
@@ -63,18 +67,37 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
 
   return (
     <div className="w-full max-w-xl bg-white rounded-2xl pt-12 mb-6 md:mb-0 md:pt-0 px-8">
-      <h2 className="text-3xl font-bold text-gray-800 text-center mb-2">Student Info</h2>
+      <h2 className="text-3xl font-bold text-gray-800 text-center mb-2">
+        Student Info
+      </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* First Name & Last Name */}
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="First Name" name="firstName" register={register} error={errors.firstName} />
-          <FormField label="Last Name" name="lastName" register={register} error={errors.lastName} />
+          <FormField
+            label="First Name"
+            name="firstName"
+            placeholder="Elvis"
+            register={register}
+            error={errors.firstName}
+          />
+          <FormField
+            label="Last Name"
+            name="lastName"
+            placeholder="Owusu Gyasi"
+            register={register}
+            error={errors.lastName}
+          />
         </div>
 
         {/* Gender & Level */}
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Gender" name="gender" register={register} error={errors.gender}>
+          <FormField
+            label="Gender"
+            name="gender"
+            register={register}
+            error={errors.gender}
+          >
             <select
               {...register("gender")}
               className={`mt-1 w-full p-2.5 border rounded-lg ${
@@ -87,7 +110,12 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
             </select>
           </FormField>
 
-          <FormField label="Level" name="level" register={register} error={errors.level}>
+          <FormField
+            label="Level"
+            name="level"
+            register={register}
+            error={errors.level}
+          >
             <select
               {...register("level")}
               className={`mt-1 w-full p-2.5 border rounded-lg ${
@@ -105,12 +133,29 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
 
         {/* Student ID & Phone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Student ID" name="studentId" register={register} error={errors.studentId} />
-          <FormField label="Phone" name="phone" register={register} error={errors.phone} />
+          <FormField
+            label="Student ID"
+            name="studentId"
+            placeholder="20724143"
+            register={register}
+            error={errors.studentId}
+          />
+          <FormField
+            label="Phone"
+            name="phone"
+            placeholder="0552778478"
+            register={register}
+            error={errors.phone}
+          />
         </div>
 
         {/* School */}
-        <FormField label="School" name="school" register={register} error={errors.school}>
+        <FormField
+          label="School"
+          name="school"
+          register={register}
+          error={errors.school}
+        >
           <select
             {...register("school")}
             className={`mt-1 w-full p-2.5 border rounded-lg ${
@@ -133,17 +178,17 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
 
         {/* Buttons */}
         <div className="flex justify-between gap-3">
-          <button
+          <Button
             type="button"
             onClick={onPrev}
             className="w-1/3 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg"
           >
             Back
-          </button>
+          </Button>
           <Button
             type="submit"
             disabled={loading}
-            className="w-2/3 bg-yellow-500 hover:bg-yellow-600 text-white py-2.5 rounded-lg disabled:opacity-70"
+            className="w-2/3 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg disabled:opacity-70"
           >
             {loading ? "Submitting..." : "Submit"}
           </Button>

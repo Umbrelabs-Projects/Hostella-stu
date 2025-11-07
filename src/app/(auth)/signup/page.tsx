@@ -1,14 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainSignUp from "./step1/page";
 import { useAuthStore } from "@/store/useAuthStore";
 import VerificationPage from "./step2/page";
 import DetailsForm from "./step3/page";
 
 export default function SignupPage() {
-  const [step, setStep] = useState(1);
   const { signupData } = useAuthStore();
+
+  const [step, setStep] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedStep = localStorage.getItem("signup-step");
+      return savedStep ? Number(savedStep) : 1;
+    }
+    return 1;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("signup-step", String(step));
+  }, [step]);
 
   const nextStep = () => setStep((s) => s + 1);
   const prevStep = () => setStep((s) => s - 1);

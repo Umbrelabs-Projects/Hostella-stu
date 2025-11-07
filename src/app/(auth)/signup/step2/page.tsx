@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useRef, ChangeEvent, KeyboardEvent, ClipboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,10 +18,12 @@ type VerificationData = z.infer<typeof verificationSchema>;
 interface VerificationPageProps {
   email: string;
   onNext: () => void;
+  maskOtp?: boolean; // optional: mask input for security
 }
 
-export default function VerificationPage({ email, onNext }: VerificationPageProps) {
+export default function VerificationPage({ email, onNext, maskOtp = false }: VerificationPageProps) {
   const [isVerified, setIsVerified] = useState(false);
+  const inputRefs = useRef<HTMLInputElement[]>([]);
 
   const { handleSubmit, setValue, watch, formState: { errors } } = useForm<VerificationData>({
     resolver: zodResolver(verificationSchema),
@@ -35,14 +37,39 @@ export default function VerificationPage({ email, onNext }: VerificationPageProp
       const updatedOtp = [...otp];
       updatedOtp[index] = value;
       setValue("otp", updatedOtp);
+
+      // Move focus to next input
+      if (value && inputRefs.current[index + 1]) {
+        inputRefs.current[index + 1].focus();
+      }
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Backspace" && !otp[index] && inputRefs.current[index - 1]) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData("text").trim();
+    if (/^\d{5}$/.test(pasteData)) {
+      const pasteArray = pasteData.split("");
+      setValue("otp", pasteArray);
+      pasteArray.forEach((_, i) => {
+        if (inputRefs.current[i]) inputRefs.current[i].value = maskOtp ? "" : pasteArray[i];
+      });
+      inputRefs.current[4].focus();
+    } else {
+      toast.error("Paste only 5 numeric digits.");
     }
   };
 
   const onSubmit = (data: VerificationData) => {
     console.log("Verifying:", data);
-    // Here you would call your backend OTP verification API
     setIsVerified(true);
-    setTimeout(() => onNext(), 1500); // move to DetailsForm step
+    setTimeout(() => onNext(), 1500);
   };
 
   return (
@@ -59,20 +86,26 @@ export default function VerificationPage({ email, onNext }: VerificationPageProp
               {otp.map((digit, i) => (
                 <input
                   key={i}
-                  type="text"
+                  ref={(el) => {
+                    inputRefs.current[i] = el!;
+                  }}
+                  type={maskOtp ? "password" : "text"}
                   inputMode="numeric"
                   value={digit}
                   maxLength={1}
+                  autoComplete="one-time-code"
+                  pattern="[0-9]*"
                   onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(e.target.value, i)}
+                  onKeyDown={(e) => handleKeyDown(e, i)}
+                  onPaste={handlePaste}
                   className={`w-12 h-12 border rounded-lg text-center text-lg focus:ring-2 focus:ring-yellow-400 outline-none ${
                     errors.otp ? "border-red-500" : "border-gray-300"
                   }`}
                 />
               ))}
             </div>
-            {errors.otp && (
-              <p className="text-red-500 text-sm mb-4">{errors.otp.message}</p>
-            )}
+
+            {errors.otp && <p className="text-red-500 text-sm mb-4">{errors.otp.message}</p>}
 
             <button
               type="submit"

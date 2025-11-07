@@ -44,14 +44,19 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
     <div className="flex items-center justify-center mt-12 md:mt-0 mb-4 md:mb-0">
       <div className="w-full flex flex-col justify-between">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800">Create an Account</h2>
+          <h2 className="text-3xl font-bold text-gray-800">
+            Create an Account
+          </h2>
           <p className="text-gray-500 text-sm mt-2">
             Sign up to continue to{" "}
             <span className="text-yellow-500 font-medium">Hostella</span>
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 md:space-y-4 mt-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5 md:space-y-4 mt-6"
+        >
           <FormField
             label="Email"
             name="email"
@@ -61,7 +66,12 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
             type="email"
           />
 
-          <FormField label="Password" name="password" register={register} error={errors.password}>
+          <FormField
+            label="Password"
+            name="password"
+            register={register}
+            error={errors.password}
+          >
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -114,8 +124,8 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
             {loading ? "Processing..." : "Continue"}
           </Button>
 
-          <div className="text-center text-sm text-gray-600 pt-3 border-t">
-            Already have an account?{" "}
+          <div className="flex justify-center text-sm text-gray-600 pt-3 border-t">
+            <p> Already have an account?</p>
             <Link
               href="/login"
               className="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium transition"

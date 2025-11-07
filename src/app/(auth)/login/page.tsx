@@ -10,7 +10,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import FormField from "../forms/FormField";
 import { useAuthStore } from "@/store/useAuthStore";
-import { signInSchema, SignInFormData } from "@/app/(auth)/validations/signInSchema";
+import {
+  signInSchema,
+  SignInFormData,
+} from "@/app/(auth)/validations/signInSchema";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +32,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-      await signIn(data); 
+      await signIn(data);
       toast.success("Welcome back!");
       router.push("/dashboard"); // redirect to protected route
     } catch {
@@ -38,13 +41,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-slate-50">
+    <div className="flex items-center justify-center mt-12 md:mt-0 mb-6 md:mb-0">
       <div className="w-full max-w-md p-6 bg-white">
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
           <p className="text-gray-500 text-sm mt-1">
-            Sign in to your <span className="text-yellow-500 font-medium">Hostella</span> account
+            Sign in to your{" "}
+            <span className="text-yellow-500 font-medium">Hostella</span>{" "}
+            account
           </p>
         </div>
 
@@ -115,7 +120,9 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative flex items-center justify-center">
             <div className="w-full h-px bg-gray-200"></div>
-            <span className="absolute bg-white px-3 text-sm text-gray-400">or</span>
+            <span className="absolute bg-white px-3 text-sm text-gray-400">
+              or
+            </span>
           </div>
 
           {/* Google Button */}
@@ -124,13 +131,15 @@ export default function LoginPage() {
             variant="outline"
             className="flex items-center justify-center gap-2 h-10 w-full rounded-lg border border-gray-300 shadow-sm hover:bg-gray-100 transition"
           >
-            <span className="text-gray-700 font-medium">Sign In with Google</span>
+            <span className="text-gray-700 font-medium">
+              Sign In with Google
+            </span>
           </Button>
         </form>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-600 pt-3 border-t mt-6">
-          Don’t have an account?{" "}
+        <div className="flex justify-center text-sm text-gray-600 pt-3 border-t mt-6">
+          <p>Don’t have an account?{" "}</p>
           <Link
             href="/signup"
             className="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium transition"

@@ -1,38 +1,47 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({
+  children,
+  fallback = null,
+}: ProtectedRouteProps) {
   const router = useRouter();
-  const { user, token, loading, restoreSession } = useAuthStore();
+  const { restoreSession } = useAuthStore(); // no more 'user' or 'token'
+
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Wait for store to restore session from localStorage
-      await restoreSession();
+      try {
+        await restoreSession();
+        const { user, token } = useAuthStore.getState();
 
-      // If no token or user, redirect immediately
-      if (!user || !token) {
-        toast.error("Please sign in to access this page.");
+        if (!user || !token) {
+          toast.error("Please sign in to access this page.");
+          router.replace("/login");
+        } else {
+          setCheckingAuth(false);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to verify session. Please sign in again.");
         router.replace("/login");
       }
     };
 
     checkAuth();
-  }, [router, restoreSession, user, token]);
+  }, [router, restoreSession]);
 
-  // Block render completely until authentication is confirmed
-  if (loading || !user || !token) {
-    return null;
-  }
+  if (checkingAuth) return <>{fallback}</>;
 
-  // Authenticated — render protected content
   return <>{children}</>;
 }

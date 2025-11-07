@@ -38,13 +38,27 @@ export default function PdfUploadField<T extends FieldValues>({
   };
 
   const updateFileValue = (files: FileList | null) => {
-    setValue(name, files as unknown as T[Path<T>], { shouldValidate: true });
+    if (files && files.length > 0) {
+      // ✅ Store an actual FileList, not a proxy or null
+      const dt = new DataTransfer();
+      dt.items.add(files[0]);
+      setValue(name, dt.files as unknown as T[Path<T>], {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    } else {
+      setValue(name, null as unknown as T[Path<T>], {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
   };
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFileName(file.name);
+      setFileName(file.name); 
       updateFileValue(e.target.files);
     } else {
       setFileName("");

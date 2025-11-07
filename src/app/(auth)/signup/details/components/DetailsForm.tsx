@@ -11,8 +11,11 @@ import {
 } from "../../../validations/signupSchema";
 import FormField from "../../../forms/FormField";
 import PdfUploadField from "./PdfUploadField";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function DetailsForm() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -29,24 +32,28 @@ export default function DetailsForm() {
       school: "",
       studentId: "",
       phone: "",
-      admissionLetter: undefined,
+      admissionLetter: null,
       email: undefined,
       password: undefined,
       confirmPassword: undefined,
     },
   });
-  
 
   const onSubmit = (data: SignupFormData) => {
     console.log("Form submitted:", data);
-    // debug: check the watched admissionLetter
-    console.log("watched admissionLetter:", watch("admissionLetter"));
-    const file = data.admissionLetter?.[0];
-    if (file) {
-      console.log("Uploaded file:", file.name, file.size);
-    }
+    // const file = data.admissionLetter?.[0];
+    // if (file) {
+    //   console.log("Uploaded file:", file.name, file.size);
+    // }
+
+    // Navigate to dashboard
+    router.push("/dashboard");
   };
 
+  const onError = (errors: any) => {
+    console.error("❌ Validation errors:", errors);
+  };
+  
   return (
     <div className="w-full max-w-xl bg-white rounded-2xl pt-12 mb-6 md:mb-0 md:pt-0 px-8">
       <h2 className="text-3xl font-bold text-gray-800 text-center mb-2">
@@ -56,7 +63,8 @@ export default function DetailsForm() {
         Let’s get to know you well
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
+
         {/* Name Fields */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -142,12 +150,13 @@ export default function DetailsForm() {
         />
 
         {/* Submit */}
-        <button
+
+        <Button
           type="submit"
           className="w-full cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all duration-200"
         >
           Continue
-        </button>
+        </Button>
       </form>
     </div>
   );

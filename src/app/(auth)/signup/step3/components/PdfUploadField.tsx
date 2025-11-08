@@ -96,6 +96,9 @@ export default function PdfUploadField<T extends FieldValues>({
 
   return (
     <div className="w-full">
+      <label className="block text-sm mb-2 font-medium text-gray-700">
+        Upload Admission letter
+      </label>
       {!fileName ? (
         <div
           onDragOver={handleDragOver}
@@ -116,8 +119,8 @@ export default function PdfUploadField<T extends FieldValues>({
           />
           <p className="text-sm font-medium text-center">
             {isDragging
-              ? "Drop the file here..."
-              : "Click to choose or drag a file here"}
+              ? "Drop file here..."
+              : "Click to choose or drag file here"}
           </p>
           <p className="text-xs text-gray-400 mt-1">PDF format only</p>
           <input

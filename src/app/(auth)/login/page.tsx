@@ -34,15 +34,15 @@ export default function LoginPage() {
     try {
       await signIn(data);
       toast.success("Welcome back!");
-      router.push("/dashboard"); // redirect to protected route
+      router.push("/dashboard");
     } catch {
       toast.error("Failed to sign in. Please try again.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center mt-12 md:mt-0 mb-6 md:mb-0">
-      <div className="w-full max-w-md p-6 bg-white">
+    <div className="flex items-center justify-center mt-12 md:mt-8 mb-4 md:mb-0">
+      <div className="w-full flex flex-col justify-between">
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
@@ -139,7 +139,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="flex justify-center text-sm text-gray-600 pt-3 border-t mt-6">
-          <p>Don’t have an account?{" "}</p>
+          <p>Don’t have an account? </p>
           <Link
             href="/signup"
             className="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium transition"

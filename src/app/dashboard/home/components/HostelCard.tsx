@@ -1,0 +1,50 @@
+"use client";
+
+import Image, { StaticImageData } from "next/image";
+import { Star, MapPin } from "lucide-react";
+
+type Hostel = {
+  id: number;
+  name: string;
+  location: string;
+  rating: number;
+  description: string;
+  image: string | StaticImageData;
+};
+
+interface HostelCardProps {
+  hostel: Hostel;
+}
+
+export default function HostelCard({ hostel }: HostelCardProps) {
+  return (
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col">
+      <div className="relative w-full h-48">
+        <Image
+          src={hostel.image}
+          alt={hostel.name}
+          fill
+          className="object-cover"
+        />
+      </div>
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold text-lg">{hostel.name}</h3>
+            <div className="flex items-center gap-1 text-yellow-500">
+              <Star size={16} />
+              <span className="text-sm text-gray-700">{hostel.rating}</span>
+            </div>
+          </div>
+          <p className="text-gray-500 text-sm mt-1">{hostel.description}</p>
+          <div className="flex items-center mt-2 text-gray-600 text-sm">
+            <MapPin size={14} className="mr-1" /> {hostel.location}
+          </div>
+        </div>
+        <button className="mt-4 w-full cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 rounded-lg transition">
+          View Room Types
+        </button>
+      </div>
+    </div>
+  );
+}

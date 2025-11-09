@@ -2,6 +2,7 @@
 
 import Image, { StaticImageData } from "next/image";
 import { Star, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Hostel = {
   id: number;
@@ -17,6 +18,11 @@ interface HostelCardProps {
 }
 
 export default function HostelCard({ hostel }: HostelCardProps) {
+  const router = useRouter();
+
+  const handleViewRooms = () => {
+    router.push(`/dashboard/home/rooms/${hostel.id}`);
+  };
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col">
       <div className="relative w-full h-48">
@@ -41,7 +47,10 @@ export default function HostelCard({ hostel }: HostelCardProps) {
             <MapPin size={14} className="mr-1" /> {hostel.location}
           </div>
         </div>
-        <button className="mt-4 w-full cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 rounded-lg transition">
+        <button
+          onClick={handleViewRooms}
+          className="mt-4 w-full cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 rounded-lg transition"
+        >
           View Room Types
         </button>
       </div>

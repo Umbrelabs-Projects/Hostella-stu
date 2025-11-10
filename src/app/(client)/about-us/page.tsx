@@ -7,7 +7,7 @@ import OurTeam from "./OurTeam/OurTeam";
 
 export default function AboutUs() {
   return (
-    <div>
+    <div className="mt-8">
       <AboutUsStory />
       <AboutMission />
       <KeyMetrics />

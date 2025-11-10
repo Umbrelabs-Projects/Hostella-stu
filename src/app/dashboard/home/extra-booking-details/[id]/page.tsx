@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { hostelsData, roomsData } from "@/lib/constants";
 import ExtraDetailsForm from "../components/ExtraDetailsForm";
 import Image from "next/image";
-import { images } from "@/lib/images";
 import { ExtraDetailsFormValues } from "../schemas/booking";
 import BookingDetails from "../components/BookingDetails";
 
@@ -30,7 +29,7 @@ export default function ExtraBookingDetails() {
       `Proceeding to payment for ${data.roomTitle} at ${data.hostelName}\nEmergency Contact: ${data.emergencyContactName}`
     );
 
-    router.push("/dashboard/home/payment");
+    router.push(`/dashboard/payment/${room.id}`)
   };
 
   return (
@@ -39,7 +38,7 @@ export default function ExtraBookingDetails() {
         {/* Image Section */}
         <div className="relative w-full h-64  md:h-auto md:w-1/2">
           <Image
-            src={room.image || images.room2}
+            src={room.image}
             alt={room.title}
             fill
             className="object-cover"

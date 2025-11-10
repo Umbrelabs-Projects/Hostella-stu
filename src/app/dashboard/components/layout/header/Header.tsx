@@ -16,8 +16,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
   let title = "Dashboard";
 
   // Show "Payment" if the path includes "payment"
-  if (segments.includes("payment")) {
-    title = "Payment";
+  if (segments.includes("success")) {
+    title = "Booking Successful";
   } else if (segments.length > 0) {
     const lastSegment = segments[segments.length - 1];
 

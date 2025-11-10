@@ -18,6 +18,8 @@ import roomBannerBg from "../../public/rooms/room-banner-bg.png";
 import oneInRoom from "../../public/rooms/one-in-a-room.png";
 import twoInRoom from "../../public/rooms/two-in-a-room.png";
 import bookingDetails from "../../public/booking/bookingDetails.png";
+import bookingDetailsBg from "../../public/booking/bookingDetailsBg.png";
+import bookingSuccessful from "../../public/booking/bookingSuccessful.png";
 export const images = {
   hostellaLogo,
   room1,
@@ -38,5 +40,7 @@ export const images = {
   roomBannerBg,
   oneInRoom,
   twoInRoom,
-  bookingDetails
+  bookingDetails,
+  bookingDetailsBg,
+  bookingSuccessful,
 };

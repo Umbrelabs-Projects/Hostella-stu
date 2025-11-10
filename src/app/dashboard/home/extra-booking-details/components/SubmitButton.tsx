@@ -8,7 +8,7 @@ export default function SubmitButton({ label = "Proceed to Make Payment" }: Subm
   return (
     <button
       type="submit"
-      className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 rounded-xl transition-colors mt-4"
+      className="w-full cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 rounded-xl transition-colors mt-4"
     >
       {label}
     </button>

@@ -4,9 +4,11 @@ import { useState } from "react";
 import SearchBar from "../../components/SearchBar";
 import RoomCard from "./RoomCard";
 import { roomsData } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 
 export default function RoomList() {
   const [query, setQuery] = useState("");
+  const router = useRouter();
 
   const filteredRooms = roomsData.filter((room) =>
     room.title.toLowerCase().includes(query.toLowerCase())
@@ -29,7 +31,7 @@ export default function RoomList() {
               price={room.price}
               description={room.description}
               available={room.available}
-              onBook={() => alert(`Booking ${room.title}`)}
+              onBook={() => router.push(`/dashboard/home/extra-booking-details/${room.id}`)}
             />
           ))
         ) : (

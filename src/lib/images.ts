@@ -21,6 +21,10 @@ import bookingDetails from "../../public/booking/bookingDetails.png";
 import bookingDetailsBg from "../../public/booking/bookingDetailsBg.png";
 import bookingSuccessful from "../../public/booking/bookingSuccessful.png";
 import checkMark from "../../public/payment/checkMark.png";
+import mtn from "../../public/payment/mtn.png";
+import telecel from "../../public/payment/telecel.png";
+import airtelTigo from "../../public/payment/airtelTigo.png";
+
 export const images = {
   hostellaLogo,
   room1,
@@ -44,5 +48,8 @@ export const images = {
   bookingDetails,
   bookingDetailsBg,
   bookingSuccessful,
-  checkMark
+  checkMark,
+  mtn,
+  telecel,
+  airtelTigo
 };

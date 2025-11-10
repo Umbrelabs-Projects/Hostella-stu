@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function BookingSuccessCard() {
   return (
     <div className="w-full md:w-1/2 bg-white rounded-xl overflow-hidden shadow-sm">
-      <div className="relative h-72 md:h-[24.8rem]">
+      <div className="relative h-72 md:h-[30rem]">
         <Image
           src={images.bookingSuccessful}
           alt="Booking success"

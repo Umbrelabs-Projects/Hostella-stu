@@ -5,7 +5,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 export default function BookingDetailsCard() {
   const { extraBookingDetails } = useAuthStore();
 
-  // Fields shown on the UI
   const details = [
     { label: "Booking ID", key: "bookingId" },
     { label: "Hostel", key: "hostelName" },
@@ -22,19 +21,13 @@ export default function BookingDetailsCard() {
     if (!extraBookingDetails || Object.keys(extraBookingDetails).length === 0)
       return alert("No booking details to download.");
 
-    // Include everything from the store for the downloaded file
     const allDetails = Object.entries(extraBookingDetails)
       .map(([key, value]) => {
-        // Format key: convert camelCase → Normal Case
         const formattedKey = key
           .replace(/([A-Z])/g, " $1")
           .replace(/^./, (str) => str.toUpperCase());
         let formattedValue = value;
-
-        if (typeof value === "boolean") {
-          formattedValue = value ? "Yes" : "No";
-        }
-
+        if (typeof value === "boolean") formattedValue = value ? "Yes" : "No";
         return `${formattedKey}: ${formattedValue || "N/A"}`;
       })
       .join("\n");
@@ -61,37 +54,46 @@ export default function BookingDetailsCard() {
     extraBookingDetails && Object.keys(extraBookingDetails).length > 0;
 
   return (
-    <div className="w-full md:w-1/2 bg-white rounded-2xl shadow-sm p-6">
-      <h2 className="font-semibold mb-4 text-lg">Booking Details</h2>
+    <div className="w-full md:w-1/2 bg-white rounded-3xl shadow-lg px-8 py-5 border border-gray-100">
+      <h2 className="font-bold text-xl mb-5 text-gray-800 border-b pb-">
+        Booking Details
+      </h2>
 
       {hasDetails ? (
-        <div className="space-y-2 text-sm text-gray-700">
-          {details.map(({ label, key, highlight }) => (
-            <p
-              key={key}
-              className={highlight ? "text-green-600 font-semibold" : ""}
-            >
-              <strong>{label}:</strong>{" "}
-              {key === "hasMedicalCondition"
+        <div className="space-y-1 text-gray-700">
+          {details.map(({ label, key, highlight }) => {
+            const value =
+              key === "hasMedicalCondition"
                 ? extraBookingDetails[key as keyof typeof extraBookingDetails]
                   ? "Yes"
                   : "No"
-                : extraBookingDetails[
-                    key as keyof typeof extraBookingDetails
-                  ] || "N/A"}
-            </p>
-          ))}
+                : extraBookingDetails[key as keyof typeof extraBookingDetails] ||
+                  "N/A";
+            return (
+              <div
+                key={key}
+                className={`flex justify-between items-center py-1 rounded-lg transition ${
+                  highlight ? "bg-green-50 font-semibold text-green-700" : "hover:bg-gray-50"
+                }`}
+              >
+                <span className="text-gray-600">{label}</span>
+                <span>{value}</span>
+              </div>
+            );
+          })}
 
           <button
             onClick={handleDownload}
-            className="flex cursor-pointer items-center justify-center gap-2 mt-6 w-full border border-green-600 rounded-lg py-2 hover:bg-green-50 transition"
+            className="mt-5 w-full cursor-pointer flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-xl transition shadow-md"
           >
-            <Download size={18} />
-            <span>Download Booking Form</span>
+            <Download size={20} />
+            Download Booking Form
           </button>
         </div>
       ) : (
-        <p className="text-gray-500 text-sm">No booking details available.</p>
+        <p className="text-gray-400 text-center py-6">
+          No booking details available.
+        </p>
       )}
     </div>
   );

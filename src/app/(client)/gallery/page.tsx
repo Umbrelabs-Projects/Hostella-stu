@@ -27,7 +27,7 @@ const images = [
 
 export default function Gallery() {
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans">
+    <div className="min-h-screen mt-8 bg-white text-gray-800 font-sans">
       <GalleryHeader />
       <GalleryGrid images={images} />
     </div>

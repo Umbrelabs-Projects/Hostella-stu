@@ -4,6 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { HeroCarousel } from "./HeroCarousel";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function HeroSection() {
   return (
@@ -12,20 +13,41 @@ export default function HeroSection() {
       <HeroCarousel />
 
       {/* Overlay content */}
-      <div className="absolute z-10 flex flex-col items-center justify-center space-y-6 px-6">
-        <h1 className="text-4xl md:text-5xl font-semibold text-white drop-shadow-lg">
+      <motion.div
+        className="absolute z-10 flex flex-col items-center justify-center space-y-6 px-6"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+      >
+        <motion.h1
+          className="text-4xl md:text-5xl font-semibold text-white drop-shadow-lg"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+        >
           Book easy, book smart
-        </h1>
-        <p className="text-white/90 max-w-xl text-sm md:text-base leading-relaxed">
+        </motion.h1>
+        <motion.p
+          className="text-white/90 max-w-xl text-sm md:text-base leading-relaxed"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+        >
           Enjoy an unforgettable stay at Hostella with our premium rooms,
           top-tier service, and cozy atmosphere for your perfect getaway.
-        </p>
-        <Link href="/signup">
-          <Button className="bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer text-lg font-semibold px-10 py-6 rounded-full shadow-lg">
-            BOOK NOW
-          </Button>
-        </Link>
-      </div>
+        </motion.p>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          <Link href="/signup">
+            <Button className="bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer text-lg font-semibold px-10 py-6 rounded-full shadow-lg">
+              BOOK NOW
+            </Button>
+          </Link>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }

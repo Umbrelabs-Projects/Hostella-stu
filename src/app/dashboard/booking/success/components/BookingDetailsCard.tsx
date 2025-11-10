@@ -1,5 +1,6 @@
 "use client";
 import { Download } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function BookingDetailsCard() {
@@ -54,8 +55,13 @@ export default function BookingDetailsCard() {
     extraBookingDetails && Object.keys(extraBookingDetails).length > 0;
 
   return (
-    <div className="w-full md:w-1/2 bg-white rounded-3xl shadow-lg px-8 py-5 border border-gray-100">
-      <h2 className="font-bold text-xl mb-5 text-gray-800 border-b pb-">
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="w-full md:w-1/2 bg-white rounded-3xl shadow-lg px-8 py-5 border border-gray-100"
+    >
+      <h2 className="font-bold text-xl mb-5 text-gray-800 border-b pb-2">
         Booking Details
       </h2>
 
@@ -70,31 +76,37 @@ export default function BookingDetailsCard() {
                 : extraBookingDetails[key as keyof typeof extraBookingDetails] ||
                   "N/A";
             return (
-              <div
+              <motion.div
                 key={key}
+                whileHover={{ scale: 1.02, backgroundColor: "#f9fafb" }}
+                transition={{ duration: 0.2 }}
                 className={`flex justify-between items-center py-1 rounded-lg transition ${
-                  highlight ? "bg-green-50 font-semibold text-green-700" : "hover:bg-gray-50"
+                  highlight
+                    ? "bg-green-50 font-semibold text-green-700"
+                    : "hover:bg-gray-50"
                 }`}
               >
                 <span className="text-gray-600">{label}</span>
                 <span>{value}</span>
-              </div>
+              </motion.div>
             );
           })}
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleDownload}
             className="mt-5 w-full cursor-pointer flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-xl transition shadow-md"
           >
             <Download size={20} />
             Download Booking Form
-          </button>
+          </motion.button>
         </div>
       ) : (
         <p className="text-gray-400 text-center py-6">
           No booking details available.
         </p>
       )}
-    </div>
+    </motion.div>
   );
 }

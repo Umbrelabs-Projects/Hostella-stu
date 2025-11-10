@@ -1,5 +1,6 @@
 import React from "react";
 import PaymentMessage from "../reusablecomponent/PaymentMessage";
+import MomoDetails from "./components/MomoDetails";
 
 export default function BankPayment() {
   return (
@@ -9,8 +10,8 @@ export default function BankPayment() {
         {/* Left: Success Message */}
         <PaymentMessage />
 
-        {/* Right: Booking Details */}
-        {/* <BookingDetailsCard /> */}
+        {/* Right: Momo Details */}
+        <MomoDetails />
       </div>
     </div>
   );

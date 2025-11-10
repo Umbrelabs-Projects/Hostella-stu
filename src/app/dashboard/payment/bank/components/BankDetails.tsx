@@ -4,12 +4,13 @@ import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import PdfUploadField from "@/app/(auth)/signup/step3/components/PdfUploadField";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 
-// ✅ Define Zod Schema
+// Define Zod Schema
 const paymentSchema = z.object({
   receipt: z
     .any()
@@ -20,11 +21,11 @@ const paymentSchema = z.object({
     ),
 });
 
-// ✅ Infer TypeScript type
+// Infer TypeScript type
 type PaymentForm = z.infer<typeof paymentSchema>;
 
 export default function BankDetails() {
-  const {extraBookingDetails} = useAuthStore();
+  const { extraBookingDetails } = useAuthStore();
   const router = useRouter();
   const BankDetails = [
     { title: "Amount", value: extraBookingDetails.price },
@@ -32,6 +33,7 @@ export default function BankDetails() {
     { title: "Account Name", value: "Hostella" },
     { title: "Account Number", value: "000000" },
   ];
+
   const {
     register,
     handleSubmit,
@@ -48,34 +50,74 @@ export default function BankDetails() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-md">
+    <motion.div
+      className="flex flex-col gap-6 w-full max-w-md"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
       {/* Payment Note */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+      <motion.div
+        className="bg-white rounded-xl shadow-sm p-5 border border-gray-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+      >
         <p className="text-sm text-gray-700 leading-relaxed">
           Please make sure you make payment to the account below, for Hostella
           wouldn’t be responsible for any wrong transaction on your part.
         </p>
-      </div>
+      </motion.div>
 
       {/* Booking Details */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+      <motion.div
+        className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <motion.h3
+          className="text-lg font-semibold mb-4 text-gray-800"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
           Booking Details
-        </h3>
-        <div className="space-y-3 text-sm text-gray-700">
-          {BankDetails.map((detail) => (
-            <div className="flex justify-between" key={detail.title}>
+        </motion.h3>
+
+        <motion.div
+          className="space-y-3 text-sm text-gray-700"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: { staggerChildren: 0.1 },
+            },
+          }}
+          initial="hidden"
+          animate="visible"
+        >
+          {BankDetails.map((detail, index) => (
+            <motion.div
+              className="flex justify-between"
+              key={detail.title}
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+            >
               <span className="font-medium">{detail.title}:</span>
               <span>{detail.value}</span>
-            </div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Upload Receipt */}
-      <form
+      <motion.form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
       >
         <PdfUploadField
           name="receipt"
@@ -84,14 +126,21 @@ export default function BankDetails() {
           label="Upload Payment Receipt"
           error={errors.receipt}
         />
-        <Button
-          type="submit"
-          className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-medium"
-          disabled={isSubmitting}
+
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 200, damping: 10 }}
         >
-          {isSubmitting ? "Submitting..." : "Submit Receipt"}
-        </Button>
-      </form>
-    </div>
+          <Button
+            type="submit"
+            className="w-full mt-4 cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white font-medium"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Receipt"}
+          </Button>
+        </motion.div>
+      </motion.form>
+    </motion.div>
   );
 }

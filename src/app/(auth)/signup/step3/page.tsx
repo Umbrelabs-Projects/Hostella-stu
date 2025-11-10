@@ -168,12 +168,12 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
             <option value="KsTU">KsTU</option>
           </select>
         </FormField>
-
         {/* Admission Letter */}
         <PdfUploadField
           name="admissionLetter"
           register={register}
           setValue={setValue}
+          label="Upload Admission letter"
           error={errors.admissionLetter}
         />
 

@@ -16,6 +16,7 @@ interface PdfUploadFieldProps<T extends FieldValues> {
   register: UseFormRegister<T>;
   setValue: UseFormSetValue<T>;
   error?: FieldError | FieldErrorsImpl<T>;
+  label?: string;
 }
 
 export default function PdfUploadField<T extends FieldValues>({
@@ -23,6 +24,7 @@ export default function PdfUploadField<T extends FieldValues>({
   register,
   setValue,
   error,
+  label = "Upload File",
 }: PdfUploadFieldProps<T>) {
   const [fileName, setFileName] = React.useState("");
   const [isDragging, setIsDragging] = React.useState(false);
@@ -39,7 +41,7 @@ export default function PdfUploadField<T extends FieldValues>({
 
   const updateFileValue = (files: FileList | null) => {
     if (files && files.length > 0) {
-      // ✅ Store an actual FileList, not a proxy or null
+      // Store an actual FileList, not a proxy or null
       const dt = new DataTransfer();
       dt.items.add(files[0]);
       setValue(name, dt.files as unknown as T[Path<T>], {
@@ -97,14 +99,14 @@ export default function PdfUploadField<T extends FieldValues>({
   return (
     <div className="w-full">
       <label className="block text-sm mb-2 font-medium text-gray-700">
-        Upload Admission letter
+       {label}
       </label>
       {!fileName ? (
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 transition duration-200 cursor-pointer ${
+          className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-lg p- transition duration-200 cursor-pointer ${
             isDragging
               ? "border-yellow-500 bg-yellow-50"
               : error
@@ -113,11 +115,11 @@ export default function PdfUploadField<T extends FieldValues>({
           }`}
         >
           <Upload
-            className={`w-6 h-6 mb-2 ${
+            className={`w-5 h-5 mb-2 ${
               isDragging ? "text-yellow-600" : "text-yellow-500"
             }`}
           />
-          <p className="text-sm font-medium text-center">
+          <p className="text-xs font-medium text-center">
             {isDragging
               ? "Drop file here..."
               : "Click to choose or drag file here"}

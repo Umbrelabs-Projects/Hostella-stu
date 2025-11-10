@@ -3,7 +3,6 @@
 import BookingDetailsCard from "../components/BookingDetailsCard";
 import BookingSuccessCard from "../components/BookingSuccessCard";
 import PaymentMethodSelector from "../components/PaymentMethodSelector";
-import ProceedButton from "../components/ProceedButton";
 
 export default function BookingConfirmation() {
   return (
@@ -18,13 +17,7 @@ export default function BookingConfirmation() {
       </div>
 
       {/* Payment Section */}
-      <div className="w-full max-w-3xl mt-12 flex flex-col items-center">
-        <h2 className="text-lg font-semibold mb-6">Choose a Payment Method</h2>
-        <PaymentMethodSelector />
-        <div className="mt-8 w-full flex justify-center">
-          <ProceedButton />
-        </div>
-      </div>
+      <PaymentMethodSelector />
     </div>
   );
 }

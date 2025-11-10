@@ -1,5 +1,6 @@
 import Image, { StaticImageData } from "next/image";
 import React from "react";
+import { motion } from "framer-motion";
 
 interface Team {
   id: number;
@@ -16,7 +17,10 @@ const TeamCard: React.FC<TeamCardProps> = ({ team }) => {
   const { name, image, text } = team;
 
   return (
-    <div className="relative flex flex-col items-center justify-between text-center border-b-4 border-r-4 border-yellow-400 bg-white shadow-xl w-full max-w-[18rem] min-h-[20rem] px-8 py-10 mx-auto overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      className="relative flex flex-col items-center justify-between text-center border-b-4 border-r-4 border-yellow-400 bg-white shadow-xl w-full max-w-[18rem] min-h-[20rem] px-8 py-10 mx-auto overflow-hidden transition-transform duration-300"
+    >
       {/* Avatar */}
       <div className="w-[10rem] h-[10rem] mb-4 rounded-full overflow-hidden border-2 border-[#FFB636]/40">
         <Image
@@ -39,7 +43,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team }) => {
           {text}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

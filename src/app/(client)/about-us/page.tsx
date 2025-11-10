@@ -10,9 +10,9 @@ export default function AboutUs() {
     <div>
       <AboutUsStory />
       <AboutMission />
+      <KeyMetrics />
       <OurPeople />
       <OurTeam />
-      <KeyMetrics />
     </div>
   );
 }

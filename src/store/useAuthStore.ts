@@ -1,8 +1,16 @@
+// /store/useAuthStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setAuthToken, apiFetch } from "@/lib/api";
 import { FullSignUpData } from "@/app/(auth)/validations/signUpSchema";
 import { SignInFormData } from "@/app/(auth)/validations/signInSchema";
+import { ExtraDetailsFormValues } from "@/app/dashboard/home/extra-booking-details/schemas/booking";
+
+// Utility to generate random Booking ID
+function generateBookingId() {
+  const randomNum = Math.floor(10000000 + Math.random() * 90000000);
+  return `BK${randomNum}`;
+}
 
 interface User {
   id: string;
@@ -19,9 +27,14 @@ interface AuthState {
   error: string | null;
 
   signupData: Partial<FullSignUpData>;
+  extraBookingDetails: Partial<ExtraDetailsFormValues>;
+
   updateSignupData: (newData: Partial<FullSignUpData>) => void;
   resetSignupData: () => void;
   clearSignupProgress: () => void;
+
+  updateExtraBookingDetails: (data: Partial<ExtraDetailsFormValues>) => void;
+  resetExtraBookingDetails: () => void;
 
   signIn: (data: SignInFormData) => Promise<void>;
   signUp: (data: FullSignUpData) => Promise<void>;
@@ -37,11 +50,13 @@ export const useAuthStore = create<AuthState>()(
       loading: false,
       error: null,
       signupData: {},
+      extraBookingDetails: {},
 
+      // --- Signup Data Handlers ---
       updateSignupData: (newData) =>
         set((state) => {
           const updated = { ...state.signupData, ...newData };
-          localStorage.setItem("signup-data", JSON.stringify(updated)); // persist manually
+          localStorage.setItem("signup-data", JSON.stringify(updated));
           return { signupData: updated };
         }),
 
@@ -56,12 +71,41 @@ export const useAuthStore = create<AuthState>()(
         set({ signupData: {} });
       },
 
+      // --- Extra Booking Details Handlers ---
+      updateExtraBookingDetails: (data) =>
+        set((state) => {
+          // Auto-generate bookingId if not already set
+          const bookingId =
+            state.extraBookingDetails.bookingId || generateBookingId();
+
+          const updated = {
+            ...state.extraBookingDetails,
+            ...data,
+            bookingId,
+          };
+
+          localStorage.setItem(
+            "extra-booking-details",
+            JSON.stringify(updated)
+          );
+          return { extraBookingDetails: updated };
+        }),
+
+      resetExtraBookingDetails: () => {
+        localStorage.removeItem("extra-booking-details");
+        return set({ extraBookingDetails: {} });
+      },
+
+      // --- Auth Logic ---
       signIn: async (data) => {
         set({ loading: true, error: null });
         try {
           const res = await apiFetch<{ user: User; token: string }>(
             "/auth/login",
-            { method: "POST", body: JSON.stringify(data) }
+            {
+              method: "POST",
+              body: JSON.stringify(data),
+            }
           );
 
           setAuthToken(res.token);
@@ -84,13 +128,16 @@ export const useAuthStore = create<AuthState>()(
 
           const res = await apiFetch<{ user: User; token: string }>(
             "/auth/register",
-            { method: "POST", body: formData }
+            {
+              method: "POST",
+              body: formData,
+            }
           );
 
           setAuthToken(res.token);
           set({ user: res.user, token: res.token, loading: false });
 
-          // ✅ clear all local storage signup progress
+          // clear all local signup progress
           get().clearSignupProgress();
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "SignUp failed";
@@ -103,6 +150,7 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, token: null });
         localStorage.removeItem("auth-storage");
         get().clearSignupProgress();
+        get().resetExtraBookingDetails();
       },
 
       restoreSession: async () => {
@@ -120,11 +168,12 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          // Restore persisted signupData if exists
+          // Restore persisted signupData and booking details if exist
           const savedSignup = localStorage.getItem("signup-data");
-          if (savedSignup) {
-            set({ signupData: JSON.parse(savedSignup) });
-          }
+          const savedExtra = localStorage.getItem("extra-booking-details");
+
+          if (savedSignup) set({ signupData: JSON.parse(savedSignup) });
+          if (savedExtra) set({ extraBookingDetails: JSON.parse(savedExtra) });
 
           set({ loading: false });
         } catch {
@@ -139,6 +188,7 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         user: state.user,
         signupData: state.signupData,
+        extraBookingDetails: state.extraBookingDetails,
       }),
     }
   )

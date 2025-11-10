@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const extraDetailsSchema = z
   .object({
+    bookingId: z.string().optional(),
     hostelName: z.string().min(1),
     roomTitle: z.string().min(1),
     price: z.string().min(1),

@@ -8,11 +8,17 @@ import PaymentAlert from "./momoDetails/PaymentAlert";
 import NetworkSelect from "./momoDetails/NetworkSelect";
 import MobileInput from "./momoDetails/MobileInput";
 import PayButton from "./momoDetails/PayButton";
+import { validateMobileNumber } from "./validation/validateMobileNumber";
 
 const MomoDetails: React.FC = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<string>("MTN");
+  const [mobileNumber, setMobileNumber] = useState<string>("");
+  const [error, setError] = useState<string>("");
+
   const { extraBookingDetails } = useAuthStore();
-  const amount = extraBookingDetails.price;
+  const rawPrice = extraBookingDetails.price || "0";
+  const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;  
+  
 
   const colorThemes = {
     MTN: {
@@ -26,7 +32,7 @@ const MomoDetails: React.FC = () => {
       alertBg: "bg-red-400",
     },
     AIRTELTIGO: {
-      primaryBg: "bg-gradient-to-r from-blue-800 to-red-700", 
+      primaryBg: "bg-gradient-to-r from-blue-800 to-red-700",
       hoverBg: "hover:opacity-90",
       alertBg: "bg-gradient-to-r from-blue-800 to-red-700",
     },
@@ -35,7 +41,8 @@ const MomoDetails: React.FC = () => {
       hoverBg: "hover:bg-gray-500",
       alertBg: "bg-gray-300",
     },
-  };
+  } as const;
+
   type NetworkKeys = keyof typeof colorThemes;
   const currentTheme =
     colorThemes[selectedNetwork as NetworkKeys] || colorThemes.DEFAULT;
@@ -44,6 +51,18 @@ const MomoDetails: React.FC = () => {
     selectedNetwork === "MTN" ? "bg-yellow-300" : currentTheme.alertBg;
   const alertTextColor =
     selectedNetwork === "MTN" ? "text-gray-800" : "text-white";
+
+  const handlePay = () => {
+    if (!validateMobileNumber(selectedNetwork, mobileNumber)) {
+      setError(`Please enter a valid ${selectedNetwork} number`);
+      return;
+    }
+
+    setError("");
+    // Payment logic here
+    console.log("Processing payment", { network: selectedNetwork, mobileNumber, amount });
+    alert(`Payment of GHC ${amount} on ${selectedNetwork} initiated!`);
+  };
 
   return (
     <motion.div
@@ -54,20 +73,32 @@ const MomoDetails: React.FC = () => {
     >
       <PaymentAlert
         selectedNetwork={selectedNetwork}
-        amount={typeof amount === "number" ? amount : 0}
+        amount={amount}
         alertTheme={alertTheme}
         alertTextColor={alertTextColor}
       />
 
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handlePay();
+        }}
+        className="space-y-6"
+      >
         <NetworkSelect
           selectedNetwork={selectedNetwork}
           handleNetworkChange={setSelectedNetwork}
         />
-        <MobileInput />
+        <MobileInput
+          mobileNumber={mobileNumber}
+          setMobileNumber={setMobileNumber}
+          error={error}
+        />
+
         <div className="bg-amber-100 text-amber-800 p-4 rounded-xl text-sm mb-6">
           If not prompted, check your approvals to see pending approvals.
         </div>
+
         <PayButton theme={currentTheme} />
       </form>
 

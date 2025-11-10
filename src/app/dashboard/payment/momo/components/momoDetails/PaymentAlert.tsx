@@ -26,7 +26,11 @@ const PaymentAlert: React.FC<PaymentAlertProps> = ({
         exit={{ opacity: 0, x: 20 }}
         transition={{ duration: 0.4 }}
       >
-        Hostella will deduct <span className="font-extrabold text-lg">{amount}</span> from your account.
+        Hostella will deduct{" "}
+        <span className="font-extrabold text-lg">
+          GHC {typeof amount === "number" ? amount : Number(amount)}
+        </span>{" "}
+        from your account.
       </motion.div>
     </AnimatePresence>
   );

@@ -46,7 +46,7 @@ const contactDetails = [
 
 const ContactInfoCard = () => {
   return (
-    <div className="bg-yellow-400 p-6 md:p-8 rounded-xl shadow-sm w-full md:w-[22rem] space-y-6 border border-[#F4B400]/30">
+    <div className="bg-yellow-400 p-6 md:p-[2.2rem] rounded-l-2xl shadow-sm w-full md:w-[22rem] space-y-6 border border-[#F4B400]/30">
       {contactDetails.map((item, i) => (
         <div
           key={i}

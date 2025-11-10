@@ -22,7 +22,7 @@ const ContactFormSection = () => {
   };
 
   return (
-    <div className="w-full md:w-1/2">
+    <div className="w-full p-5 bg-white rounded-r-2xl">
       <h2 className="text-3xl font-semibold text-gray-900 mb-8">
         Get In Touch
       </h2>

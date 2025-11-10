@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import SubmitButton from "./SubmitButton";
 import FormField from "@/app/(auth)/forms/FormField";
 import { ExtraDetailsFormValues, extraDetailsSchema } from "../schemas/booking";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ExtraDetailsFormProps {
   onSubmit: (data: ExtraDetailsFormValues) => void;
@@ -31,7 +32,7 @@ export default function ExtraDetailsForm({
       relation: "",
       hasMedicalCondition: false,
       medicalCondition: "",
-      ...defaultValues, // include hostel/room info
+      ...defaultValues,
     },
   });
 
@@ -42,7 +43,13 @@ export default function ExtraDetailsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(submitHandler)} className="flex flex-col gap-5 mt-8 pb-10 w-full">
+    <motion.form
+      onSubmit={handleSubmit(submitHandler)}
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="flex flex-col gap-5 mt-8 pb-10 w-full"
+    >
       <FormField
         label="Emergency Contact Name"
         name="emergencyContactName"
@@ -83,24 +90,34 @@ export default function ExtraDetailsForm({
         />
       </FormField>
 
-      {hasMedicalCondition && (
-        <FormField
-          label="Please specify your condition or disability"
-          name="medicalCondition"
-          register={register}
-          error={errors.medicalCondition}
-          required
-        >
-          <textarea
-            {...register("medicalCondition", { required: hasMedicalCondition })}
-            rows={3}
-            placeholder="e.g. Asthma, Hearing impairment, Mobility challenge..."
-            className="w-full border border-gray-300 rounded-xl p-3 focus:ring-1 focus:ring-yellow-400 outline-none resize-none"
-          />
-        </FormField>
-      )}
+      <AnimatePresence>
+        {hasMedicalCondition && (
+          <motion.div
+            key="medical"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <FormField
+              label="Please specify your condition or disability"
+              name="medicalCondition"
+              register={register}
+              error={errors.medicalCondition}
+              required
+            >
+              <textarea
+                {...register("medicalCondition", { required: hasMedicalCondition })}
+                rows={3}
+                placeholder="e.g. Asthma, Hearing impairment, Mobility challenge..."
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-1 focus:ring-yellow-400 outline-none resize-none"
+              />
+            </FormField>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <SubmitButton />
-    </form>
+    </motion.form>
   );
 }

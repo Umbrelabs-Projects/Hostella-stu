@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ExtraDetailsFormValues } from "../schemas/booking";
 import BookingDetails from "../components/BookingDetails";
 import { useAuthStore } from "@/store/useAuthStore";
+import { motion } from "framer-motion";
 
 export default function ExtraBookingDetails() {
   const { id } = useParams();
@@ -14,7 +15,7 @@ export default function ExtraBookingDetails() {
   const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
 
   const room = roomsData.find((r) => r.id === Number(id));
-  const hostel = hostelsData.find((h) => h.id === room?.id);
+  const hostel = hostelsData.find((h) => h.id === room?.id); 
 
   if (!room || !hostel) {
     return (
@@ -28,18 +29,24 @@ export default function ExtraBookingDetails() {
     hostelName: hostel.name,
     roomTitle: room.title,
     price: room.price,
-    bookingId: extraBookingDetails.bookingId, // persisted from store
+    bookingId: extraBookingDetails.bookingId,
   };
 
   const handleSubmit = (data: ExtraDetailsFormValues) => {
     const fullData = { ...data, ...bookingDetails };
     updateExtraBookingDetails(fullData);
+    window.scrollTo(0, 0);
     router.push(`/dashboard/booking/success/${room.id}`);
   };
 
   return (
-    <section className="bg-[#FFF8E1] px-2 md:px-8 flex justify-center">
-      <div className="bg-white w-full max-w-5xl rounded-3xl shadow-lg overflow-hidden flex flex-col md:flex-row">
+    <section className="bg-[#FFF8E1] px-3 md:px-8 flex justify-center py-10">
+      <motion.div
+        className="bg-white w-full max-w-5xl rounded-3xl shadow-lg overflow-hidden flex flex-col md:flex-row"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
         {/* Image Section */}
         <div className="relative w-full h-64 md:h-auto md:w-1/2">
           <Image
@@ -64,7 +71,7 @@ export default function ExtraBookingDetails() {
             defaultValues={bookingDetails}
           />
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

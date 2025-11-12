@@ -3,26 +3,20 @@
 import React from "react";
 import GalleryHeader from "./components/GalleryHeader";
 import GalleryGrid from "./components/GalleryGrid";
+import { gallery } from "@/lib/images";
 
 const images = [
-  // Bathrooms
-  { src: "/images/gallery/bathroom1.jpg", alt: "Elegant modern bathroom" },
-  { src: "/images/gallery/kitchen1.jpg", alt: "Luxury kitchen lighting" },
-  { src: "/images/gallery/kitchen2.jpg", alt: "Bright kitchen with white cabinets" },
-  { src: "/images/gallery/bathroom2.jpg", alt: "Stylish yellow bathroom" },
-
-  // Dorms
-  { src: "/images/gallery/room1.jpg", alt: "Three-bed student room" },
-  { src: "/images/gallery/room2.jpg", alt: "Bunk-bed hostel room" },
-
-  // Building exteriors
-  { src: "/images/gallery/building1.jpg", alt: "Red hostel exterior" },
-  { src: "/images/gallery/building2.jpg", alt: "Yellow hostel building" },
-  { src: "/images/gallery/building3.jpg", alt: "Mixed color hostel facade" },
-
-  // Common spaces
-  { src: "/images/gallery/library.jpg", alt: "Library and reading lounge" },
-  { src: "/images/gallery/classroom.jpg", alt: "Lecture room with chairs" },
+  { src: gallery.gallery1, alt: "Lecture room with chairs" },
+  { src: gallery.gallery2, alt: "Library and reading lounge" },
+  { src: gallery.gallery3, alt: "Mixed color hostel facade" },
+  { src: gallery.gallery4, alt: "Yellow hostel building" },
+  { src: gallery.gallery5, alt: "Red hostel exterior" },
+  { src: gallery.gallery6, alt: "Three-bed student room" },
+  { src: gallery.gallery7, alt: "Bunk-bed hostel room" },
+  { src: gallery.gallery8, alt: "Stylish yellow bathroom" },
+  { src: gallery.gallery9, alt: "Bright kitchen with white cabinets" },
+  { src: gallery.gallery10, alt: "Luxury kitchen lighting" },
+  { src: gallery.gallery11, alt: "Elegant modern bathroom" },
 ];
 
 export default function Gallery() {

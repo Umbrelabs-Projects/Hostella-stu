@@ -2,9 +2,10 @@
 
 import React from "react";
 import GalleryCard from "./GalleryCard";
+import { StaticImageData } from "next/image";
 
 interface ImageType {
-  src: string;
+  src: string | StaticImageData;
   alt: string;
 }
 
@@ -17,10 +18,9 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
     <main className="container mx-auto px-4 pb-16">
       <div
         className="
-          grid 
-          grid-cols-2 sm:grid-cols-3 
-          gap-4 
-          auto-rows-[10px]
+          columns-2 sm:columns-3 lg:columns-4
+          gap-4
+          space-y-4
         "
       >
         {images.map((image, index) => (

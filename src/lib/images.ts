@@ -25,8 +25,8 @@ import checkMark from "../../public/payment/checkMark.png";
 import mtn from "../../public/payment/mtn.png";
 import telecel from "../../public/payment/telecel.png";
 import airtelTigo from "../../public/payment/airtelTigo.png";
-import bankIcon from "../../public/icons/bankIcon.png"
-import ourPeopleImg from "../../public/aboutUs/ourPeopleImg.png"
+import bankIcon from "../../public/icons/bankIcon.png";
+import ourPeopleImg from "../../public/aboutUs/ourPeopleImg.png";
 
 export const images = {
   hostellaLogo,
@@ -57,5 +57,31 @@ export const images = {
   telecel,
   airtelTigo,
   bankIcon,
-  ourPeopleImg
+  ourPeopleImg,
+};
+
+import gallery1 from "../../public/gallery/gallery1.png";
+import gallery2 from "../../public/gallery/gallery2.png";
+import gallery3 from "../../public/gallery/gallery3.png";
+import gallery4 from "../../public/gallery/gallery4.png";
+import gallery5 from "../../public/gallery/gallery5.png";
+import gallery6 from "../../public/gallery/gallery6.png";
+import gallery7 from "../../public/gallery/gallery7.png";
+import gallery8 from "../../public/gallery/gallery8.png";
+import gallery9 from "../../public/gallery/gallery9.png";
+import gallery10 from "../../public/gallery/gallery10.png";
+import gallery11 from "../../public/gallery/gallery11.png";
+
+export const gallery = {
+  gallery1,
+  gallery2,
+  gallery3,
+  gallery4,
+  gallery5,
+  gallery6,
+  gallery7,
+  gallery8,
+  gallery9,
+  gallery10,
+  gallery11,
 };

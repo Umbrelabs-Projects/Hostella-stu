@@ -17,7 +17,7 @@ export default function RoomList() {
 
   return (
     <motion.section
-      className="min-h-screen bg-[#FFF8E1] py-12 px-4 md:px-8 flex flex-col items-center"
+      className="min-h-screen py-12 px-4 md:px-8 flex flex-col items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}

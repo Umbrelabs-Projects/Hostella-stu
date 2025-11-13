@@ -6,7 +6,7 @@ import PaymentMethodSelector from "../components/PaymentMethodSelector";
 
 export default function BookingConfirmation() {
   return (
-    <div className="min-h-screen bg-[#FFF8EC] flex flex-col items-center px-4 py-8">
+    <div className="min-h-screen flex flex-col items-center px-4 py-8">
       {/* Top Section (Responsive) */}
       <div className="flex flex-col md:flex-row items-start justify-center gap-8 w-full max-w-5xl">
         {/* Left: Success Message */}

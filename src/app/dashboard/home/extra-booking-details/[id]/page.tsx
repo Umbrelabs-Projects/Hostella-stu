@@ -40,7 +40,7 @@ export default function ExtraBookingDetails() {
   };
 
   return (
-    <section className="bg-[#FFF8E1] px-3 md:px-8 flex justify-center py-10">
+    <section className="px-3 md:px-8 flex justify-center py-10">
       <motion.div
         className="bg-white w-full max-w-5xl rounded-3xl shadow-lg overflow-hidden flex flex-col md:flex-row"
         initial={{ opacity: 0, y: 40 }}

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Booking } from "@/types/bookingStatus";
 import BookingActions from "./BookingActions";
 import BookingStatusBadge from "./BookingStatusBadge";
-import { Calendar, Building2, DoorOpen, DollarSign } from "lucide-react";
+import { Calendar, Building2, DoorOpen } from "lucide-react";
 
 interface BookingDetailsProps {
   booking: Booking;

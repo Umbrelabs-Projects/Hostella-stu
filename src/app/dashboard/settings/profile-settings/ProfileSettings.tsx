@@ -24,7 +24,7 @@ export default function ProfileSettings() {
       <h2 className="text-lg font-semibold">Profile Settings</h2>
 
       <AvatarUploader
-        avatar={user?.avatar || "/avatar.avif"}
+        avatar={user?.avatar || "/avatar.jpg"}
         onFileSelect={setAvatarFile}
       />
 

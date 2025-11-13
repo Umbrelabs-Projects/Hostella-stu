@@ -1,8 +1,5 @@
 import React from "react";
 
-interface BookingStatusBadgeProps {
-  status: string;
-}
 
 export default function BookingStatusBadge({ status }: { status: string }) {
   const base = "px-3 py-1 text-xs font-semibold rounded-full shadow-sm";

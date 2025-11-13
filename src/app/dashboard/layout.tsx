@@ -12,7 +12,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex h-screen flex-col md:flex-row bg-gray-50">
+    <div className="flex h-screen flex-col md:flex-row bg-gray-100 ">
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 w-64 md:w-[25%] bg-white shadow-lg border-r
@@ -34,7 +34,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main content area */}
       <div className="flex flex-col w-full">
         <Header onMenuClick={() => setIsOpen(true)} />
-        <main className="flex-grow overflow-y-auto p-4 bg-[#FAF5E6] ">{children}</main>
+        <main className="flex-grow overflow-y-auto p-4  ">{children}</main>
       </div>
     </div>
   );

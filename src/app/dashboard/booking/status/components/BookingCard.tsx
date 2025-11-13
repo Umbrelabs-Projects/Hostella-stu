@@ -20,7 +20,7 @@ export default function BookingCard({
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 200, damping: 15 }}
-      className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all border border-gray-100 group"
+      className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 group"
     >
       {/* Image Section */}
       <div className="relative h-48 w-full overflow-hidden">
@@ -52,7 +52,7 @@ export default function BookingCard({
         </div>
 
         {booking.status != "room allocated" ? (
-          <p className="mt-2 font-bold text-blue-700 text-lg">
+          <p className="mt-2 font-bold text-yellow-600 text-lg">
             {booking.price}
           </p>
         ) : (
@@ -73,7 +73,7 @@ export default function BookingCard({
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onViewDetails(booking)}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+            className="w-full cursor-pointer bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 text-white py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
           >
             View Details
           </motion.button>

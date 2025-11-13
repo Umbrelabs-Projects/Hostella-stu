@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { NotificationItem } from "./NotificationItem";
 import { AnimatePresence, motion } from "framer-motion";
+import NotificationCard from "./NotificationCard";
 import { Notification } from "@/types/notifications";
 
 interface NotificationListProps {
@@ -18,8 +18,8 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 }) => {
   if (notifications.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-gray-100">
-        <p className="text-gray-500">You&apos;re all caught up!</p>
+      <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400">You&apos;re all caught up!</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
             exit={{ opacity: 0, x: 50 }}
             layout
           >
-            <NotificationItem
+            <NotificationCard
               notification={n}
               markAsRead={markAsRead}
               deleteNotification={deleteNotification}

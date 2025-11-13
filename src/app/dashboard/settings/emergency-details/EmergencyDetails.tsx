@@ -61,9 +61,9 @@ export const EmergencyDetails = ({
     setContacts(contacts.filter((c) => c.id !== id));
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-8 space-y-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-8 space-y-6">
       {/* Contacts Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
             Emergency Contacts
@@ -79,7 +79,7 @@ export const EmergencyDetails = ({
               setFormData({ name: "", relationship: "", phone: "" });
               setEditingId(null);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" /> Add Contact
           </Button>
@@ -103,7 +103,7 @@ export const EmergencyDetails = ({
         />
       )}
 
-      {/* Contacts List (hidden while editing) */}
+      {/* Contacts List */}
       {!editingId && (
         <div className="space-y-3">
           {contacts.map((contact) => (

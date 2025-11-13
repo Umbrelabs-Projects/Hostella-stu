@@ -9,16 +9,17 @@ import NetworkSelect from "./momoDetails/NetworkSelect";
 import MobileInput from "./momoDetails/MobileInput";
 import PayButton from "./momoDetails/PayButton";
 import { validateMobileNumber } from "./validation/validateMobileNumber";
+import { useRouter } from "next/navigation";
 
 const MomoDetails: React.FC = () => {
+  const router = useRouter();
   const [selectedNetwork, setSelectedNetwork] = useState<string>("MTN");
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   const { extraBookingDetails } = useAuthStore();
   const rawPrice = extraBookingDetails.price || "0";
-  const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;  
-  
+  const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
 
   const colorThemes = {
     MTN: {
@@ -60,8 +61,13 @@ const MomoDetails: React.FC = () => {
 
     setError("");
     // Payment logic here
-    console.log("Processing payment", { network: selectedNetwork, mobileNumber, amount });
+    console.log("Processing payment", {
+      network: selectedNetwork,
+      mobileNumber,
+      amount,
+    });
     alert(`Payment of GHC ${amount} on ${selectedNetwork} initiated!`);
+    router.push("/dashboard/payment/paymentCompleted");
   };
 
   return (

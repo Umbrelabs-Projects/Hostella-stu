@@ -1,9 +1,8 @@
 export interface Notification {
-    id: string;
-    title: string;
-    description: string;
-    timestamp: string;
-    read: boolean;
-    type: "info" | "success" | "warning" | "error";
-  }
-  
+  id: number;
+  type: string;
+  title: string;
+  description: string;
+  time: string;
+  read: boolean;
+}

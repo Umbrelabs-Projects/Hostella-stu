@@ -4,15 +4,7 @@ import React from "react";
 import { Trash2 } from "lucide-react";
 import { typeConfig } from "./notificationConfig";
 import { motion } from "framer-motion";
-
-export interface Notification {
-  id: number;
-  type: string;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
-}
+import { Notification } from "@/types/notifications";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -33,34 +25,37 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
-      className={`p-4 rounded-xl shadow-md flex justify-between items-start border-l-4 transition ${
-        notification.read ? "bg-gray-50 border-gray-200" : `bg-white ${config.color}`
+      className={`p-4 rounded-2xl shadow-lg flex justify-between items-start border-l-4 transition ${
+        notification.read
+          ? "bg-gray-50 border-gray-200"
+          : `bg-white ${config.color} border-opacity-60`
       }`}
     >
-      <div className="flex-1 min-w-0 flex items-start">
-        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full mr-3 text-lg">
-          {Icon && <Icon className="w-6 h-6" />}
+      {/* Icon & Info */}
+      <div className="flex-1 min-w-0 flex items-start space-x-3">
+        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-lg">
+          {Icon && <Icon className="w-6 h-6 text-gray-700" />}
         </div>
         <div
           className="flex-1 cursor-pointer"
           onClick={() => markAsRead(notification.id)}
         >
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
             <h3
-              className={`font-semibold ${
+              className={`font-semibold text-sm md:text-base ${
                 notification.read ? "text-gray-600" : "text-gray-900"
               }`}
             >
               {notification.title}
             </h3>
             {!notification.read && (
-              <span className="w-2 h-2 bg-indigo-500 rounded-full ml-2 flex-shrink-0"></span>
+              <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
             )}
           </div>
           <p
-            className={`mt-1 text-sm ${
+            className={`mt-1 text-sm md:text-sm ${
               notification.read ? "text-gray-500" : "text-gray-700"
             }`}
           >
@@ -70,18 +65,19 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         </div>
       </div>
 
-      <div className="flex space-x-2">
+      {/* Actions */}
+      <div className="flex flex-col md:flex-row items-center md:space-x-2 mt-3 md:mt-0">
         {!notification.read && (
           <button
             onClick={() => markAsRead(notification.id)}
-            className="bg-green-600 hover:bg-green-700 cursor-pointer text-white text-xs px-2 py-1 rounded-lg transition"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm px-3 py-1.5 rounded-lg transition shadow-sm"
           >
             Mark as Read
           </button>
         )}
         <button
           onClick={() => deleteNotification(notification.id)}
-          className="text-gray-400 hover:text-red-500 cursor-pointer transition"
+          className="text-gray-400 hover:text-red-500 mt-2 md:mt-0 transition"
         >
           <Trash2 className="w-5 h-5" />
         </button>

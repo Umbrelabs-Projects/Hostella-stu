@@ -15,8 +15,8 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = ({
   allRead,
   allEmpty,
 }) => (
-  <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
-    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight"></h1>
+  <header className="mb-6 flex flex-row justify-end ">
+    
     <div className="mt-3 md:mt-0 flex space-x-3">
       <button
         onClick={markAllAsRead}

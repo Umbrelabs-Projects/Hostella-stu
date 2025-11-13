@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Notification, NotificationItem } from "./NotificationItem";
-import { motion, AnimatePresence } from "framer-motion";
+import { NotificationItem } from "./NotificationItem";
+import { AnimatePresence, motion } from "framer-motion";
+import { Notification } from "@/types/notifications";
 
 interface NotificationListProps {
   notifications: Notification[];
@@ -31,8 +32,8 @@ export const NotificationList: React.FC<NotificationListProps> = ({
             key={n.id}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, x: 50 }}
+            layout
           >
             <NotificationItem
               notification={n}

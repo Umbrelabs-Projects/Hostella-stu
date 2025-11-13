@@ -25,7 +25,7 @@ export default function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         >
-          Book easy, book smart
+          Book smart, Stay smart
         </motion.h1>
         <motion.p
           className="text-white/90 max-w-xl text-sm md:text-base leading-relaxed"

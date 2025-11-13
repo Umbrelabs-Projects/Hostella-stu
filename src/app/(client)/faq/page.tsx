@@ -1,5 +1,10 @@
+import UndevelopedPage from "@/components/UndevelopedPage";
 import React from "react";
 
 export default function FAQs() {
-  return <div>FAQs</div>;
+  return (
+    <div>
+      <UndevelopedPage title="FAQs" />
+    </div>
+  );
 }

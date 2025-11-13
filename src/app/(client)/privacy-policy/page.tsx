@@ -1,5 +1,10 @@
+import UndevelopedPage from "@/components/UndevelopedPage";
 import React from "react";
 
 export default function PrivacyPolicy() {
-  return <div>PrivacyPolicy</div>;
+  return (
+    <div>
+      <UndevelopedPage title="Privacy Policy" />
+    </div>
+  );
 }

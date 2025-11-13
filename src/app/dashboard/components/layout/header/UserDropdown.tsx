@@ -12,9 +12,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const dropdownItems = [
-  { name: "View Profile", link: "/dashboard/profile" },
   { name: "Account Settings", link: "/dashboard/settings" },
-  { name: "Logout", link: "/" },
+  { name: "Sign Out", link: "/" },
 ];
 
 export default function UserDropdown() {
@@ -35,22 +34,24 @@ export default function UserDropdown() {
 
       <DropdownMenuContent align="end" className="w-40">
         {dropdownItems.map((item) => {
-          const isLogout = item.name === "Logout";
+          const isLogout = item.name === "Sign Out";
           const isActive = pathname === item.link;
 
           return (
-            <DropdownMenuItem
-              key={item.name}
-              asChild
-              className="p-0"
-            >
+            <DropdownMenuItem key={item.name} asChild className="p-0">
               <Link
                 href={item.link}
                 className={`block w-full px-3 py-2 text-sm cursor-pointer
-                  ${isLogout
-                    ? "text-red-600 hover:!text-red-600 hover:!bg-red-50 focus:!bg-red-50 active:!bg-red-100"
-                    : "text-gray-700 hover:bg-gray-50 focus:bg-gray-100 active:bg-gray-100"}
-                  ${isActive && !isLogout ? "bg-gray-200 text-black font-medium" : ""}
+                  ${
+                    isLogout
+                      ? "text-red-600 hover:!text-red-600 hover:!bg-red-50 focus:!bg-red-50 active:!bg-red-100"
+                      : "text-gray-700 hover:bg-gray-50 focus:bg-gray-100 active:bg-gray-100"
+                  }
+                  ${
+                    isActive && !isLogout
+                      ? "bg-gray-200 text-black font-medium"
+                      : ""
+                  }
                 `}
               >
                 {item.name}

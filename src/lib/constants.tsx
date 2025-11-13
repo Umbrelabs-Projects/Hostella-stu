@@ -3,7 +3,7 @@ import {
   FacebookIcon,
   InstagramIcon,
   LinkedinIcon,
-  Twitter,
+  XIcon,
 } from "lucide-react";
 import { images } from "./images";
 
@@ -29,7 +29,7 @@ export const footerSections: FooterSection[] = [
   {
     title: "Get Connected",
     iconLink: [
-      { icon: Twitter, link: "https://twitter.com" },
+      { icon: XIcon, link: "https://twitter.com" },
       { icon: LinkedinIcon, link: "https://linkedin.com" },
       { icon: FacebookIcon, link: "https://facebook.com" },
       { icon: InstagramIcon, link: "https://instagram.com" },

@@ -63,7 +63,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="mt-10 text-sm text-white text-center">
-          © 2025 Hostella. Book easy, book smart.
+          © 2025 Hostella. Book smart, Stay smart
         </div>
       </div>
     </footer>

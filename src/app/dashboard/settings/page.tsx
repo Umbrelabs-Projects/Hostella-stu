@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import ProfileSettings from "./components/ProfileSettings";
-import PasswordSettings from "./components/PasswordSettings";
-import VerificationSettings from "./components/VerificationSettings";
+import ProfileSettings from "./profile-settings/ProfileSettings";
+import PasswordSettings from "./password-settings/PasswordSettings";
+import VerificationSettings from "./verification/VerificationSettings";
 import SettingsSidebar from "./components/SettingsSidebar";
 import { EmergencyDetails } from "./emergency-details/EmergencyDetails";
 

@@ -11,7 +11,7 @@ export default function BookingDetailsCard() {
     { label: "Hostel", key: "hostelName" },
     { label: "Room Type", key: "roomTitle" },
     { label: "Emergency Contact", key: "emergencyContactName" },
-    { label: "Contact Number", key: "emergencyContactNumber" },
+    { label: "Phone Number", key: "emergencyContactNumber" },
     { label: "Relation", key: "relation" },
     { label: "Has Medical Condition", key: "hasMedicalCondition" },
     { label: "Medical Condition", key: "medicalCondition" },
@@ -96,7 +96,7 @@ export default function BookingDetailsCard() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDownload}
-            className="mt-5 w-full cursor-pointer flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-xl transition shadow-md"
+            className="mt-5 text-sm md:text-base w-full cursor-pointer flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-xl transition shadow-md"
           >
             <Download size={20} />
             Download Booking Form

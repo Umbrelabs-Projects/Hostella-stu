@@ -20,14 +20,14 @@ export default function SideNavLink({
   return (
     <Link
       href={url}
-      className={`flex items-center gap-3 mx-4 rounded-md p-3 text-sm font-medium transition-all ${
+      className={`flex items-center gap-3 mx-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
         isActive
-          ? "bg-yellow-50 text-yellow-500"
-          : "text-gray-600 hover:bg-gray-50"
+          ? "bg-yellow-50 text-yellow-600 border-l-4 border-yellow-500"
+          : "text-gray-700 hover:bg-blue-50"
       }`}
     >
       <Icon className="w-5 h-5" />
-      {title}
+      <span>{title}</span>
     </Link>
   );
 }

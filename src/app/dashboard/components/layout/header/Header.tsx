@@ -50,7 +50,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <div className="flex items-center justify-between border-b bg-white px-4 py-3 shadow-sm">
+    <div className="sticky top-0 z-40 flex items-center justify-between border-b bg-white px-4 py-3 shadow-sm">
       <HeaderLeft title={title} onMenuClick={onMenuClick} />
       <HeaderRight />
     </div>

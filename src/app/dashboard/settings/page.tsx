@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import ProfileSettings from "./profile-settings/ProfileSettings";
 import PasswordSettings from "./password-settings/PasswordSettings";
 import VerificationSettings from "./verification/VerificationSettings";
@@ -26,7 +27,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
@@ -34,8 +35,20 @@ export default function SettingsPage() {
             <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           </div>
 
-          {/* Main Content */}
-          <div className="md:flex-1 min-w-0">{renderContent()}</div>
+          {/* Main Content with animations */}
+          <div className="md:flex-1 min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab} // important for remounting animation
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderContent()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

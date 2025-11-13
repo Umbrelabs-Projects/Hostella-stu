@@ -19,7 +19,7 @@ export default function SettingsSidebar({
   ];
 
   return (
-    <div className="flex-shrink-0">
+    <div className="flex-shrink-0 shadow-xs rounded-2xl">
       <nav className="space-y-2 bg-white rounded-lg p-4 border border-gray-200">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -31,7 +31,7 @@ export default function SettingsSidebar({
               className={`w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
-                  : "text-gray-700 hover:bg-gray-50"
+                  : "text-gray-700 hover:bg-blue-50"
               }`}
             >
               <Icon className="w-5 h-5" />

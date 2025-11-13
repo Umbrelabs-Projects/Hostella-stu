@@ -27,13 +27,15 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex gap-6 px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
-          <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="md:w-1/4">
+            <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0">{renderContent()}</div>
+          <div className="md:flex-1 min-w-0">{renderContent()}</div>
         </div>
       </div>
     </div>

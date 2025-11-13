@@ -15,7 +15,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex h-screen flex-col md:flex-row bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg border-r
+        className={`fixed inset-y-0 left-0 z-50 w-64 md:w-[25%] bg-white shadow-lg border-r
         transform transition-transform duration-300 ease-in-out 
         ${isOpen ? "translate-x-0" : "-translate-x-full"} 
         md:translate-x-0 md:static`}
@@ -32,7 +32,7 @@ export default function Layout({ children }: LayoutProps) {
       )}
 
       {/* Main content area */}
-      <div className="flex flex-col flex-grow">
+      <div className="flex flex-col w-full">
         <Header onMenuClick={() => setIsOpen(true)} />
         <main className="flex-grow overflow-y-auto p-4 bg-[#FAF5E6] ">{children}</main>
       </div>

@@ -18,11 +18,11 @@ export const ContactForm = ({
   onSave,
   editing,
 }: ContactFormProps) => (
-  <div className="border-2 border-gray-200 rounded-lg p-6 space-y-4 bg-gray-50">
+  <div className="border-2 border-gray-200 rounded-lg p-4 sm:p-6 space-y-4 bg-gray-50">
     <h3 className="font-semibold text-gray-900">
       {editing ? "Edit Contact" : "Add New Contact"}
     </h3>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {(["name", "relationship", "phone"] as const).map((field) => (
         <input
           key={field}
@@ -34,21 +34,21 @@ export const ContactForm = ({
           }
           value={formData[field]}
           onChange={(e) => onChange(field, e.target.value)}
-          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
         />
       ))}
     </div>
-    <div className="flex gap-3 pt-2">
+    <div className="flex flex-col sm:flex-row gap-3 pt-2">
       <Button
         onClick={onSave}
-        className="bg-blue-600 hover:bg-blue-700 text-white"
+        className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
       >
         {editing ? "Update Contact" : "Add Contact"}
       </Button>
       <Button
         onClick={onCancel}
         variant="outline"
-        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+        className="border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
       >
         Cancel
       </Button>

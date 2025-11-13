@@ -6,7 +6,6 @@ import { FullSignUpData } from "@/app/(auth)/validations/signUpSchema";
 import { SignInFormData } from "@/app/(auth)/validations/signInSchema";
 import { ExtraDetailsFormValues } from "@/app/dashboard/home/extra-booking-details/schemas/booking";
 
-// Utility to generate random Booking ID
 function generateBookingId() {
   const randomNum = Math.floor(10000000 + Math.random() * 90000000);
   return `BK${randomNum}`;
@@ -17,6 +16,7 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   avatar?: string;
 }
 
@@ -25,7 +25,6 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
-
   signupData: Partial<FullSignUpData>;
   extraBookingDetails: Partial<ExtraDetailsFormValues>;
 
@@ -40,6 +39,13 @@ interface AuthState {
   signUp: (data: FullSignUpData) => Promise<void>;
   signOut: () => Promise<void>;
   restoreSession: () => Promise<void>;
+
+  // newly added
+  updateProfile: (updates: FormData) => Promise<void>;
+  updatePassword: (payload: {
+    currentPassword: string;
+    newPassword: string;
+  }) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,45 +58,35 @@ export const useAuthStore = create<AuthState>()(
       signupData: {},
       extraBookingDetails: {},
 
-      // --- Signup Data Handlers ---
+      // --- Signup Handlers ---
       updateSignupData: (newData) =>
         set((state) => {
           const updated = { ...state.signupData, ...newData };
           localStorage.setItem("signup-data", JSON.stringify(updated));
           return { signupData: updated };
         }),
-
       resetSignupData: () => {
         localStorage.removeItem("signup-data");
         return set({ signupData: {} });
       },
-
       clearSignupProgress: () => {
         localStorage.removeItem("signup-step");
         localStorage.removeItem("signup-data");
         set({ signupData: {} });
       },
 
-      // --- Extra Booking Details Handlers ---
+      // --- Extra Booking Details ---
       updateExtraBookingDetails: (data) =>
         set((state) => {
-          // Auto-generate bookingId if not already set
           const bookingId =
             state.extraBookingDetails.bookingId || generateBookingId();
-
-          const updated = {
-            ...state.extraBookingDetails,
-            ...data,
-            bookingId,
-          };
-
+          const updated = { ...state.extraBookingDetails, ...data, bookingId };
           localStorage.setItem(
             "extra-booking-details",
             JSON.stringify(updated)
           );
           return { extraBookingDetails: updated };
         }),
-
       resetExtraBookingDetails: () => {
         localStorage.removeItem("extra-booking-details");
         return set({ extraBookingDetails: {} });
@@ -107,12 +103,13 @@ export const useAuthStore = create<AuthState>()(
               body: JSON.stringify(data),
             }
           );
-
           setAuthToken(res.token);
           set({ user: res.user, token: res.token, loading: false });
         } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "Login failed";
-          set({ error: message, loading: false });
+          // Narrow the type
+          const errorMessage =
+            err instanceof Error ? err.message : "SignIn failed";
+          set({ error: errorMessage, loading: false });
         }
       },
 
@@ -136,12 +133,46 @@ export const useAuthStore = create<AuthState>()(
 
           setAuthToken(res.token);
           set({ user: res.user, token: res.token, loading: false });
-
-          // clear all local signup progress
           get().clearSignupProgress();
         } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "SignUp failed";
-          set({ error: message, loading: false });
+          // Narrow the type
+          const errorMessage =
+            err instanceof Error ? err.message : " SignUp failed";
+          set({ error: errorMessage, loading: false });
+        }
+      },
+
+      // --- Profile Update ---
+      updateProfile: async (formData) => {
+        set({ loading: true });
+        try {
+          const updatedUser = await apiFetch<User>("/user/updateProfile", {
+            method: "PUT",
+            body: formData,
+          });
+          set({ user: updatedUser, loading: false });
+        } catch (err: unknown) {
+          // Narrow the type
+          const errorMessage =
+            err instanceof Error ? err.message : "Profile update failed";
+          set({ error: errorMessage, loading: false });
+        }
+      },
+
+      // --- Password Update ---
+      updatePassword: async (payload) => {
+        set({ loading: true });
+        try {
+          await apiFetch("/user/updatePassword", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          set({ loading: false });
+        } catch (err: unknown) {
+          // Narrow the type
+          const errorMessage =
+            err instanceof Error ? err.message : "Password update failed";
+          set({ error: errorMessage, loading: false });
         }
       },
 
@@ -168,17 +199,16 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          // Restore persisted signupData and booking details if exist
+          // restore partials
           const savedSignup = localStorage.getItem("signup-data");
           const savedExtra = localStorage.getItem("extra-booking-details");
-
           if (savedSignup) set({ signupData: JSON.parse(savedSignup) });
           if (savedExtra) set({ extraBookingDetails: JSON.parse(savedExtra) });
 
           set({ loading: false });
         } catch {
-          set({ user: null, token: null, loading: false });
           setAuthToken(null);
+          set({ user: null, token: null, loading: false });
         }
       },
     }),

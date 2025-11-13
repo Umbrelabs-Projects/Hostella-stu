@@ -18,7 +18,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ value, label }) => {
       <h3 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 mb-2 leading-none">
         {value}
       </h3>
-      <p className="text-sm sm:text-base font-medium uppercase tracking-wider text-amber-500">
+      <p className="text-sm sm:text-base font-medium uppercase tracking-wider text-yellow-400">
         {label}
       </p>
     </motion.div>

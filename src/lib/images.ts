@@ -27,6 +27,7 @@ import telecel from "../../public/payment/telecel.png";
 import airtelTigo from "../../public/payment/airtelTigo.png";
 import bankIcon from "../../public/icons/bankIcon.png";
 import xIcon from "../../public/icons/xIcon.png";
+import whatsApp from "../../public/icons/whatsApp.webp";
 import ourPeopleImg from "../../public/aboutUs/ourPeopleImg.png";
 
 export const images = {
@@ -60,6 +61,7 @@ export const images = {
   bankIcon,
   ourPeopleImg,
   xIcon,
+  whatsApp
 };
 
 import gallery1 from "../../public/gallery/gallery1.png";

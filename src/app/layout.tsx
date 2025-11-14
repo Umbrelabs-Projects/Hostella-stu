@@ -38,7 +38,7 @@ export default function RootLayout({
         </div>
 
         <Toaster position="top-right" richColors />
-        {/* <Script
+        <Script
           id="tawk-to"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -54,7 +54,7 @@ export default function RootLayout({
               })();
             `,
           }}
-        /> */}
+        />
       </body>
     </html>
   );

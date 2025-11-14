@@ -35,7 +35,7 @@ export default function MessageInput({
   };
 
   return (
-    <div className="flex flex-col w-full gap-2">
+    <div className="flex flex-col w-full gap-2 py-3">
       {/* Reply Preview Animated */}
       <AnimatePresence>
         {repliedTo && (

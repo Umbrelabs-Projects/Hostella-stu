@@ -104,7 +104,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex relative flex-col bg-slate-50">
+    <div className="flex relative flex-col h-screen md:h-full bg-slate-50">
       <ChatHeader />
 
       {/* Messages scrollable area */}

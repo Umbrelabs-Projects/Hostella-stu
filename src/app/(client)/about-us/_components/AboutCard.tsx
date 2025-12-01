@@ -12,7 +12,7 @@ interface AboutCardProps {
 export default function AboutCard({ title, description }: AboutCardProps) {
   return (
     <motion.div
-      className="flex flex-row md:flex-row items-center gap-3 space-y-3 border-t-4 border-l-4 border-yellow-400 bg-white p-5 shadow-sm hover:shadow-md transition-shadow duration-300"
+      className="flex flex-row md:flex-row justify-between h-full items-center gap-3 space-y-3 border-t-4 border-l-4 border-yellow-400 bg-white p-5 shadow-sm hover:shadow-md transition-shadow duration-300"
       whileHover={{ scale: 1.03 }}
       transition={{ type: "spring", stiffness: 150 }}
     >
@@ -21,7 +21,7 @@ export default function AboutCard({ title, description }: AboutCardProps) {
       </div>
       <div className="w-full">
         <h2 className="text-xl text-yellow-400">{title}</h2>
-        <p className="text-2xl font-semibold w-full text-gray-800">
+        <p className="w-full text-gray-800">
           {description}
         </p>
       </div>

@@ -62,11 +62,10 @@ const AboutUsStory = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            At Hostella, we take pride in providing an unparalleled
-            experience for our tenants. Our commitment to excellence is evident
-            in every detail, from the stylish decor in our rooms to the spacious
-            bedroom sizes. We ensure that every stay is a blend of comfort,
-            style, and impeccable service.
+            At Hostella, we take pride in providing an unparalleled experience for
+            our tenants. Our commitment to excellence is evident in every
+            detail, from the stylish decor in our rooms to the spacious bedroom
+            sizes.
           </motion.p>
         </div>
       </motion.div>

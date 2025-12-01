@@ -4,6 +4,7 @@ import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import FormField from "../forms/FormField";
+import { toast } from "sonner";
 
 interface ForgotPasswordForm {
   email: string;
@@ -17,13 +18,13 @@ export default function ForgotPasswordPage() {
     try {
       console.log("Sending password reset email to:", data.email);
       // await axios.post("/api/auth/forgot-password", data);
-      alert("Reset code sent to your email!");
+      toast("Reset code sent to your email!");
 
       // ✅ Redirect to verify-code page
       router.push("/forgot-password/verify-code");
     } catch (error) {
       console.error(error);
-      alert("Failed to send reset code.");
+      toast("Failed to send reset code.");
     }
   };
 

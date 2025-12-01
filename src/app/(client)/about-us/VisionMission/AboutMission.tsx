@@ -7,11 +7,13 @@ export default function AboutMission() {
   const features = [
     {
       title: "OUR VISION",
-      description: "Elevating hospitality, creating experiences.",
+      description:
+        "To become the leading student accommodation brand in Ghana, recognized for exceptional service, innovative facilities, security, and a warm community that empowers students to thrive academically and socially",
     },
     {
       title: "OUR MISSION",
-      description: "Exceed expectations, cherish every moment.",
+      description:
+        "To provide safe, clean, and comfortable accommodation that supports students’ academic success. We aim to create a home-like environment where discipline, convenience, and modern amenities come together to enhance productivity, personal growth, and excellence.",
     },
   ];
 

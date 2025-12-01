@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useRouter } from "next/navigation"; // ✅ for navigation in Next.js
+import { useRouter } from "next/navigation"; 
 import FormField from "../../forms/FormField";
 
 interface VerifyCodeForm {
@@ -19,13 +19,10 @@ export default function VerifyCodePage() {
       console.log("Verifying code:", data.code);
       // await axios.post("/api/auth/verify-code", data);
 
-      alert("Code verified successfully!");
-
       // ✅ Redirect to reset password page
       router.push("/forgot-password/reset-password");
     } catch (error) {
       console.error(error);
-      alert("Invalid code, please try again.");
     }
   };
 

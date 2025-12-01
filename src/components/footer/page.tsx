@@ -18,7 +18,7 @@ export default function Footer() {
               alt="HostellaLOGO"
             />
             <p className="text-sm max-w-60 text-white">
-              Your gateway to amazing hostel experiences
+              Feel at Home for Academic Excellence
             </p>
           </div>
 

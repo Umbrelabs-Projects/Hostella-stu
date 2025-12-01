@@ -3,6 +3,8 @@
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import FormField from "../../forms/FormField";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 
 interface ResetPasswordForm {
@@ -11,22 +13,24 @@ interface ResetPasswordForm {
 }
 
 export default function ResetPasswordPage() {
+    const router = useRouter();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ResetPasswordForm>();
 
   const onSubmit: SubmitHandler<ResetPasswordForm> = async (data) => {
     if (data.password !== data.confirmPassword) {
-      alert("Passwords do not match!");
+      toast("Passwords do not match!");
       return;
     }
 
     try {
       console.log("Resetting password...");
       // await axios.post("/api/auth/reset-password", data);
-      alert("Password reset successful!");
-
+      toast("Password reset successful!");
+ // ✅ Redirect to login page
+      router.push("/login");
     } catch (error) {
       console.error(error);
-      alert("Failed to reset password.");
+      toast("Failed to reset password.");
     }
   };
 

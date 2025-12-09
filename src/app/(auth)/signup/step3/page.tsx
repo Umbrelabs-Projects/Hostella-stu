@@ -12,10 +12,10 @@ import FormField from "../../forms/FormField";
 import PdfUploadField from "./components/PdfUploadField";
 
 interface DetailsFormProps {
-  onPrev: () => void;
+  onPrev?: () => void;
 }
 
-export default function DetailsForm({ onPrev }: DetailsFormProps) {
+export default function DetailsForm(_: DetailsFormProps) {
   const { signUp, signupData, clearSignupProgress, loading } = useAuthStore();
   const router = useRouter();
 

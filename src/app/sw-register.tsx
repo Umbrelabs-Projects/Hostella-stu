@@ -40,9 +40,10 @@ export default function ServiceWorkerRegister() {
           );
 
           setupUpdateHandlers(registration);
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Handle invalid state error by unregistering and retrying
-          if (error?.message?.includes('invalid state') || error?.name === 'InvalidStateError') {
+          const err = error as Error;
+          if (err?.message?.includes('invalid state') || err?.name === 'InvalidStateError') {
             console.warn('[PWA] Service Worker in invalid state, cleaning up...');
             
             try {

@@ -23,7 +23,7 @@ const MomoDetails: React.FC = () => {
   
   const rawPrice = extraBookingDetails.price || "0";
   const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
-  const bookingId = extraBookingDetails.bookingId as number;
+  const bookingId = extraBookingDetails.bookingId ? parseInt(extraBookingDetails.bookingId) : 0;
 
   const colorThemes = {
     MTN: {

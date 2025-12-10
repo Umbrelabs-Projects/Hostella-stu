@@ -6,7 +6,7 @@ export const extraDetailsSchema = z
     hostelName: z.string().min(1),
     roomTitle: z.string().min(1),
     price: z.string().min(1),
-    currency: z.string().default('GHC'),
+    currency: z.string().min(1, "Currency is required"),
     emergencyContactName: z.string().min(1, "This field is required"),
     emergencyContactNumber: z
       .string()

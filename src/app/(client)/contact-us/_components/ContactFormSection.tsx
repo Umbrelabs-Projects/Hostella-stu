@@ -82,6 +82,13 @@ const ContactFormSection = () => {
           error={errors.phone}
         />
         <ContactField
+          name="subject"
+          label="Subject"
+          placeholder="Enter message subject"
+          register={register}
+          error={errors.subject}
+        />
+        <ContactField
           name="message"
           label="Message"
           placeholder="Type here..."

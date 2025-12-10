@@ -27,6 +27,7 @@ export default function ExtraDetailsForm({
       hostelName: "",
       roomTitle: "",
       price: "",
+      currency: "GHC",
       emergencyContactName: "",
       emergencyContactNumber: "",
       relation: "",

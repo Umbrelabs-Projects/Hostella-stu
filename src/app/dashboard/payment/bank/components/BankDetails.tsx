@@ -49,7 +49,7 @@ export default function BankDetails() {
 
   const onSubmit = async (data: PaymentForm) => {
     try {
-      const paymentId = currentPayment?.id || extraBookingDetails.paymentId as number;
+      const paymentId = currentPayment?.id;
       
       if (!paymentId) {
         alert("Payment ID not found. Please try again.");

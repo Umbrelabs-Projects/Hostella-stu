@@ -7,54 +7,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import TestimonialCard from "./components/TestimonialCard";
-import { images } from "@/lib/images";
-
-const testimonials = [
-  {
-    id: 1,
-    name: "John Doe",
-    image: images.johnDoe,
-    rating: 3,
-    text: "I love how spacious the rooms are.",
-  },
-  {
-    id: 2,
-    name: "Esther Adams",
-    image: images.esther,
-    rating: 4,
-    text: "The service was excellent and the staff were very friendly.",
-  },
-  {
-    id: 3,
-    name: "Paul Smith",
-    image: images.paul,
-    rating: 2,
-    text: "Great experience overall! Highly recommended.",
-  },
-  {
-    id: 4,
-    name: "John Doe",
-    image: images.johnDoe,
-    rating: 5,
-    text: "I love how spacious the rooms are.",
-  },
-  {
-    id: 5,
-    name: "Esther Adams",
-    image: images.esther,
-    rating: 2,
-    text: "The service was excellent and the staff were very friendly.",
-  },
-  {
-    id: 6,
-    name: "Paul Smith",
-    image: images.paul,
-    rating: 4,
-    text: "Great experience overall! Highly recommended.",
-  },
-];
+import { useTestimonialStore } from "@/store/useTestimonialStore";
+import { PageLoader } from "@/components/ui/loading";
+import { ErrorState } from "@/components/ui/error";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function Testimonials() {
+  const { testimonials, loading, error, fetchTestimonials } = useTestimonialStore();
   const autoplay = React.useMemo(
     () => Autoplay({ delay: 4000, stopOnInteraction: false }),
     []
@@ -64,6 +23,10 @@ export function Testimonials() {
   const [prevEnabled, setPrevEnabled] = React.useState(false);
   const [nextEnabled, setNextEnabled] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    fetchTestimonials();
+  }, [fetchTestimonials]);
 
   const scrollPrev = () => emblaApi?.scrollPrev();
   const scrollNext = () => emblaApi?.scrollNext();
@@ -80,6 +43,12 @@ export function Testimonials() {
     emblaApi.on("select", onSelect);
     onSelect();
   }, [emblaApi, onSelect]);
+
+  if (loading) return <PageLoader />;
+  if (error) return <ErrorState message={error} onRetry={fetchTestimonials} />;
+  if (!testimonials || testimonials.length === 0) {
+    return <EmptyState title="No testimonials yet" description="Check back soon for customer reviews" />;
+  }
 
   return (
     <section className="md:px-[5%] text-white">

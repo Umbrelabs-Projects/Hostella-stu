@@ -1,30 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
-import { bookings } from "./status/data/bookings";
-import { hostelsData, roomsData } from "@/lib/constants";
+import React, { useState, useEffect } from "react";
+import { useBookingStore } from "@/store/useBookingStore";
 import BookingDetails from "./status/components/BookingDetails";
 import BookingList from "./status/components/BookingList";
 import { Booking } from "@/types/bookingStatus";
 import HostelHeroBanner from "../home/hostels/components/HostelHeroBanner";
 import { images } from "@/lib/images";
+import { PageLoader } from "@/components/ui/loading";
+import { ErrorState } from "@/components/ui/error";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function Bookings() {
+  const { bookings, loading, error, fetchUserBookings } = useBookingStore();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  // Enrich booking data with hostel + room info
-  const enrichedBookings: Booking[] = bookings.map((booking) => {
-    const hostel = hostelsData.find((h) => h.id === booking.hostelId);
-    const room = roomsData.find((r) => r.id === booking.roomId);
+  useEffect(() => {
+    fetchUserBookings();
+  }, [fetchUserBookings]);
 
-    return {
-      ...booking,
-      hostelName: hostel?.name || "Unknown Hostel",
-      hostelImage: hostel?.image || "/default-hostel.jpg",
-      roomTitle: room?.title || "Room",
-      price: room?.price || "N/A",
-    };
-  });
+  if (loading) return <PageLoader />;
+  if (error) return <ErrorState message={error} onRetry={fetchUserBookings} />;
 
   return (
     <div className="md:mx-[5%] space-y-12 mb-9">
@@ -34,10 +30,14 @@ export default function Bookings() {
         image={images.dashboardImg}
       />
       {!selectedBooking ? (
-        <BookingList
-          bookings={enrichedBookings}
-          onViewDetails={(b) => setSelectedBooking(b)}
-        />
+        bookings.length === 0 ? (
+          <EmptyState title="No bookings yet" description="Start booking a hostel room" />
+        ) : (
+          <BookingList
+            bookings={bookings as Booking[]}
+            onViewDetails={(b) => setSelectedBooking(b)}
+          />
+        )
       ) : (
         <BookingDetails
           booking={selectedBooking}

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import PdfUploadField from "@/app/(auth)/signup/step3/components/PdfUploadField";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { usePaymentStore } from "@/store/usePaymentStore";
 
 // Define Zod Schema
 const paymentSchema = z.object({
@@ -26,7 +27,9 @@ type PaymentForm = z.infer<typeof paymentSchema>;
 
 export default function BankDetails() {
   const { extraBookingDetails } = useAuthStore();
+  const { uploadReceipt, currentPayment, loading } = usePaymentStore();
   const router = useRouter();
+  
   const BankDetails = [
     { title: "Amount", value: extraBookingDetails.price },
     { title: "Bank Name", value: "Cal Bank" },
@@ -44,9 +47,21 @@ export default function BankDetails() {
     mode: "onChange",
   });
 
-  const onSubmit = (data: PaymentForm) => {
-    console.log("Receipt uploaded:", data.receipt?.[0]);
-    router.push("/dashboard/payment/paymentCompleted");
+  const onSubmit = async (data: PaymentForm) => {
+    try {
+      const paymentId = currentPayment?.id || extraBookingDetails.paymentId as number;
+      
+      if (!paymentId) {
+        alert("Payment ID not found. Please try again.");
+        return;
+      }
+
+      // Upload receipt to the payment store
+      await uploadReceipt(paymentId, data.receipt[0]);
+      router.push("/dashboard/payment/paymentCompleted");
+    } catch (error: any) {
+      console.error("Receipt upload failed:", error);
+    }
   };
 
   return (
@@ -135,9 +150,9 @@ export default function BankDetails() {
           <Button
             type="submit"
             className="w-full mt-4 cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white font-medium"
-            disabled={isSubmitting}
+            disabled={isSubmitting || loading}
           >
-            {isSubmitting ? "Submitting..." : "Submit Receipt"}
+            {isSubmitting || loading ? "Submitting..." : "Submit Receipt"}
           </Button>
         </motion.div>
       </motion.form>

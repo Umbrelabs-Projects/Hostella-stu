@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
+import { usePaymentStore } from "@/store/usePaymentStore";
 import PaymentIcons from "./momoDetails/PaymentIcons";
 import PaymentAlert from "./momoDetails/PaymentAlert";
 import NetworkSelect from "./momoDetails/NetworkSelect";
@@ -18,8 +19,11 @@ const MomoDetails: React.FC = () => {
   const [error, setError] = useState<string>("");
 
   const { extraBookingDetails } = useAuthStore();
+  const { initiatePayment, loading } = usePaymentStore();
+  
   const rawPrice = extraBookingDetails.price || "0";
   const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
+  const bookingId = extraBookingDetails.bookingId as number;
 
   const colorThemes = {
     MTN: {
@@ -53,21 +57,21 @@ const MomoDetails: React.FC = () => {
   const alertTextColor =
     selectedNetwork === "MTN" ? "text-gray-800" : "text-white";
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (!validateMobileNumber(selectedNetwork, mobileNumber)) {
       setError(`Please enter a valid ${selectedNetwork} number`);
       return;
     }
 
     setError("");
-    // Payment logic here
-    console.log("Processing payment", {
-      network: selectedNetwork,
-      mobileNumber,
-      amount,
-    });
-    alert(`Payment of GHC ${amount} on ${selectedNetwork} initiated!`);
-    router.push("/dashboard/payment/paymentCompleted");
+    
+    try {
+      // Call the payment store to initiate payment
+      await initiatePayment(bookingId, 'momo', mobileNumber);
+      router.push("/dashboard/payment/paymentCompleted");
+    } catch (err: any) {
+      setError(err.message || "Failed to initiate payment");
+    }
   };
 
   return (
@@ -105,7 +109,7 @@ const MomoDetails: React.FC = () => {
           If not prompted, check your approvals to see pending approvals.
         </div>
 
-        <PayButton theme={currentTheme} />
+        <PayButton theme={currentTheme} loading={loading} />
       </form>
 
       <PaymentIcons />

@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/useAuthStore";
 import PasswordField from "./components/PasswordField";
 
 export default function PasswordSettings() {
+  const { updatePassword, loading } = useAuthStore();
   const [form, setForm] = useState({
     current: "",
     new: "",
@@ -14,17 +16,27 @@ export default function PasswordSettings() {
     new: false,
     confirm: false,
   });
-  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSave = async () => {
+    setError("");
     if (form.new !== form.confirm) {
-      alert("Passwords do not match");
+      setError("New passwords do not match");
       return;
     }
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setForm({ current: "", new: "", confirm: "" });
+    if (form.new.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    try {
+      await updatePassword({
+        currentPassword: form.current,
+        newPassword: form.new,
+      });
+      setForm({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update password");
+    }
   };
 
   const handleChange = (
@@ -55,6 +67,12 @@ export default function PasswordSettings() {
         </p>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
       <div className="space-y-6 pt-4">
         {fields.map((field) => (
           <PasswordField
@@ -71,10 +89,10 @@ export default function PasswordSettings() {
         <div className="flex justify-end pt-4">
           <Button
             onClick={handleSave}
-            disabled={!form.current || !form.new || !form.confirm || isSaving}
+            disabled={!form.current || !form.new || !form.confirm || loading}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
           >
-            {isSaving ? "Updating..." : "Update Password"}
+            {loading ? "Updating..." : "Update Password"}
           </Button>
         </div>
       </div>

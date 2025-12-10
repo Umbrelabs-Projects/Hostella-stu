@@ -6,101 +6,74 @@ import ChatHeader from "./components/ChatHeader";
 import MessageList from "./components/MessageList";
 import MessageInput from "./components/MessageInput";
 import ReplyPreview from "./components/ReplyPreview";
-import { ChatMessageType } from "@/types/chatType";
-
-const INITIAL_MESSAGES: ChatMessageType[] = [
-  {
-    id: 1,
-    sender: "student",
-    content: "Hi, I have a question...",
-    timestamp: "2:15 PM",
-    type: "text",
-  },
-  {
-    id: 2,
-    sender: "admin",
-    content: "Of course! What do you need help with?",
-    timestamp: "2:16 PM",
-    type: "text",
-  },
-  {
-    id: 3,
-    sender: "student",
-    content: "Can I submit it a day late?",
-    timestamp: "2:17 PM",
-    type: "text",
-  },
-  {
-    id: 4,
-    sender: "admin",
-    content: "Late submissions are accepted with penalty.",
-    timestamp: "2:18 PM",
-    type: "text",
-  },
-  {
-    id: 5,
-    sender: "student",
-    content: "Thank you so much!",
-    timestamp: "2:19 PM",
-    type: "text",
-  },
-  {
-    id: 6,
-    sender: "admin",
-    content: "Good luck with your exam!",
-    timestamp: "2:20 PM",
-    type: "text",
-  },
-];
+import { ChatMessage } from "@/types/api";
+import { useChatStore } from "@/store/useChatStore";
+import { PageLoader } from "@/components/ui/loading";
+import { ErrorState } from "@/components/ui/error";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessageType[]>(INITIAL_MESSAGES);
+  const { messages, selectedChat, loading, error, fetchChats, fetchMessages, sendMessage } = useChatStore();
+  const [repliedTo, setRepliedTo] = useState<ChatMessage | null>(null);
   const [input, setInput] = useState("");
-  const [repliedTo, setRepliedTo] = useState<ChatMessageType | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
+
+  // When chat is selected, fetch messages
+  useEffect(() => {
+    if (selectedChat) {
+      fetchMessages(selectedChat.id);
+    }
+  }, [selectedChat, fetchMessages]);
 
   // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
+  const handleSendMessage = async () => {
+    if (!input.trim() || !selectedChat) return;
 
-    const newMsg: ChatMessageType = {
-      id: messages.length + 1,
-      sender: "student",
-      content: input,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      type: "text",
-    };
-
-    setMessages([...messages, newMsg]);
-    setInput("");
-    setRepliedTo(null);
+    try {
+      await sendMessage(selectedChat.id, input, "text");
+      setInput("");
+      setRepliedTo(null);
+    } catch (err) {
+      console.error("Failed to send message", err);
+    }
   };
 
-  const handleSendVoice = (audioBlob: Blob) => {
+  const handleSendVoice = async (audioBlob: Blob) => {
+    if (!selectedChat) return;
     setIsRecording(false);
 
-    const newMsg: ChatMessageType = {
-      id: messages.length + 1,
-      sender: "student",
-      content: "[Voice message]",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      type: "voice",
-      audio: audioBlob,
-    };
+    try {
+      // Convert Blob to File
+      const file = new File([audioBlob], "audio.webm", { type: audioBlob.type });
+      await sendMessage(selectedChat.id, "[Voice message]", "voice", file);
+    } catch (err) {
+      console.error("Failed to send voice message", err);
+    }
+  };
 
-    setMessages([...messages, newMsg]);
+  if (loading && messages.length === 0) return <PageLoader />;
+  if (error && messages.length === 0) return <ErrorState message={error} onRetry={fetchChats} />;
+
+  // Convert ChatMessage to ChatMessageType for MessageList component
+  const chatMessageTypes = messages.map((msg) => ({
+    id: msg.id,
+    sender: msg.sender as "student" | "admin",
+    content: msg.content,
+    timestamp: msg.timestamp,
+    type: (msg.type === "voice" ? "voice" : "text") as "text" | "voice",
+  }));
+
+  const handleReply = () => {
+    // Placeholder for reply functionality
   };
 
   return (
@@ -109,7 +82,7 @@ export default function ChatPage() {
 
       {/* Messages scrollable area */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-19 space-y-4">
-        <MessageList messages={messages} onReply={setRepliedTo} />
+        <MessageList messages={chatMessageTypes} onReply={() => {}} />
         <div ref={messagesEndRef} />
       </div>
 
@@ -125,7 +98,7 @@ export default function ChatPage() {
               className="mb-2"
             >
               <ReplyPreview
-                repliedTo={repliedTo}
+                repliedTo={repliedTo as any}
                 onCancel={() => setRepliedTo(null)}
               />
             </motion.div>

@@ -1,0 +1,145 @@
+import { create } from 'zustand';
+import { Booking } from '@/types/api';
+import { bookingApi } from '@/lib/api';
+
+interface BookingState {
+  bookings: Booking[];
+  selectedBooking: Booking | null;
+  loading: boolean;
+  error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
+
+  fetchBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
+  fetchUserBookings: () => Promise<void>;
+  fetchBookingById: (id: number) => Promise<void>;
+  createBooking: (data: any) => Promise<Booking | null>;
+  updateBooking: (id: number, data: Partial<Booking>) => Promise<void>;
+  cancelBooking: (id: number, reason?: string) => Promise<void>;
+  setSelectedBooking: (booking: Booking | null) => void;
+  clearError: () => void;
+}
+
+export const useBookingStore = create<BookingState>((set) => ({
+  bookings: [],
+  selectedBooking: null,
+  loading: false,
+  error: null,
+  pagination: null,
+
+  fetchBookings: async (params) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await bookingApi.getAll(params);
+      set({
+        bookings: response.data,
+        pagination: response.pagination,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to fetch bookings',
+        loading: false,
+      });
+    }
+  },
+
+  fetchUserBookings: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await bookingApi.getUserBookings();
+      set({
+        bookings: response.data,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to fetch user bookings',
+        loading: false,
+      });
+    }
+  },
+
+  fetchBookingById: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await bookingApi.getById(id);
+      set({
+        selectedBooking: response.data,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to fetch booking',
+        loading: false,
+      });
+    }
+  },
+
+  createBooking: async (data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await bookingApi.create(data);
+      set((state) => ({
+        bookings: [response.data, ...state.bookings],
+        selectedBooking: response.data,
+        loading: false,
+      }));
+      return response.data;
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to create booking',
+        loading: false,
+      });
+      return null;
+    }
+  },
+
+  updateBooking: async (id, data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await bookingApi.update(id, data);
+      set((state) => ({
+        bookings: state.bookings.map((b) =>
+          b.id === id ? response.data : b
+        ),
+        selectedBooking:
+          state.selectedBooking?.id === id
+            ? response.data
+            : state.selectedBooking,
+        loading: false,
+      }));
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to update booking',
+        loading: false,
+      });
+    }
+  },
+
+  cancelBooking: async (id, reason) => {
+    set({ loading: true, error: null });
+    try {
+      await bookingApi.cancel(id, reason);
+      set((state) => ({
+        bookings: state.bookings.map((b) =>
+          b.id === id ? { ...b, status: 'cancelled' as const } : b
+        ),
+        loading: false,
+      }));
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to cancel booking',
+        loading: false,
+      });
+    }
+  },
+
+  setSelectedBooking: (booking) => set({ selectedBooking: booking }),
+
+  clearError: () => set({ error: null }),
+}));

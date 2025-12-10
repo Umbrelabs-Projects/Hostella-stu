@@ -55,7 +55,7 @@ export async function apiFetch<T>(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://www.hostella.render.com/api/v1";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://example-prod.up.railway.app/api/v1";
   
   // Don't set Content-Type for FormData (browser will set it with boundary)
   const isFormData = options.body instanceof FormData;

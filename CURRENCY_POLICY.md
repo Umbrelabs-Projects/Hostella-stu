@@ -78,7 +78,7 @@ All transaction records maintain amounts in GHC:
 ## 🛠️ Technical Implementation
 
 ### API Documentation
-- Base URL: `https://www.hostella.render.com/api/v1`
+- Base URL: `https://example-prod.up.railway.app/api/v1`
 - **Currency Declaration**: All prices and amounts are in Ghana Cedis (GHC)
 - All payment endpoints handle amounts in GHC
 

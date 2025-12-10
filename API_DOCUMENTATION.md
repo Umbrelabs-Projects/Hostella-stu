@@ -1,6 +1,6 @@
 # Hostella API Documentation for Backend Team
 
-**Base URL**: `https://www.hostella.render.com/api/v1`  
+**Base URL**: `https://example-prod.up.railway.app/api/v1`  
 **Currency**: All prices and amounts are in **Ghana Cedis (GHC)**
 
 ## Table of Contents
@@ -1315,7 +1315,7 @@
 
 ### Connection Initialization
 
-**URL**: `wss://www.hostella.render.com/socket.io/?EIO=4&transport=websocket`
+**URL**: `wss://example-prod.up.railway.app/socket.io/?EIO=4&transport=websocket`
 
 **Headers**:
 ```
@@ -1603,8 +1603,8 @@ metadata: {
         "id": "image-uuid-1",
         "originalName": "hostel-entrance.jpg",
         "fileName": "hostel-entrance-2025-01-15-uuid.jpg",
-        "url": "https://www.hostella.render.com/uploads/hostels/hostel-entrance-2025-01-15-uuid.jpg",
-        "thumbnailUrl": "https://www.hostella.render.com/uploads/hostels/thumb-hostel-entrance-2025-01-15-uuid.jpg",
+        "url": "https://example-prod.up.railway.app/uploads/hostels/hostel-entrance-2025-01-15-uuid.jpg",
+        "thumbnailUrl": "https://example-prod.up.railway.app/uploads/hostels/thumb-hostel-entrance-2025-01-15-uuid.jpg",
         "size": 2048576,
         "sizeFormatted": "2.0 MB",
         "mimeType": "image/jpeg",
@@ -1619,8 +1619,8 @@ metadata: {
         "id": "image-uuid-2",
         "originalName": "room-view.png",
         "fileName": "room-view-2025-01-15-uuid.png",
-        "url": "https://www.hostella.render.com/uploads/rooms/room-view-2025-01-15-uuid.png",
-        "thumbnailUrl": "https://www.hostella.render.com/uploads/rooms/thumb-room-view-2025-01-15-uuid.png",
+        "url": "https://example-prod.up.railway.app/uploads/rooms/room-view-2025-01-15-uuid.png",
+        "thumbnailUrl": "https://example-prod.up.railway.app/uploads/rooms/thumb-room-view-2025-01-15-uuid.png",
         "size": 3145728,
         "sizeFormatted": "3.0 MB",
         "mimeType": "image/png",
@@ -1667,7 +1667,7 @@ userId: string (required)
   "data": {
     "documentId": "doc-uuid",
     "fileName": "admission-letter-2025-01-15-uuid.pdf",
-    "url": "https://www.hostella.render.com/uploads/documents/admission-letter-2025-01-15-uuid.pdf",
+    "url": "https://example-prod.up.railway.app/uploads/documents/admission-letter-2025-01-15-uuid.pdf",
     "documentType": "admission_letter",
     "size": 1024576,
     "sizeFormatted": "1.0 MB",

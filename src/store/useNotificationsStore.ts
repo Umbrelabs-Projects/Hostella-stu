@@ -3,51 +3,27 @@
 import { create } from "zustand";
 import { Notification } from "@/types/notifications";
 import { CheckCircle, CreditCard, Key, ToolCase } from "lucide-react";
+import { notificationApi } from "@/lib/api";
 
 interface NotificationsState {
   notifications: Notification[];
-  addNotification: (notification: Notification) => void;
-  markAsRead: (id: number) => void;
-  markAllAsRead: () => void;
-  deleteNotification: (id: number) => void;
-  deleteAll: () => void;
-}
+  loading: boolean;
+  error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
 
-// Initial dummy notifications
-const initialNotifications: Notification[] = [
-  {
-    id: 1,
-    type: "booking_approved",
-    title: "Booking Approved",
-    description: "Your request for Room B-204 has been confirmed.",
-    time: "1 min ago",
-    read: false,
-  },
-  {
-    id: 2,
-    type: "payment_received",
-    title: "Payment Received",
-    description: "The payment of $800 for hostel fees was successful.",
-    time: "15 min ago",
-    read: false,
-  },
-  {
-    id: 3,
-    type: "room_allocated",
-    title: "Room Allocated",
-    description: "You have been assigned to Room A-312.",
-    time: "2 hours ago",
-    read: false,
-  },
-  {
-    id: 4,
-    type: "maintenance_alert",
-    title: "Maintenance Alert",
-    description: "Water will be shut off for 2 hours tomorrow.",
-    time: "1 day ago",
-    read: true,
-  },
-];
+  fetchNotifications: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) => Promise<void>;
+  addNotification: (notification: Notification) => void;
+  markAsRead: (id: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: number) => Promise<void>;
+  deleteAll: () => Promise<void>;
+  clearError: () => void;
+}
 
 export const typeConfig = {
   booking_approved: {
@@ -69,25 +45,87 @@ export const typeConfig = {
 };
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({
-  notifications: initialNotifications,
+  notifications: [],
+  loading: false,
+  error: null,
+  pagination: null,
+
+  fetchNotifications: async (params) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await notificationApi.getAll(params);
+      set({
+        notifications: response.data,
+        pagination: response.pagination,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to fetch notifications',
+        loading: false,
+      });
+    }
+  },
+
   addNotification: (notification) =>
-    set((state) => ({ notifications: [notification, ...state.notifications] })),
-  markAsRead: (id) =>
-    set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      ),
+    set((state) => ({ 
+      notifications: [notification, ...state.notifications] 
     })),
-  markAllAsRead: () =>
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, read: true })),
-    })),
-  deleteNotification: (id) =>
-    set((state) => ({
-      notifications: state.notifications.filter((n) => n.id !== id),
-    })),
-  deleteAll: () =>
-    set(() => ({
-      notifications: [],
-    })),
+
+  markAsRead: async (id) => {
+    try {
+      await notificationApi.markAsRead(id);
+      set((state) => ({
+        notifications: state.notifications.map((n) =>
+          n.id === id ? { ...n, read: true } : n
+        ),
+      }));
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to mark notification as read',
+      });
+    }
+  },
+
+  markAllAsRead: async () => {
+    try {
+      await notificationApi.markAllAsRead();
+      set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, read: true })),
+      }));
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to mark all notifications as read',
+      });
+    }
+  },
+
+  deleteNotification: async (id) => {
+    try {
+      await notificationApi.delete(id);
+      set((state) => ({
+        notifications: state.notifications.filter((n) => n.id !== id),
+      }));
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to delete notification',
+      });
+    }
+  },
+
+  deleteAll: async () => {
+    try {
+      await notificationApi.deleteAll();
+      set(() => ({
+        notifications: [],
+      }));
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to delete all notifications',
+      });
+    }
+  },
+
+  clearError: () => set({ error: null }),
 }));
+

@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { useBlogStore } from "@/store/useBlogStore";
-import { PageLoader } from "@/components/ui/loading";
 import { ErrorState } from "@/components/ui/error";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 
 export default function Blog() {
   const { posts, categories, loading, error, fetchPosts, fetchCategories } = useBlogStore();
@@ -17,7 +17,7 @@ export default function Blog() {
     fetchPosts({ category: selectedCategory, page });
   }, [fetchPosts, fetchCategories, selectedCategory, page]);
 
-  if (loading && posts.length === 0) return <PageLoader />;
+  if (loading && posts.length === 0) return <SkeletonCardGrid count={6} />;
   if (error && posts.length === 0) return <ErrorState message={error} onRetry={() => fetchPosts({ category: selectedCategory, page })} />;
 
   return (

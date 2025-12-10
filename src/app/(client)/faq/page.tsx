@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useFAQStore } from "@/store/useFAQStore";
-import { PageLoader } from "@/components/ui/loading";
 import { ErrorState } from "@/components/ui/error";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { SkeletonList } from "@/components/ui/skeleton";
 
 interface ExpandedFAQ {
   [key: string]: boolean;
@@ -33,7 +33,7 @@ export default function FAQs() {
     ? faqs.filter((faq) => faq.category === selectedCategory)
     : faqs;
 
-  if (loading) return <PageLoader />;
+  if (loading) return <SkeletonList count={5} />;
   if (error) return <ErrorState message={error} onRetry={fetchFAQs} />;
 
   return (

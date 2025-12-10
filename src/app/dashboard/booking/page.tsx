@@ -7,9 +7,9 @@ import BookingList from "./status/components/BookingList";
 import { Booking } from "@/types/bookingStatus";
 import HostelHeroBanner from "../home/hostels/components/HostelHeroBanner";
 import { images } from "@/lib/images";
-import { PageLoader } from "@/components/ui/loading";
 import { ErrorState } from "@/components/ui/error";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SkeletonBanner, SkeletonList } from "@/components/ui/skeleton";
 
 export default function Bookings() {
   const { bookings, loading, error, fetchUserBookings } = useBookingStore();
@@ -19,7 +19,14 @@ export default function Bookings() {
     fetchUserBookings();
   }, [fetchUserBookings]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="md:mx-[5%] space-y-12 mb-9">
+        <SkeletonBanner />
+        <SkeletonList count={3} />
+      </div>
+    );
+  }
   if (error) return <ErrorState message={error} onRetry={fetchUserBookings} />;
 
   return (

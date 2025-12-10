@@ -83,6 +83,7 @@ Implement all endpoints defined in **API_DOCUMENTATION.md** sections:
 - ✅ Zustand state management (13 stores)
 - ✅ Jest test suite (75 tests, all passing)
 - ✅ Protected routes with middleware
+- ✅ **Performance Optimizations**: Lazy loading, code splitting, skeleton loaders
 
 ### Pending Backend Integration:
 - API endpoint implementations
@@ -143,6 +144,51 @@ pending_payment → pending_approval → approved → room_allocated → complet
 | **API_DOCUMENTATION.md** | Complete API specifications | Building all endpoints |
 | **CURRENCY_POLICY.md** | Currency standards | Payment processing |
 | **README.md** | Project overview | Development setup |
+
+---
+
+## ⚡ Frontend Performance Optimizations
+
+### Lazy Loading & Code Splitting
+The frontend implements strategic lazy loading for optimal performance:
+
+**Lazy Loaded Components:**
+- Homepage sections (WhyChooseUs, OurHostels, Testimonials)
+- Blog, FAQ, Gallery sections
+- Heavy dashboard components
+
+**Implementation:**
+```typescript
+// Using Next.js dynamic imports with React Suspense
+const Component = dynamic(() => import('./Component'), {
+  loading: () => <SkeletonLoader />,
+  ssr: true
+});
+```
+
+### Skeleton Loaders
+Instead of generic loading spinners, the frontend uses context-specific skeleton loaders that match the actual content layout. This improves perceived performance and user experience.
+
+**Skeleton Types:**
+- Card skeletons (for hostel/room listings)
+- Text skeletons (for content blocks)
+- List skeletons (for chat/notification lists)
+- Form skeletons (for form fields)
+- Banner skeletons (for hero sections)
+
+### Performance Impact:
+- Reduced First Contentful Paint (FCP)
+- Improved Time to Interactive (TTI)
+- Better user experience during API calls
+- Smoother page transitions
+
+**Affected Pages:**
+- `/` (Home) - Lazy loads below-the-fold sections
+- `/blog` - Skeleton cards while loading posts
+- `/faq` - Skeleton list while loading FAQs
+- `/dashboard` - Skeleton loaders for all data lists
+- `/dashboard/booking` - Skeleton loaders for booking details
+- `/dashboard/chats` - Skeleton loaders for messages
 
 ---
 

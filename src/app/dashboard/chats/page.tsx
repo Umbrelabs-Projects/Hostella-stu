@@ -8,8 +8,8 @@ import MessageInput from "./components/MessageInput";
 import ReplyPreview from "./components/ReplyPreview";
 import { ChatMessage } from "@/types/api";
 import { useChatStore } from "@/store/useChatStore";
-import { PageLoader } from "@/components/ui/loading";
 import { ErrorState } from "@/components/ui/error";
+import { SkeletonList } from "@/components/ui/skeleton";
 
 export default function ChatPage() {
   const { messages, selectedChat, loading, error, fetchChats, fetchMessages, sendMessage } = useChatStore();
@@ -60,7 +60,18 @@ export default function ChatPage() {
     }
   };
 
-  if (loading && messages.length === 0) return <PageLoader />;
+  if (loading && messages.length === 0) {
+    return (
+      <div className="flex relative flex-col h-screen md:h-full bg-slate-50">
+        <div className="px-4 py-4 border-b">
+          <div className="animate-pulse h-6 bg-gray-200 rounded w-32" />
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-19">
+          <SkeletonList count={5} />
+        </div>
+      </div>
+    );
+  }
   if (error && messages.length === 0) return <ErrorState message={error} onRetry={fetchChats} />;
 
   // Convert ChatMessage to ChatMessageType for MessageList component
@@ -71,10 +82,6 @@ export default function ChatPage() {
     timestamp: msg.timestamp,
     type: (msg.type === "voice" ? "voice" : "text") as "text" | "voice",
   }));
-
-  const handleReply = () => {
-    // Placeholder for reply functionality
-  };
 
   return (
     <div className="flex relative flex-col h-screen md:h-full bg-slate-50">

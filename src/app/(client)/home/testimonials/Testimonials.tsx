@@ -8,9 +8,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TestimonialCard from "./components/TestimonialCard";
 import { useTestimonialStore } from "@/store/useTestimonialStore";
-import { PageLoader } from "@/components/ui/loading";
 import { ErrorState } from "@/components/ui/error";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SkeletonTestimonial } from "@/components/ui/skeleton";
 
 export function Testimonials() {
   const { testimonials, loading, error, fetchTestimonials } = useTestimonialStore();
@@ -44,7 +44,18 @@ export function Testimonials() {
     onSelect();
   }, [emblaApi, onSelect]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <section className="md:px-[5%] text-white">
+        <h1 className="text-2xl md:text-5xl font-bold text-center text-black mb-10">Testimonials</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <SkeletonTestimonial key={i} />
+          ))}
+        </div>
+      </section>
+    );
+  }
   if (error) return <ErrorState message={error} onRetry={fetchTestimonials} />;
   if (!testimonials || testimonials.length === 0) {
     return <EmptyState title="No testimonials yet" description="Check back soon for customer reviews" />;

@@ -21,6 +21,11 @@ const eslintConfig = [
       "scripts/**",
     ],
   },
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 ];
 
 export default eslintConfig;

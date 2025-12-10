@@ -11,6 +11,17 @@ function generateBookingId() {
   return `BK${randomNum}`;
 }
 
+// Helper to set auth cookie for middleware
+function setAuthCookie(token: string | null) {
+  if (typeof window !== 'undefined') {
+    if (token) {
+      document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+    } else {
+      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    }
+  }
+}
+
 interface User {
   id: string;
   firstName: string;
@@ -96,20 +107,21 @@ export const useAuthStore = create<AuthState>()(
       signIn: async (data) => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ user: User; token: string }>(
+          const res = await apiFetch<{ success: boolean; data: { user: User; token: string } }>(
             "/auth/login",
             {
               method: "POST",
               body: JSON.stringify(data),
             }
           );
-          setAuthToken(res.token);
-          set({ user: res.user, token: res.token, loading: false });
+          setAuthToken(res.data.token);
+          setAuthCookie(res.data.token);
+          set({ user: res.data.user, token: res.data.token, loading: false });
         } catch (err: unknown) {
-          // Narrow the type
           const errorMessage =
             err instanceof Error ? err.message : "SignIn failed";
           set({ error: errorMessage, loading: false });
+          throw err;
         }
       },
 
@@ -123,7 +135,7 @@ export const useAuthStore = create<AuthState>()(
             else if (value != null) formData.append(key, String(value));
           });
 
-          const res = await apiFetch<{ user: User; token: string }>(
+          const res = await apiFetch<{ success: boolean; data: { user: User; token: string } }>(
             "/auth/register",
             {
               method: "POST",
@@ -131,57 +143,65 @@ export const useAuthStore = create<AuthState>()(
             }
           );
 
-          setAuthToken(res.token);
-          set({ user: res.user, token: res.token, loading: false });
+          setAuthToken(res.data.token);
+          setAuthCookie(res.data.token);
+          set({ user: res.data.user, token: res.data.token, loading: false });
           get().clearSignupProgress();
         } catch (err: unknown) {
-          // Narrow the type
           const errorMessage =
-            err instanceof Error ? err.message : " SignUp failed";
+            err instanceof Error ? err.message : "SignUp failed";
           set({ error: errorMessage, loading: false });
+          throw err;
         }
       },
 
       // --- Profile Update ---
       updateProfile: async (formData) => {
-        set({ loading: true });
+        set({ loading: true, error: null });
         try {
-          const updatedUser = await apiFetch<User>("/user/updateProfile", {
+          const res = await apiFetch<{ success: boolean; data: User }>("/user/profile", {
             method: "PUT",
             body: formData,
           });
-          set({ user: updatedUser, loading: false });
+          set({ user: res.data, loading: false });
         } catch (err: unknown) {
-          // Narrow the type
           const errorMessage =
             err instanceof Error ? err.message : "Profile update failed";
           set({ error: errorMessage, loading: false });
+          throw err;
         }
       },
 
       // --- Password Update ---
       updatePassword: async (payload) => {
-        set({ loading: true });
+        set({ loading: true, error: null });
         try {
-          await apiFetch("/user/updatePassword", {
-            method: "POST",
+          await apiFetch("/user/password", {
+            method: "PUT",
             body: JSON.stringify(payload),
           });
           set({ loading: false });
         } catch (err: unknown) {
-          // Narrow the type
           const errorMessage =
             err instanceof Error ? err.message : "Password update failed";
           set({ error: errorMessage, loading: false });
+          throw err;
         }
       },
 
       signOut: async () => {
-        setAuthToken(null);
-        set({ user: null, token: null });
-        localStorage.removeItem("auth-storage");
-        get().clearSignupProgress();
-        get().resetExtraBookingDetails();
+        try {
+          await apiFetch("/auth/logout", { method: "POST" });
+        } catch (error) {
+          // Ignore logout errors
+        } finally {
+          setAuthToken(null);
+          setAuthCookie(null);
+          set({ user: null, token: null });
+          localStorage.removeItem("auth-storage");
+          get().clearSignupProgress();
+          get().resetExtraBookingDetails();
+        }
       },
 
       restoreSession: async () => {
@@ -193,8 +213,9 @@ export const useAuthStore = create<AuthState>()(
             const token = parsed?.state?.token;
             if (token) {
               setAuthToken(token);
-              const user = await apiFetch<User>("/auth/me");
-              set({ user, token, loading: false });
+              setAuthCookie(token);
+              const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
+              set({ user: res.data, token, loading: false });
               return;
             }
           }
@@ -208,6 +229,7 @@ export const useAuthStore = create<AuthState>()(
           set({ loading: false });
         } catch {
           setAuthToken(null);
+          setAuthCookie(null);
           set({ user: null, token: null, loading: false });
         }
       },

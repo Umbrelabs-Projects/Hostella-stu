@@ -4,6 +4,7 @@ import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import FormField from "../forms/FormField";
+import { usePasswordResetStore } from "@/store/usePasswordResetStore";
 import { toast } from "sonner";
 
 interface ForgotPasswordForm {
@@ -12,19 +13,19 @@ interface ForgotPasswordForm {
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const { sendResetCode, loading } = usePasswordResetStore();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotPasswordForm>();
 
   const onSubmit: SubmitHandler<ForgotPasswordForm> = async (data) => {
     try {
-      console.log("Sending password reset email to:", data.email);
-      // await axios.post("/api/auth/forgot-password", data);
+      await sendResetCode(data.email);
       toast("Reset code sent to your email!");
 
       // ✅ Redirect to verify-code page
       router.push("/forgot-password/verify-code");
     } catch (error) {
       console.error(error);
-      toast("Failed to send reset code.");
+      toast(error instanceof Error ? error.message : "Failed to send reset code.");
     }
   };
 
@@ -53,10 +54,10 @@ export default function ForgotPasswordPage() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold"
+          disabled={loading || isSubmitting}
+          className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50 text-white py-3 rounded-lg font-semibold"
         >
-          {isSubmitting ? "Sending..." : "Send Reset Code"}
+          {loading || isSubmitting ? "Sending..." : "Send Reset Code"}
         </button>
       </form>
     </div>

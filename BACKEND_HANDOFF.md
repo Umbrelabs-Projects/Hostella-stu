@@ -43,7 +43,7 @@ This package contains everything needed for backend API development and integrat
 ## 🎯 Quick Start for Backend Development
 
 ### Frontend is Using:
-- **Base API URL**: `https://www.hostella.render.com/api/v1`
+- **Base API URL**: `https://example-prod.up.railway.app/api/v1`
 - **State Management**: Zustand (13 stores)
 - **Authentication**: Token-based (JWT recommended)
 - **Request Format**: JSON with Bearer token in Authorization header
@@ -1561,7 +1561,7 @@ DATABASE_SSL=true
 # API Configuration
 NODE_ENV=production
 API_PORT=3001
-API_BASE_URL=https://www.hostella.render.com/api/v1
+API_BASE_URL=https://example-prod.up.railway.app/api/v1
 FRONTEND_URL=https://hostella.com
 ALLOWED_ORIGINS=https://hostella.com,https://www.hostella.com
 
@@ -1602,7 +1602,7 @@ LOG_FILE=logs/application.log
 
 # WebSocket
 WEBSOCKET_PORT=3002
-WEBSOCKET_URL=wss://www.hostella.render.com
+WEBSOCKET_URL=wss://example-prod.up.railway.app
 ```
 
 ---
@@ -1641,8 +1641,8 @@ kubectl apply -f configmap.yml
 kubectl apply -f secret.yml
 
 # 7. Health Check
-curl https://api.hostella.com/health
-curl https://api.hostella.com/api/v1/health
+curl https://example-prod.up.railway.app/health
+curl https://example-prod.up.railway.app/api/v1/health
 
 # 8. Smoke Tests
 npm run test:smoke # Quick integration tests on production

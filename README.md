@@ -87,7 +87,7 @@ pnpm install
 The `.env.local` file is already configured:
 
 ```env
-NEXT_PUBLIC_API_URL=https://www.hostella.render.com/api/v1
+NEXT_PUBLIC_API_URL=https://example-prod.up.railway.app/api/v1
 ```
 
 ### 4️⃣ Run the development server

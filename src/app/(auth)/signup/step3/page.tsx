@@ -11,7 +11,12 @@ import { Step2Data, step2Schema } from "@/app/(auth)/validations/signUpSchema";
 import FormField from "../../forms/FormField";
 import PdfUploadField from "./components/PdfUploadField";
 
-export default function DetailsForm() {
+interface DetailsFormProps {
+  onPrev?: () => void;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function DetailsForm({ onPrev }: DetailsFormProps) {
   const { signUp, signupData, clearSignupProgress, loading } = useAuthStore();
   const router = useRouter();
 

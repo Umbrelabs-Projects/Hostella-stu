@@ -40,9 +40,9 @@ export const useChatStore = create<ChatState>((set) => ({
         chats: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch chats',
+        error: error instanceof Error ? error.message : 'Failed to fetch chats',
         loading: false,
       });
     }
@@ -57,9 +57,9 @@ export const useChatStore = create<ChatState>((set) => ({
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch messages',
+        error: error instanceof Error ? error.message : 'Failed to fetch messages',
         loading: false,
       });
     }
@@ -81,9 +81,9 @@ export const useChatStore = create<ChatState>((set) => ({
         messages: [...state.messages, response.data],
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to send message',
+        error: error instanceof Error ? error.message : 'Failed to send message',
         loading: false,
       });
     }
@@ -97,9 +97,9 @@ export const useChatStore = create<ChatState>((set) => ({
           messageIds.includes(m.id) ? { ...m, read: true } : m
         ),
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to mark messages as read',
+        error: error instanceof Error ? error.message : 'Failed to mark messages as read',
       });
     }
   },

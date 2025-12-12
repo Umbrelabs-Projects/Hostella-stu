@@ -6,14 +6,14 @@ import ChatHeader from "./components/ChatHeader";
 import MessageList from "./components/MessageList";
 import MessageInput from "./components/MessageInput";
 import ReplyPreview from "./components/ReplyPreview";
-import { ChatMessage } from "@/types/api";
+import { ChatMessageType } from "@/types/chatType";
 import { useChatStore } from "@/store/useChatStore";
 import { ErrorState } from "@/components/ui/error";
 import { SkeletonList } from "@/components/ui/skeleton";
 
 export default function ChatPage() {
   const { messages, selectedChat, loading, error, fetchChats, fetchMessages, sendMessage } = useChatStore();
-  const [repliedTo, setRepliedTo] = useState<ChatMessage | null>(null);
+  const [repliedTo, setRepliedTo] = useState<ChatMessageType | null>(null);
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
 
@@ -105,7 +105,7 @@ export default function ChatPage() {
               className="mb-2"
             >
               <ReplyPreview
-                repliedTo={repliedTo as any}
+                repliedTo={repliedTo}
                 onCancel={() => setRepliedTo(null)}
               />
             </motion.div>

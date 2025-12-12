@@ -3,6 +3,22 @@
 **Base URL**: `https://example-prod.up.railway.app/api/v1`  
 **Currency**: All prices and amounts are in **Ghana Cedis (GHC)**
 
+## Global Conventions
+- Authorization: `Authorization: Bearer <token>` on all protected routes
+- Content-Type: `application/json` unless noted (`multipart/form-data` for uploads)
+- Pagination: `{ page, limit }` query; server responds with `{ pagination: { page, limit, total, totalPages } }`
+- Error format:
+```
+{
+  "success": false,
+  "error": { "code": "string", "message": "human-readable", "details": any }
+}
+```
+- Success format:
+```
+{ "success": true, "data": any, "pagination"?: { ... } }
+```
+
 ## Table of Contents
 1. [Authentication](#authentication)
 2. [User Management](#user-management)

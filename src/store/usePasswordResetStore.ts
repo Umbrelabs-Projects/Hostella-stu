@@ -20,7 +20,7 @@ interface PasswordResetState {
   clearError: () => void;
 }
 
-export const usePasswordResetStore = create<PasswordResetState>((set, get) => ({
+export const usePasswordResetStore = create<PasswordResetState>((set) => ({
   email: '',
   code: '',
   loading: false,
@@ -37,9 +37,9 @@ export const usePasswordResetStore = create<PasswordResetState>((set, get) => ({
       await authApi.forgotPassword(email);
       set({ email, step: 'code', loading: false });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to send reset code',
+        error: error instanceof Error ? error.message : 'Failed to send reset code',
         loading: false,
       });
       return false;
@@ -52,9 +52,9 @@ export const usePasswordResetStore = create<PasswordResetState>((set, get) => ({
       await authApi.verifyResetCode(email, code);
       set({ code, step: 'password', loading: false });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Invalid verification code',
+        error: error instanceof Error ? error.message : 'Invalid verification code',
         loading: false,
       });
       return false;
@@ -67,9 +67,9 @@ export const usePasswordResetStore = create<PasswordResetState>((set, get) => ({
       await authApi.resetPassword(email, code, newPassword);
       set({ step: 'success', loading: false });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to reset password',
+        error: error instanceof Error ? error.message : 'Failed to reset password',
         loading: false,
       });
       return false;

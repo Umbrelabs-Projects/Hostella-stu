@@ -11,11 +11,7 @@ import { Step2Data, step2Schema } from "@/app/(auth)/validations/signUpSchema";
 import FormField from "../../forms/FormField";
 import PdfUploadField from "./components/PdfUploadField";
 
-interface DetailsFormProps {
-  onPrev?: () => void;
-}
-
-export default function DetailsForm(_: DetailsFormProps) {
+export default function DetailsForm() {
   const { signUp, signupData, clearSignupProgress, loading } = useAuthStore();
   const router = useRouter();
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Booking } from '@/types/api';
+import { Booking, CreateBookingData } from '@/types/api';
 import { bookingApi } from '@/lib/api';
 
 interface BookingState {
@@ -17,7 +17,7 @@ interface BookingState {
   fetchBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
   fetchUserBookings: () => Promise<void>;
   fetchBookingById: (id: number) => Promise<void>;
-  createBooking: (data: any) => Promise<Booking | null>;
+  createBooking: (data: CreateBookingData) => Promise<Booking | null>;
   updateBooking: (id: number, data: Partial<Booking>) => Promise<void>;
   cancelBooking: (id: number, reason?: string) => Promise<void>;
   setSelectedBooking: (booking: Booking | null) => void;
@@ -40,9 +40,9 @@ export const useBookingStore = create<BookingState>((set) => ({
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch bookings',
+        error: error instanceof Error ? error.message : 'Failed to fetch bookings',
         loading: false,
       });
     }
@@ -56,9 +56,9 @@ export const useBookingStore = create<BookingState>((set) => ({
         bookings: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch user bookings',
+        error: error instanceof Error ? error.message : 'Failed to fetch user bookings',
         loading: false,
       });
     }
@@ -72,9 +72,9 @@ export const useBookingStore = create<BookingState>((set) => ({
         selectedBooking: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch booking',
+        error: error instanceof Error ? error.message : 'Failed to fetch booking',
         loading: false,
       });
     }
@@ -90,9 +90,9 @@ export const useBookingStore = create<BookingState>((set) => ({
         loading: false,
       }));
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to create booking',
+        error: error instanceof Error ? error.message : 'Failed to create booking',
         loading: false,
       });
       return null;
@@ -113,9 +113,9 @@ export const useBookingStore = create<BookingState>((set) => ({
             : state.selectedBooking,
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to update booking',
+        error: error instanceof Error ? error.message : 'Failed to update booking',
         loading: false,
       });
     }
@@ -131,9 +131,9 @@ export const useBookingStore = create<BookingState>((set) => ({
         ),
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to cancel booking',
+        error: error instanceof Error ? error.message : 'Failed to cancel booking',
         loading: false,
       });
     }

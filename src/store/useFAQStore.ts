@@ -27,9 +27,9 @@ export const useFAQStore = create<FAQState>((set) => ({
         faqs: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch FAQs',
+        error: error instanceof Error ? error.message : 'Failed to fetch FAQs',
         loading: false,
       });
     }
@@ -43,9 +43,9 @@ export const useFAQStore = create<FAQState>((set) => ({
         categories: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch FAQ categories',
+        error: error instanceof Error ? error.message : 'Failed to fetch FAQ categories',
         loading: false,
       });
     }

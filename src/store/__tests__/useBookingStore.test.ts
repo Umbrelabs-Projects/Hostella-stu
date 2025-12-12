@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useBookingStore } from '../../store/useBookingStore';
+import { useBookingStore } from '../useBookingStore';
+import { Booking } from '@/types/api';
 
 jest.mock('../../lib/api', () => ({
   bookingApi: {
@@ -18,21 +19,23 @@ describe('useBookingStore', () => {
     jest.clearAllMocks();
   });
 
-  it('should initialize with empty bookings array', () => {
+  it('initializes with empty bookings array', () => {
     const { result } = renderHook(() => useBookingStore());
     expect(result.current.bookings).toEqual([]);
     expect(result.current.selectedBooking).toBeNull();
     expect(result.current.loading).toBe(false);
   });
 
-  it('should set selected booking', () => {
+  it('sets selected booking', () => {
     const { result } = renderHook(() => useBookingStore());
-    const mockBooking: any = {
+    const mockBooking: Booking = {
       id: 1,
       userId: 1,
       hostelId: 1,
       roomId: 1,
       status: 'pending_payment',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
     };
     act(() => {
       result.current.setSelectedBooking(mockBooking);
@@ -40,7 +43,7 @@ describe('useBookingStore', () => {
     expect(result.current.selectedBooking).toEqual(mockBooking);
   });
 
-  it('should clear error', () => {
+  it('clears error', () => {
     const { result } = renderHook(() => useBookingStore());
     act(() => {
       result.current.clearError();

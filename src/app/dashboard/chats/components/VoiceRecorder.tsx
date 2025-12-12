@@ -55,7 +55,7 @@ export function VoiceRecorder({ onSendVoice, onCancel }: VoiceRecorderProps) {
         clearInterval(durationIntervalRef.current)
       }
     }
-  }, [])
+  }, [onCancel])
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {

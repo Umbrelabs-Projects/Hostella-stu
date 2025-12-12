@@ -176,3 +176,23 @@ export interface ContactMessage {
   status: 'new' | 'read' | 'replied';
   createdAt: string;
 }
+
+// Type for creating a new booking
+export interface CreateBookingData {
+  hostelId: number;
+  roomId: number;
+  arrivalDate?: string;
+  departureDate?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  emergencyContact?: string;
+  guardian?: string;
+  guardianPhone?: string;
+  occupation?: string;
+  specialRequests?: string;
+  hasAllergies?: boolean;
+  allergyDetails?: string;
+  paymentMethod?: 'bank' | 'momo';
+}

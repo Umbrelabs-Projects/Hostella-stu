@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useChatStore } from '../../store/useChatStore';
 import { useNotificationsStore } from '../../store/useNotificationsStore';
+import { Chat } from '@/types/api';
 
 jest.mock('../../lib/api', () => ({
   chatApi: {
@@ -31,10 +32,12 @@ describe('useChatStore', () => {
 
   it('should set selected chat', () => {
     const { result } = renderHook(() => useChatStore());
-    const mockChat: any = {
+    const mockChat: Partial<Chat> = {
       id: 1,
-      participants: [1, 2],
       lastMessage: 'Hello',
+      lastMessageTime: '',
+      unreadCount: 0,
+      userId: 1,
     };
     act(() => {
       result.current.setSelectedChat(mockChat);

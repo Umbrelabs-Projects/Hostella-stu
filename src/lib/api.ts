@@ -10,8 +10,10 @@ import {
   Chat,
   ChatMessage,
   Service,
-  ContactMessage
+  ContactMessage,
+  CreateBookingData
 } from '@/types/api';
+import { User } from '@/store/useAuthStore';
 
 let authToken: string | null = null;
 
@@ -48,6 +50,15 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+// Helper function to build query strings
+function buildQueryString(params?: Record<string, string | number | boolean | undefined>): string {
+  if (!params) return '';
+  const filtered = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined)
+  ) as Record<string, string>;
+  return new URLSearchParams(filtered).toString();
 }
 
 // Base fetch function
@@ -114,18 +125,18 @@ export async function apiFetch<T>(
 // ============================================
 export const authApi = {
   login: (email: string, password: string) =>
-    apiFetch<ApiResponse<{ user: any; token: string }>>('/auth/login', {
+    apiFetch<ApiResponse<{ user: User; token: string }>>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
 
   register: (data: FormData) =>
-    apiFetch<ApiResponse<{ user: any; token: string }>>('/auth/register', {
+    apiFetch<ApiResponse<{ user: User; token: string }>>('/auth/register', {
       method: 'POST',
       body: data,
     }),
 
-  me: () => apiFetch<ApiResponse<any>>('/auth/me'),
+  me: () => apiFetch<ApiResponse<User>>('/auth/me'),
 
   forgotPassword: (email: string) =>
     apiFetch<ApiResponse<{ message: string }>>('/auth/forgot-password', {
@@ -156,7 +167,7 @@ export const authApi = {
 // ============================================
 export const userApi = {
   updateProfile: (data: FormData) =>
-    apiFetch<ApiResponse<any>>('/user/profile', {
+    apiFetch<ApiResponse<User>>('/user/profile', {
       method: 'PUT',
       body: data,
     }),
@@ -167,7 +178,7 @@ export const userApi = {
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
 
-  getProfile: () => apiFetch<ApiResponse<any>>('/user/profile'),
+  getProfile: () => apiFetch<ApiResponse<User>>('/user/profile'),
 };
 
 // ============================================
@@ -176,7 +187,7 @@ export const userApi = {
 export const hostelApi = {
   getAll: (params?: { page?: number; limit?: number; search?: string }) =>
     apiFetch<PaginatedResponse<Hostel>>(
-      `/hostels?${new URLSearchParams(params as any).toString()}`
+      `/hostels?${buildQueryString(params)}`
     ),
 
   getById: (id: number) => apiFetch<ApiResponse<Hostel>>(`/hostels/${id}`),
@@ -203,7 +214,7 @@ export const roomApi = {
 // BOOKING API ENDPOINTS
 // ============================================
 export const bookingApi = {
-  create: (data: any) =>
+  create: (data: CreateBookingData) =>
     apiFetch<ApiResponse<Booking>>('/bookings', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -211,7 +222,7 @@ export const bookingApi = {
 
   getAll: (params?: { page?: number; limit?: number; status?: string }) =>
     apiFetch<PaginatedResponse<Booking>>(
-      `/bookings?${new URLSearchParams(params as any).toString()}`
+      `/bookings?${buildQueryString(params)}`
     ),
 
   getById: (id: number) => apiFetch<ApiResponse<Booking>>(`/bookings/${id}`),
@@ -262,8 +273,8 @@ export const paymentApi = {
 // ============================================
 export const notificationApi = {
   getAll: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
-    apiFetch<PaginatedResponse<any>>(
-      `/notifications?${new URLSearchParams(params as any).toString()}`
+    apiFetch<PaginatedResponse<unknown>>(
+      `/notifications?${buildQueryString(params)}`
     ),
 
   markAsRead: (id: number) =>
@@ -295,7 +306,7 @@ export const chatApi = {
 
   getMessages: (chatId: number, params?: { page?: number; limit?: number }) =>
     apiFetch<PaginatedResponse<ChatMessage>>(
-      `/chats/${chatId}/messages?${new URLSearchParams(params as any).toString()}`
+      `/chats/${chatId}/messages?${buildQueryString(params)}`
     ),
 
   sendMessage: (chatId: number, content: string, type: 'text' | 'image' | 'voice' | 'file' = 'text', file?: FormData) =>
@@ -317,7 +328,7 @@ export const chatApi = {
 export const testimonialApi = {
   getAll: (params?: { page?: number; limit?: number }) =>
     apiFetch<PaginatedResponse<Testimonial>>(
-      `/testimonials?${new URLSearchParams(params as any).toString()}`
+      `/testimonials?${buildQueryString(params)}`
     ),
 
   create: (data: Omit<Testimonial, 'id' | 'createdAt'>) =>
@@ -333,7 +344,7 @@ export const testimonialApi = {
 export const galleryApi = {
   getAll: (params?: { page?: number; limit?: number; category?: string }) =>
     apiFetch<PaginatedResponse<GalleryImage>>(
-      `/gallery?${new URLSearchParams(params as any).toString()}`
+      `/gallery?${buildQueryString(params)}`
     ),
 
   getByHostelId: (hostelId: number) =>
@@ -346,7 +357,7 @@ export const galleryApi = {
 export const blogApi = {
   getAll: (params?: { page?: number; limit?: number; category?: string; tag?: string }) =>
     apiFetch<PaginatedResponse<BlogPost>>(
-      `/blog?${new URLSearchParams(params as any).toString()}`
+      `/blog?${buildQueryString(params)}`
     ),
 
   getBySlug: (slug: string) => apiFetch<ApiResponse<BlogPost>>(`/blog/${slug}`),
@@ -360,7 +371,7 @@ export const blogApi = {
 export const faqApi = {
   getAll: (params?: { category?: string }) =>
     apiFetch<ApiResponse<FAQ[]>>(
-      `/faqs?${new URLSearchParams(params as any).toString()}`
+      `/faqs?${buildQueryString(params)}`
     ),
 
   getCategories: () => apiFetch<ApiResponse<string[]>>('/faqs/categories'),

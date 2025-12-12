@@ -34,9 +34,9 @@ export const useRoomStore = create<RoomState>((set) => ({
         rooms: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch rooms',
+        error: error instanceof Error ? error.message : 'Failed to fetch rooms',
         loading: false,
       });
     }
@@ -50,9 +50,9 @@ export const useRoomStore = create<RoomState>((set) => ({
         selectedRoom: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch room',
+        error: error instanceof Error ? error.message : 'Failed to fetch room',
         loading: false,
       });
     }
@@ -66,9 +66,9 @@ export const useRoomStore = create<RoomState>((set) => ({
         availability: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to check availability',
+        error: error instanceof Error ? error.message : 'Failed to check availability',
         loading: false,
       });
     }

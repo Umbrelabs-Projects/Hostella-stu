@@ -53,6 +53,7 @@ export default function PersonalInfoForm({
           type="email"
           value={email}
           disabled
+          placeholder={email ? undefined : "Fetching from account..."}
           className="border px-4 py-2 rounded-lg w-full bg-gray-100 cursor-not-allowed"
         />
       </div>

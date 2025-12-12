@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useAuthStore } from '../../store/useAuthStore';
-import { setAuthToken } from '../../lib/api';
 
 jest.mock('../../lib/api', () => ({
   setAuthToken: jest.fn(),

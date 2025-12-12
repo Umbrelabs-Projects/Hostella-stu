@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useBookingStore } from '../../store/useBookingStore';
+import { Booking } from '@/types/api';
 
 jest.mock('../../lib/api', () => ({
   bookingApi: {
@@ -27,7 +28,7 @@ describe('useBookingStore', () => {
 
   it('should set selected booking', () => {
     const { result } = renderHook(() => useBookingStore());
-    const mockBooking: any = {
+    const mockBooking: Partial<Booking> = {
       id: 1,
       userId: 1,
       hostelId: 1,

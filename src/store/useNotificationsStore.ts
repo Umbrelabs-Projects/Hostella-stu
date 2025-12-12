@@ -55,13 +55,13 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
     try {
       const response = await notificationApi.getAll(params);
       set({
-        notifications: response.data,
+        notifications: response.data as Notification[],
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch notifications',
+        error: error instanceof Error ? error.message : 'Failed to fetch notifications',
         loading: false,
       });
     }
@@ -80,9 +80,9 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
           n.id === id ? { ...n, read: true } : n
         ),
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to mark notification as read',
+        error: error instanceof Error ? error.message : 'Failed to mark notification as read',
       });
     }
   },
@@ -93,9 +93,9 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
       set((state) => ({
         notifications: state.notifications.map((n) => ({ ...n, read: true })),
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to mark all notifications as read',
+        error: error instanceof Error ? error.message : 'Failed to mark all notifications as read',
       });
     }
   },
@@ -106,9 +106,9 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
       set((state) => ({
         notifications: state.notifications.filter((n) => n.id !== id),
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to delete notification',
+        error: error instanceof Error ? error.message : 'Failed to delete notification',
       });
     }
   },
@@ -119,9 +119,9 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
       set(() => ({
         notifications: [],
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to delete all notifications',
+        error: error instanceof Error ? error.message : 'Failed to delete all notifications',
       });
     }
   },

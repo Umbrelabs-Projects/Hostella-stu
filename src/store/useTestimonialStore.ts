@@ -33,9 +33,9 @@ export const useTestimonialStore = create<TestimonialState>((set) => ({
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch testimonials',
+        error: error instanceof Error ? error.message : 'Failed to fetch testimonials',
         loading: false,
       });
     }
@@ -49,9 +49,9 @@ export const useTestimonialStore = create<TestimonialState>((set) => ({
         testimonials: [response.data, ...state.testimonials],
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to create testimonial',
+        error: error instanceof Error ? error.message : 'Failed to create testimonial',
         loading: false,
       });
     }

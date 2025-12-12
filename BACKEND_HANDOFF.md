@@ -43,28 +43,29 @@ This package contains everything needed for backend API development and integrat
 ## 🎯 Quick Start for Backend Development
 
 ### Frontend is Using:
-- **Base API URL**: `https://example-prod.up.railway.app/api/v1`
+- **Base API URL**: `https://example-prod.up.railway.app/api/v1` (env var configurable: `API_BASE_URL`)
 - **State Management**: Zustand (13 stores)
-- **Authentication**: Token-based (JWT recommended)
-- **Request Format**: JSON with Bearer token in Authorization header
+- **Authentication**: JWT (Bearer) expected on protected routes
+- **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
+- **Versioning**: Path-based (`/api/v1`); future versions should be `/api/v2`
 
 ### API Endpoints Required:
-Implement all endpoints defined in **API_DOCUMENTATION.md** sections:
+Implement all endpoints defined in **API_DOCUMENTATION.md** with exact response shapes. Summary:
 
 1. **Authentication** (`/auth/*`) - Login, Register, Password Reset
-2. **Users** (`/users/*`) - Profile management
-3. **Hostels** (`/hostels/*`) - CRUD operations
-4. **Rooms** (`/hostels/:id/rooms/*`) - Room management
-5. **Bookings** (`/bookings/*`) - Booking lifecycle
-6. **Payments** (`/payments/*`) - Payment processing
-7. **Chat** (`/chat/*`) - Real-time messaging
-8. **Notifications** (`/notifications/*`) - Push notifications
-9. **Gallery** (`/gallery/*`) - Image management
-10. **Blog** (`/blog/*`) - Content management
-11. **FAQ** (`/faqs/*`) - FAQ management
-12. **Testimonials** (`/testimonials/*`) - Reviews
-13. **Services** (`/services/*`) - Service listings
-14. **Contact** (`/contact/*`) - Contact submissions
+2. **Users** (`/user/*`) - Profile and password update, current user
+3. **Hostels** (`/hostels/*`) - List, detail, featured, search
+4. **Rooms** (`/hostels/:id/rooms/*`) - List by hostel, detail, availability
+5. **Bookings** (`/bookings/*`) - List, user bookings, create, update, cancel
+6. **Payments** (`/payments/*`) - Initiate, upload receipt, verify, by booking
+7. **Chat** (`/chat/*`) - Chats list, messages, send
+8. **Notifications** (`/notifications/*`) - List, mark read, mark all read
+9. **Gallery** (`/gallery/*`) - List, by hostel
+10. **Blog** (`/blog/*`) - List, by slug, categories
+11. **FAQ** (`/faqs/*`) - List, categories
+12. **Testimonials** (`/testimonials/*`) - List, detail, create (admin)
+13. **Services** (`/services/*`) - List
+14. **Contact** (`/contact/*`) - Submit contact message
 
 ---
 

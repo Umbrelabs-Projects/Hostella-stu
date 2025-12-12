@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 import { useHostelStore } from '../../store/useHostelStore';
 import { useRoomStore } from '../../store/useRoomStore';
 import { usePaymentStore } from '../../store/usePaymentStore';
+import { Hostel, Room } from '@/types/api';
 
 jest.mock('../../lib/api', () => ({
   hostelApi: {
@@ -35,7 +36,7 @@ describe('useHostelStore', () => {
 
   it('should set selected hostel', () => {
     const { result } = renderHook(() => useHostelStore());
-    const mockHostel: any = {
+    const mockHostel: Partial<Hostel> = {
       id: 1,
       name: 'Test Hostel',
       location: 'Test Location',
@@ -61,7 +62,7 @@ describe('useRoomStore', () => {
 
   it('should set selected room', () => {
     const { result } = renderHook(() => useRoomStore());
-    const mockRoom: any = {
+    const mockRoom: Partial<Room> = {
       id: 1,
       hostelId: 1,
       title: 'Deluxe Room',

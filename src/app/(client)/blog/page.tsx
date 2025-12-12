@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { useBlogStore } from "@/store/useBlogStore";
 import { ErrorState } from "@/components/ui/error";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -64,9 +65,11 @@ export default function Blog() {
                   className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   {post.image && (
-                    <img
+                    <Image
                       src={post.image}
                       alt={post.title}
+                      width={400}
+                      height={192}
                       className="w-full h-48 object-cover"
                     />
                   )}

@@ -38,9 +38,9 @@ export const useBlogStore = create<BlogState>((set) => ({
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch blog posts',
+        error: error instanceof Error ? error.message : 'Failed to fetch blog posts',
         loading: false,
       });
     }
@@ -54,9 +54,9 @@ export const useBlogStore = create<BlogState>((set) => ({
         selectedPost: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch blog post',
+        error: error instanceof Error ? error.message : 'Failed to fetch blog post',
         loading: false,
       });
     }
@@ -70,9 +70,9 @@ export const useBlogStore = create<BlogState>((set) => ({
         categories: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch categories',
+        error: error instanceof Error ? error.message : 'Failed to fetch categories',
         loading: false,
       });
     }

@@ -35,9 +35,9 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         loading: false,
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to initiate payment',
+        error: error instanceof Error ? error.message : 'Failed to initiate payment',
         loading: false,
       });
       return null;
@@ -54,9 +54,9 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         currentPayment: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to upload receipt',
+        error: error instanceof Error ? error.message : 'Failed to upload receipt',
         loading: false,
       });
     }
@@ -70,9 +70,9 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         currentPayment: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to verify payment',
+        error: error instanceof Error ? error.message : 'Failed to verify payment',
         loading: false,
       });
     }
@@ -86,9 +86,9 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         payments: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch payments',
+        error: error instanceof Error ? error.message : 'Failed to fetch payments',
         loading: false,
       });
     }

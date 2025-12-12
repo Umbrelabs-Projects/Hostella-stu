@@ -1,13 +1,32 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo } from "react";
 import VerificationItem from "./components/VerificationItem";
 import { useAuthStore } from "@/store/useAuthStore";
+
 export default function VerificationSettings() {
-  const { user } = useAuthStore();
-  const [verificationStatus] = useState({
-    email: { verified: true, value: user?.email || "elvisgyasisowusu@gmail.com" },
-    phone: { verified: false, value: user?.phone ||  "+1 (555) 000-0000" },
-  });
+  const { user, fetchProfile } = useAuthStore();
+
+  useEffect(() => {
+    if (!user) {
+      fetchProfile().catch(() => {
+        /* error handled in store */
+      });
+    }
+  }, [fetchProfile, user]);
+
+  const verificationStatus = useMemo(
+    () => ({
+      email: {
+        verified: Boolean(user?.emailVerified),
+        value: user?.email || "Fetching from backend...",
+      },
+      phone: {
+        verified: Boolean(user?.phoneVerified),
+        value: user?.phone || "Add a phone number to verify",
+      },
+    }),
+    [user]
+  );
 
   const handleVerify = (type: keyof typeof verificationStatus) => {
     alert(`Verification link sent to ${verificationStatus[type].value}`);

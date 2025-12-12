@@ -96,7 +96,7 @@ Network: MTN Ghana
 ```
 
 ### Database Storage
-- Prices stored as numbers (without currency symbol)
+- Prices stored as integers (minor units) or decimals (2dp) in GHC; prefer integers in minor units to avoid floating errors
 - Currency context provided through API documentation and frontend labels
 
 ### Type Definitions
@@ -105,15 +105,15 @@ Network: MTN Ghana
 // IMPORTANT: All prices and monetary amounts are in Ghana Cedis (GHC)
 
 interface Room {
-  price: string | number;  // In Ghana Cedis
+  price: string | number;  // In Ghana Cedis (transport as number)
 }
 
 interface Booking {
-  totalAmount?: number;    // In Ghana Cedis
+  totalAmount?: number;    // In Ghana Cedis (transport as number)
 }
 
 interface Payment {
-  amount: number;          // In Ghana Cedis
+  amount: number;          // In Ghana Cedis (transport as number)
 }
 ```
 

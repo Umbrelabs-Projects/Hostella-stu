@@ -22,13 +22,15 @@ function setAuthCookie(token: string | null) {
   }
 }
 
-interface User {
+export interface User {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
   avatar?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 }
 
 interface AuthState {
@@ -50,6 +52,7 @@ interface AuthState {
   signUp: (data: FullSignUpData) => Promise<void>;
   signOut: () => Promise<void>;
   restoreSession: () => Promise<void>;
+  fetchProfile: () => Promise<void>;
 
   // newly added
   updateProfile: (updates: FormData) => Promise<void>;
@@ -84,6 +87,21 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem("signup-step");
         localStorage.removeItem("signup-data");
         set({ signupData: {} });
+      },
+
+      fetchProfile: async () => {
+        set({ loading: true, error: null });
+        try {
+          const res = await apiFetch<{ success: boolean; data: User }>(
+            "/user/profile"
+          );
+          set({ user: res.data, loading: false });
+        } catch (err: unknown) {
+          const errorMessage =
+            err instanceof Error ? err.message : "Profile fetch failed";
+          set({ error: errorMessage, loading: false });
+          throw err;
+        }
       },
 
       // --- Extra Booking Details ---
@@ -192,7 +210,7 @@ export const useAuthStore = create<AuthState>()(
       signOut: async () => {
         try {
           await apiFetch("/auth/logout", { method: "POST" });
-        } catch (error) {
+        } catch {
           // Ignore logout errors
         } finally {
           setAuthToken(null);

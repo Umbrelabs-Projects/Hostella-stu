@@ -69,8 +69,8 @@ const MomoDetails: React.FC = () => {
       // Call the payment store to initiate payment
       await initiatePayment(bookingId, 'momo', mobileNumber);
       router.push("/dashboard/payment/paymentCompleted");
-    } catch (err: any) {
-      setError(err.message || "Failed to initiate payment");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to initiate payment");
     }
   };
 

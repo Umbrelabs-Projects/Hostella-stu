@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { NotificationHeader } from "./components/NotificationHeader";
 import { NotificationList } from "./components/NotificationList";
 import { useNotificationsStore } from "@/store/useNotificationsStore";
@@ -12,7 +12,14 @@ const NotificationsPage: React.FC = () => {
     deleteNotification,
     markAllAsRead,
     deleteAll,
+    fetchNotifications,
   } = useNotificationsStore();
+
+  useEffect(() => {
+    fetchNotifications().catch(() => {
+      /* errors handled in store */
+    });
+  }, [fetchNotifications]);
 
   const allRead = notifications.every((n) => n.read);
   const allEmpty = notifications.length === 0;

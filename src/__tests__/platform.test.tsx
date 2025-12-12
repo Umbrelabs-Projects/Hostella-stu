@@ -14,6 +14,7 @@ import { useTestimonialStore } from '../store/useTestimonialStore';
 import { usePasswordResetStore } from '../store/usePasswordResetStore';
 import { useUIStore } from '../store/useUIStore';
 import { setAuthToken } from '../lib/api';
+import { Booking, Hostel, Room, Chat } from '@/types/api';
 
 // Mock API module
 jest.mock('../lib/api', () => ({
@@ -179,7 +180,7 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected booking', () => {
       const { result } = renderHook(() => useBookingStore());
-      const mockBooking: any = {
+      const mockBooking: Partial<Booking> = {
         id: 1,
         userId: 1,
         hostelId: 1,
@@ -213,7 +214,7 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected hostel', () => {
       const { result } = renderHook(() => useHostelStore());
-      const mockHostel: any = {
+      const mockHostel: Partial<Hostel> = {
         id: 1,
         name: 'Test Hostel',
         location: 'Test Location',
@@ -238,7 +239,7 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected room', () => {
       const { result } = renderHook(() => useRoomStore());
-      const mockRoom: any = {
+      const mockRoom: Partial<Room> = {
         id: 1,
         hostelId: 1,
         title: 'Deluxe Room',
@@ -283,10 +284,12 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected chat', () => {
       const { result } = renderHook(() => useChatStore());
-      const mockChat: any = {
+      const mockChat: Partial<Chat> = {
         id: 1,
-        participants: [1, 2],
         lastMessage: 'Hello',
+        lastMessageTime: '',
+        unreadCount: 0,
+        userId: 1,
       };
       act(() => {
         result.current.setSelectedChat(mockChat);

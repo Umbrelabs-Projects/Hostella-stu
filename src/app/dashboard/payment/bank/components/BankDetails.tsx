@@ -59,7 +59,7 @@ export default function BankDetails() {
       // Upload receipt to the payment store
       await uploadReceipt(paymentId, data.receipt[0]);
       router.push("/dashboard/payment/paymentCompleted");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Receipt upload failed:", error);
     }
   };

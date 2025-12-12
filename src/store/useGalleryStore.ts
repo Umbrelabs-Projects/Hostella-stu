@@ -33,9 +33,9 @@ export const useGalleryStore = create<GalleryState>((set) => ({
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch gallery images',
+        error: error instanceof Error ? error.message : 'Failed to fetch gallery images',
         loading: false,
       });
     }
@@ -49,9 +49,9 @@ export const useGalleryStore = create<GalleryState>((set) => ({
         images: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch hostel gallery',
+        error: error instanceof Error ? error.message : 'Failed to fetch hostel gallery',
         loading: false,
       });
     }

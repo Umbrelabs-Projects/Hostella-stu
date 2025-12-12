@@ -31,8 +31,9 @@ const ContactFormSection = () => {
       
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(""), 5000);
-    } catch (error: any) {
-      setErrorMessage(error.message || "Failed to send message. Please try again.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to send message. Please try again.";
+      setErrorMessage(message);
     }
   };
 

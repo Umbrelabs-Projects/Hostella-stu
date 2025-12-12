@@ -39,9 +39,9 @@ export const useHostelStore = create<HostelState>((set) => ({
         pagination: response.pagination,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch hostels',
+        error: error instanceof Error ? error.message : 'Failed to fetch hostels',
         loading: false,
       });
     }
@@ -55,9 +55,9 @@ export const useHostelStore = create<HostelState>((set) => ({
         featuredHostels: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch featured hostels',
+        error: error instanceof Error ? error.message : 'Failed to fetch featured hostels',
         loading: false,
       });
     }
@@ -71,9 +71,9 @@ export const useHostelStore = create<HostelState>((set) => ({
         selectedHostel: response.data,
         loading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
-        error: error.message || 'Failed to fetch hostel',
+        error: error instanceof Error ? error.message : 'Failed to fetch hostel',
         loading: false,
       });
     }

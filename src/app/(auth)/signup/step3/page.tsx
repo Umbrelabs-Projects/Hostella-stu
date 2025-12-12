@@ -15,7 +15,8 @@ interface DetailsFormProps {
   onPrev?: () => void;
 }
 
-export default function DetailsForm(_: DetailsFormProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function DetailsForm({ onPrev }: DetailsFormProps) {
   const { signUp, signupData, clearSignupProgress, loading } = useAuthStore();
   const router = useRouter();
 

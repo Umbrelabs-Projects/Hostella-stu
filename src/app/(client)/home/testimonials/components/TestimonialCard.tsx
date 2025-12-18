@@ -1,13 +1,7 @@
 import Image, { StaticImageData } from "next/image";
 import React from "react";
-
-interface Testimonial {
-  id: number;
-  name: string;
-  image: string | StaticImageData;
-  rating: number;
-  text: string;
-}
+import { Testimonial } from "@/types/api";
+import { images } from "@/lib/images";
 
 interface TestimonialCardProps {
   testimonial: Testimonial;
@@ -15,13 +9,14 @@ interface TestimonialCardProps {
 
 const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial }) => {
   const { name, image, rating, text } = testimonial;
+  const imgSrc: string | StaticImageData = image ?? images.hostellaLogo;
 
   return (
     <div className="relative flex flex-col items-center text-center border-b-4 border-r-4 border-yellow-400 bg-white shadow-lg w-full max-w-[20rem] sm:max-w-[22rem] min-h-[22rem] px-8 py-10 mx-auto overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
       {/* Avatar */}
       <div className="w-20 h-20 mb-4 rounded-full overflow-hidden border-2 border-[#FFB636]/40">
         <Image
-          src={image}
+          src={imgSrc}
           alt={name}
           width={80}
           height={80}

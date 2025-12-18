@@ -2,25 +2,22 @@
 // IMPORTANT: All prices and monetary amounts are in Ghana Cedis (GHC)
 
 export interface Hostel {
-  id: number;
+  id: string;
   name: string;
-  location: string;
+  location: string | null;
+  campus: string | null;
   rating: number;
   description: string;
-  image: string;
-  images?: string[];
-  amenities?: string[];
-  address?: string;
-  phone?: string;
-  email?: string;
-  priceRange?: {
+  image: string | null;
+  images: string[];
+  amenities: string[];
+  priceRange: {
     min: number;
     max: number;
   };
-  availableRooms?: number;
-  totalRooms?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  availableRooms: number;
+  totalRooms: number;
+  createdAt: string;
 }
 
 export interface Room {
@@ -73,13 +70,13 @@ export interface Booking {
 }
 
 export interface Testimonial {
-  id: number;
+  id: string;
   name: string;
-  image: string;
+  image: string | null;
   rating: number;
   text: string;
-  createdAt?: string;
-  hostelId?: number;
+  hostelId: string | null;
+  createdAt: string;
 }
 
 export interface GalleryImage {

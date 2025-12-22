@@ -1,21 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { HealthDetails } from "./types";
 
 interface HealthInfoProps {
   healthDetails?: HealthDetails | null;
-  onUpdate: (data: HealthDetails) => void;
+  onUpdate: (data: HealthDetails) => void | Promise<void>;
 }
 
 export const HealthInfo = ({ healthDetails, onUpdate }: HealthInfoProps) => {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<HealthDetails>(healthDetails || {});
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    onUpdate(formData);
-    setEditing(false);
+  // Sync formData when healthDetails changes
+  useEffect(() => {
+    if (healthDetails) {
+      setFormData(healthDetails);
+    }
+  }, [healthDetails]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await onUpdate(formData);
+      setEditing(false);
+    } catch (error) {
+      console.error("Error saving health info:", error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -48,9 +63,10 @@ export const HealthInfo = ({ healthDetails, onUpdate }: HealthInfoProps) => {
           <div className="col-span-full flex justify-end pt-2">
             <Button
               onClick={handleSave}
+              disabled={saving}
               className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
             >
-              Save
+              {saving ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>

@@ -1,8 +1,9 @@
 export interface Notification {
-  id: number;
-  type: string;
+  id: string;
+  type: 'broadcast' | 'new-booking' | 'payment-received' | 'room-allocated' | 'booking-approved' | 'booking-rejected' | 'booking-cancelled' | 'maintenance-alert' | 'complaint-received' | 'complaint-resolved';
   title: string;
   description: string;
-  time: string;
-  read: boolean;
+  relatedId?: string;
+  isRead: boolean;
+  createdAt: string;
 }

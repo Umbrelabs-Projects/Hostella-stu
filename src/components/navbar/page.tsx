@@ -37,9 +37,15 @@ export default function Navbar() {
                      shadow-sm flex items-center justify-between"
         >
           {/* LEFT: Logo */}
-          <div className="flex pb-3 items-center gap-3 bg-black px-4 h-11">
+          <div className="flex pb-3 items-center gap-3 bg-black px-4 h-11" suppressHydrationWarning>
             <Link href="/">
-              <Image src={images.hostellaLogo} alt="hostellaLogo" />
+              <Image 
+                src={images.hostellaLogo} 
+                alt="hostellaLogo" 
+                width={121}
+                height={67}
+                priority
+              />
             </Link>
           </div>
 

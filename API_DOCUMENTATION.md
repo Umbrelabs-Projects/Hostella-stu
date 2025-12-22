@@ -1026,12 +1026,12 @@
   "success": true,
   "data": [
     {
-      "id": 1,
+      "id": "string",
       "name": "string",
-      "image": "string (URL)",
+      "image": "string (URL) | null",
       "rating": 5,
       "text": "string",
-      "hostelId": 1,
+      "hostelId": "string | null",
       "createdAt": "ISO 8601 datetime"
     }
   ],
@@ -1055,7 +1055,7 @@
   "name": "string",
   "rating": 5,
   "text": "string",
-  "hostelId": 1
+  "hostelId": "string | null"
 }
 ```
 
@@ -1064,12 +1064,12 @@
 {
   "success": true,
   "data": {
-    "id": 1,
+    "id": "string",
     "name": "string",
-    "image": "string (URL)",
+    "image": "string (URL) | null",
     "rating": 5,
     "text": "string",
-    "hostelId": 1,
+    "hostelId": "string | null",
     "createdAt": "ISO 8601 datetime"
   }
 }

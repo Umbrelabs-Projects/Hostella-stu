@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const verificationSchema = z.object({
   otp: z
@@ -23,7 +24,9 @@ interface VerificationPageProps {
 
 export default function VerificationPage({ email, onNext, maskOtp = false }: VerificationPageProps) {
   const [isVerified, setIsVerified] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<HTMLInputElement[]>([]);
+  const { signupData, updateSignupData } = useAuthStore();
 
   const { handleSubmit, setValue, watch, formState: { errors } } = useForm<VerificationData>({
     resolver: zodResolver(verificationSchema),
@@ -66,10 +69,52 @@ export default function VerificationPage({ email, onNext, maskOtp = false }: Ver
     }
   };
 
-  const onSubmit = (data: VerificationData) => {
-    console.log("Verifying:", data);
-    setIsVerified(true);
-    setTimeout(() => onNext(), 1500);
+  const onSubmit = async (data: VerificationData) => {
+    try {
+      setIsLoading(true);
+      
+      if (!signupData.email || !signupData.sessionId) {
+        toast.error("Session expired. Please start signup again.");
+        return;
+      }
+
+      const { authApi } = await import('@/lib/api');
+      const otpCode = data.otp.join("");
+      
+      const response = await authApi.verifyOtp({
+        email: signupData.email,
+        otp: otpCode,
+        sessionId: signupData.sessionId,
+      });
+
+      // Store verifiedSessionId - THIS IS CRITICAL!
+      const verifiedSessionId = response.data.verifiedSessionId;
+      updateSignupData({
+        verifiedSessionId: verifiedSessionId,
+      });
+
+      // Debug: Verify it was stored
+      console.log("OTP verified. Stored verifiedSessionId:", verifiedSessionId);
+      
+      // Double-check it's in localStorage
+      const stored = localStorage.getItem("signup-data");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log("Verified sessionId in localStorage:", parsed.verifiedSessionId);
+      }
+
+      setIsVerified(true);
+      toast.success("OTP verified successfully");
+      setTimeout(() => onNext(), 1500);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Invalid OTP code";
+      toast.error(errorMessage);
+      // Clear OTP inputs on error
+      setValue("otp", ["", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -109,9 +154,42 @@ export default function VerificationPage({ email, onNext, maskOtp = false }: Ver
 
             <button
               type="submit"
-              className="w-full bg-yellow-500 text-white font-semibold py-3 rounded-lg hover:bg-yellow-600 transition"
+              disabled={isLoading}
+              className="w-full bg-yellow-500 text-white font-semibold py-3 rounded-lg hover:bg-yellow-600 transition disabled:opacity-70 disabled:cursor-not-allowed mb-3"
             >
-              Verify
+              {isLoading ? "Verifying..." : "Verify"}
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                if (!signupData.email || !signupData.password || !signupData.confirmPassword) {
+                  toast.error("Please go back to Step 1");
+                  return;
+                }
+                try {
+                  setIsLoading(true);
+                  const { authApi } = await import('@/lib/api');
+                  const response = await authApi.initiateSignup({
+                    email: signupData.email,
+                    password: signupData.password,
+                    confirmPassword: signupData.confirmPassword,
+                  });
+                  updateSignupData({ sessionId: response.data.sessionId });
+                  toast.success("New OTP sent to your email");
+                  setValue("otp", ["", "", "", "", ""]);
+                  inputRefs.current[0]?.focus();
+                } catch (error: unknown) {
+                  const errorMessage = error instanceof Error ? error.message : "Failed to resend OTP";
+                  toast.error(errorMessage);
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              disabled={isLoading}
+              className="w-full text-sm text-gray-600 hover:text-gray-800 underline disabled:opacity-50"
+            >
+              Didn&apos;t receive code? Resend OTP
             </button>
           </form>
         </div>

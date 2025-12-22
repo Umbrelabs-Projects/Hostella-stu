@@ -17,7 +17,11 @@ function setAuthCookie(token: string | null) {
     if (token) {
       document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
     } else {
-      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+      // Clear cookie with multiple attempts to ensure it's deleted
+      const pastDate = 'Thu, 01 Jan 1970 00:00:01 GMT';
+      document.cookie = `auth-token=; path=/; expires=${pastDate}`;
+      document.cookie = `auth-token=; path=/; domain=${window.location.hostname}; expires=${pastDate}`;
+      document.cookie = `auth-token=; path=/; expires=${pastDate}; SameSite=Lax`;
     }
   }
 }
@@ -29,19 +33,60 @@ export interface User {
   email: string;
   phone?: string;
   avatar?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  // University Information
+  campus?: string;
+  programme?: string;
+  studentRefNumber?: string;
+  level?: string;
+  // Health Information
+  hasHealthCondition?: boolean;
+  healthCondition?: string;
+  bloodType?: string;
+  allergies?: string;
+  // Emergency Contact (Legacy - Single Contact)
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
 }
+
+// Extended signup data type to include session IDs
+type ExtendedSignupData = Partial<FullSignUpData> & {
+  sessionId?: string;
+  verifiedSessionId?: string;
+};
+
+// API Response types
+type ProfileResponse = 
+  | { success: boolean; data: User }
+  | { success: boolean; data: { user: User } }
+  | { data: User }
+  | { data: { user: User } }
+  | { user: User }
+  | User;
+
+type LoginResponse = 
+  | { success: boolean; data: { user: User; token: string } }
+  | { data: { user: User; token: string } }
+  | { user: User; token: string };
+
+type UpdateProfileResponse = 
+  | { success: boolean; data: User }
+  | { data: User }
+  | { user: User }
+  | User;
 
 interface AuthState {
   user: User | null;
   token: string | null;
   loading: boolean;
   error: string | null;
-  signupData: Partial<FullSignUpData>;
+  signupData: ExtendedSignupData;
   extraBookingDetails: Partial<ExtraDetailsFormValues>;
 
-  updateSignupData: (newData: Partial<FullSignUpData>) => void;
+  updateSignupData: (newData: Partial<ExtendedSignupData>) => void;
   resetSignupData: () => void;
   clearSignupProgress: () => void;
 
@@ -92,11 +137,164 @@ export const useAuthStore = create<AuthState>()(
       fetchProfile: async () => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ success: boolean; data: User }>(
-            "/user/profile"
-          );
-          set({ user: res.data, loading: false });
+          // Try to get complete profile first, fallback to basic profile
+          try {
+            const res = await apiFetch<ProfileResponse>(
+              "/onboarding/profile"
+            );
+            console.log("fetchProfile: Complete profile response", res);
+            console.log("fetchProfile: Response keys", Object.keys(res));
+            
+            // Handle different response formats:
+            // 1. { success: true, data: { user: User } } - nested user in data
+            // 2. { success: true, data: User } - user directly in data
+            // 3. { user: User } - user at top level
+            // 4. Direct User object
+            let userData: User;
+            
+            // First check if data exists and has a nested user
+            if ("data" in res && res.data && typeof res.data === "object" && res.data !== null) {
+              if ("user" in res.data && res.data.user && typeof res.data.user === "object") {
+                // Format: { success: true, data: { user: User } }
+                userData = res.data.user as User;
+                console.log("fetchProfile: Found nested user in data.user");
+              } else if ("id" in res.data) {
+                // Format: { success: true, data: User }
+                userData = res.data as User;
+                console.log("fetchProfile: Found user directly in data");
+              } else {
+                // Fallback: treat data as user (check if it's actually a user object)
+                if (typeof res.data === "object" && res.data !== null && "id" in res.data && "firstName" in res.data) {
+                  userData = res.data as unknown as User;
+                  console.log("fetchProfile: Treating data as user (fallback)");
+                } else {
+                  throw new Error("Unable to extract user data from response");
+                }
+              }
+            } else if ("user" in res && res.user && typeof res.user === "object") {
+              // Format: { user: User }
+              userData = res.user as User;
+              console.log("fetchProfile: Found user at top level");
+            } else if (typeof res === "object" && res !== null && "id" in res) {
+              // Direct User object
+              userData = res as User;
+              console.log("fetchProfile: Treating response as direct user object");
+            } else {
+              throw new Error("Unable to extract user data from response");
+            }
+            
+            console.log("fetchProfile: Extracted user data", userData);
+            console.log("fetchProfile: User data keys", Object.keys(userData));
+            console.log("fetchProfile: Programme field check", {
+              programme: userData.programme,
+              hasProgramme: 'programme' in userData,
+              programmeType: typeof userData.programme,
+              campus: userData.campus,
+              studentRefNumber: userData.studentRefNumber,
+              level: userData.level,
+              allKeys: Object.keys(userData),
+            });
+            
+            // Map alternative field names if backend uses different names
+            const mappedData: Record<string, unknown> = { ...userData };
+            if ((mappedData.school as string) && !(mappedData.campus as string)) {
+              mappedData.campus = mappedData.school;
+            }
+            if ((mappedData.studentId as string) && !(mappedData.studentRefNumber as string)) {
+              mappedData.studentRefNumber = mappedData.studentId;
+            }
+            // Check for alternative programme field names
+            if (!mappedData.programme) {
+              // Try common alternative names
+              if (mappedData.program) {
+                mappedData.programme = mappedData.program;
+              } else if (mappedData.course) {
+                mappedData.programme = mappedData.course;
+              } else if (mappedData.degree) {
+                mappedData.programme = mappedData.degree;
+              } else if (mappedData.major) {
+                mappedData.programme = mappedData.major;
+              }
+            }
+            
+            console.log("fetchProfile: Mapped user data", mappedData);
+            console.log("fetchProfile: Avatar check", {
+              avatar: (mappedData as unknown as User).avatar,
+              avatarType: typeof (mappedData as unknown as User).avatar,
+              hasAvatar: 'avatar' in mappedData,
+              avatarValue: (mappedData as unknown as User).avatar,
+            });
+            set({ user: mappedData as unknown as User, loading: false });
+          } catch (error) {
+            console.error("fetchProfile: Complete profile failed, trying basic profile", error);
+            // Fallback to basic profile if complete profile endpoint fails
+            const res = await apiFetch<ProfileResponse>(
+              "/auth/me"
+            );
+            console.log("fetchProfile: Basic profile response", res);
+            console.log("fetchProfile: Basic response keys", Object.keys(res));
+            
+            // Handle different response formats (same logic as above)
+            let userData: User;
+            
+            // First check if data exists and has a nested user
+            if ("data" in res && res.data && typeof res.data === "object" && res.data !== null) {
+              if ("user" in res.data && res.data.user && typeof res.data.user === "object") {
+                // Format: { success: true, data: { user: User } }
+                userData = res.data.user as User;
+                console.log("fetchProfile: Found nested user in data.user (basic)");
+              } else if ("id" in res.data) {
+                // Format: { success: true, data: User }
+                userData = res.data as User;
+                console.log("fetchProfile: Found user directly in data (basic)");
+              } else {
+                // Fallback: treat data as user (check if it's actually a user object)
+                if (typeof res.data === "object" && res.data !== null && "id" in res.data && "firstName" in res.data) {
+                  userData = res.data as unknown as User;
+                  console.log("fetchProfile: Treating data as user (basic fallback)");
+                } else {
+                  throw new Error("Unable to extract user data from response (basic)");
+                }
+              }
+            } else if ("user" in res && res.user && typeof res.user === "object") {
+              // Format: { user: User }
+              userData = res.user as User;
+              console.log("fetchProfile: Found user at top level (basic)");
+            } else if (typeof res === "object" && res !== null && "id" in res) {
+              // Direct User object
+              userData = res as User;
+              console.log("fetchProfile: Treating response as direct user object (basic)");
+            } else {
+              throw new Error("Unable to extract user data from response (basic)");
+            }
+            
+            console.log("fetchProfile: Extracted user data (basic)", userData);
+            console.log("fetchProfile: User data keys (basic)", Object.keys(userData));
+            
+            // Map alternative field names
+            const mappedData: Record<string, unknown> = { ...userData };
+            if ((mappedData.school as string) && !(mappedData.campus as string)) {
+              mappedData.campus = mappedData.school;
+            }
+            if ((mappedData.studentId as string) && !(mappedData.studentRefNumber as string)) {
+              mappedData.studentRefNumber = mappedData.studentId;
+            }
+            if (!(mappedData.programme as string)) {
+              if (mappedData.program) {
+                mappedData.programme = mappedData.program;
+              } else if (mappedData.course) {
+                mappedData.programme = mappedData.course;
+              } else if (mappedData.degree) {
+                mappedData.programme = mappedData.degree;
+              } else if (mappedData.major) {
+                mappedData.programme = mappedData.major;
+              }
+            }
+            
+            set({ user: mappedData as unknown as User, loading: false });
+          }
         } catch (err: unknown) {
+          // Error is logged above, no need to use it here
           const errorMessage =
             err instanceof Error ? err.message : "Profile fetch failed";
           set({ error: errorMessage, loading: false });
@@ -125,16 +323,45 @@ export const useAuthStore = create<AuthState>()(
       signIn: async (data) => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ success: boolean; data: { user: User; token: string } }>(
+          const res = await apiFetch<LoginResponse>(
             "/auth/login",
             {
               method: "POST",
               body: JSON.stringify(data),
             }
           );
-          setAuthToken(res.data.token);
-          setAuthCookie(res.data.token);
-          set({ user: res.data.user, token: res.data.token, loading: false });
+          
+          // Handle different response formats
+          let user: User | null = null;
+          let token: string | null = null;
+          
+          if ("data" in res && res.data) {
+            if ("user" in res.data && "token" in res.data) {
+              user = res.data.user;
+              token = res.data.token;
+            } else {
+              // Fallback: try direct access
+              const resAny = res as unknown as { user?: User; token?: string; data?: { user?: User; token?: string } };
+              user = resAny.user || resAny.data?.user || null;
+              token = resAny.token || resAny.data?.token || null;
+              if (!user || !token) {
+                throw new Error("Invalid response format from login endpoint");
+              }
+            }
+          } else if ("user" in res && "token" in res) {
+            user = res.user;
+            token = res.token;
+          } else {
+            throw new Error("Invalid response format from login endpoint");
+          }
+          
+          if (!user || !token) {
+            throw new Error("Invalid response format from login endpoint");
+          }
+          
+          setAuthToken(token);
+          setAuthCookie(token);
+          set({ user, token, loading: false });
         } catch (err: unknown) {
           const errorMessage =
             err instanceof Error ? err.message : "SignIn failed";
@@ -153,17 +380,45 @@ export const useAuthStore = create<AuthState>()(
             else if (value != null) formData.append(key, String(value));
           });
 
-          const res = await apiFetch<{ success: boolean; data: { user: User; token: string } }>(
+          const res = await apiFetch<LoginResponse>(
             "/auth/register",
             {
               method: "POST",
               body: formData,
             }
           );
+          
+          // Handle different response formats
+          let user: User | null = null;
+          let token: string | null = null;
+          
+          if ("data" in res && res.data) {
+            if ("user" in res.data && "token" in res.data) {
+              user = res.data.user;
+              token = res.data.token;
+            } else {
+              // Fallback: try direct access
+              const resAny = res as unknown as { user?: User; token?: string; data?: { user?: User; token?: string } };
+              user = resAny.user || resAny.data?.user || null;
+              token = resAny.token || resAny.data?.token || null;
+              if (!user || !token) {
+                throw new Error("Invalid response format from register endpoint");
+              }
+            }
+          } else if ("user" in res && "token" in res) {
+            user = res.user;
+            token = res.token;
+          } else {
+            throw new Error("Invalid response format from register endpoint");
+          }
+          
+          if (!user || !token) {
+            throw new Error("Invalid response format from register endpoint");
+          }
 
-          setAuthToken(res.data.token);
-          setAuthCookie(res.data.token);
-          set({ user: res.data.user, token: res.data.token, loading: false });
+          setAuthToken(token);
+          setAuthCookie(token);
+          set({ user, token, loading: false });
           get().clearSignupProgress();
         } catch (err: unknown) {
           const errorMessage =
@@ -177,11 +432,42 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: async (formData) => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ success: boolean; data: User }>("/user/profile", {
+          const res = await apiFetch<UpdateProfileResponse>("/auth/profile", {
             method: "PUT",
             body: formData,
           });
-          set({ user: res.data, loading: false });
+          
+          // Handle different response formats
+          let userData: User;
+          if ("user" in res && res.user) {
+            userData = res.user;
+          } else if ("data" in res && res.data) {
+            userData = res.data;
+          } else {
+            userData = res as User;
+          }
+          
+          // Map alternative field names
+          const mappedData: Record<string, unknown> = { ...userData };
+          if ((mappedData.school as string) && !(mappedData.campus as string)) {
+            mappedData.campus = mappedData.school;
+          }
+          if ((mappedData.studentId as string) && !(mappedData.studentRefNumber as string)) {
+            mappedData.studentRefNumber = mappedData.studentId;
+          }
+          if (!(mappedData.programme as string)) {
+            if (mappedData.program) {
+              mappedData.programme = mappedData.program;
+            } else if (mappedData.course) {
+              mappedData.programme = mappedData.course;
+            } else if (mappedData.degree) {
+              mappedData.programme = mappedData.degree;
+            } else if (mappedData.major) {
+              mappedData.programme = mappedData.major;
+            }
+          }
+          
+          set({ user: mappedData as unknown as User, loading: false });
         } catch (err: unknown) {
           const errorMessage =
             err instanceof Error ? err.message : "Profile update failed";
@@ -194,8 +480,8 @@ export const useAuthStore = create<AuthState>()(
       updatePassword: async (payload) => {
         set({ loading: true, error: null });
         try {
-          await apiFetch("/user/password", {
-            method: "PUT",
+          await apiFetch("/auth/password", {
+            method: "POST",
             body: JSON.stringify(payload),
           });
           set({ loading: false });
@@ -211,12 +497,22 @@ export const useAuthStore = create<AuthState>()(
         try {
           await apiFetch("/auth/logout", { method: "POST" });
         } catch {
-          // Ignore logout errors
+          // Ignore logout errors - still clear local state
         } finally {
+          // Clear all authentication data
           setAuthToken(null);
           setAuthCookie(null);
-          set({ user: null, token: null });
+          
+          // Clear Zustand store state
+          set({ user: null, token: null, error: null });
+          
+          // Clear all localStorage items related to auth
           localStorage.removeItem("auth-storage");
+          localStorage.removeItem("signup-data");
+          localStorage.removeItem("signup-step");
+          localStorage.removeItem("extra-booking-details");
+          
+          // Clear signup progress and extra booking details from store
           get().clearSignupProgress();
           get().resetExtraBookingDetails();
         }
@@ -230,15 +526,78 @@ export const useAuthStore = create<AuthState>()(
             const parsed = JSON.parse(stored);
             const token = parsed?.state?.token;
             if (token) {
-              setAuthToken(token);
-              setAuthCookie(token);
-              const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
-              set({ user: res.data, token, loading: false });
-              return;
+              // Verify token is still valid by fetching user profile
+              try {
+                setAuthToken(token);
+                setAuthCookie(token);
+                // Try to get complete profile first, fallback to basic profile
+                try {
+                  const res = await apiFetch<ProfileResponse>("/onboarding/profile");
+                  // Handle different response formats
+                  let userData: User;
+                  if ("user" in res && res.user) {
+                    userData = res.user;
+                  } else if ("data" in res && res.data) {
+                    if (typeof res.data === "object" && res.data !== null && "id" in res.data && "firstName" in res.data) {
+                      userData = res.data as unknown as User;
+                    } else {
+                      throw new Error("Unable to extract user data from response");
+                    }
+                  } else {
+                    userData = res as unknown as User;
+                  }
+                  
+                  // Map alternative field names
+                  const mappedData: Record<string, unknown> = { ...userData };
+                  if ((mappedData.school as string) && !(mappedData.campus as string)) {
+                    mappedData.campus = mappedData.school;
+                  }
+                  if ((mappedData.studentId as string) && !(mappedData.studentRefNumber as string)) {
+                    mappedData.studentRefNumber = mappedData.studentId;
+                  }
+                  
+                  set({ user: mappedData as unknown as User, token, loading: false });
+                } catch {
+                  // Fallback to basic profile if complete profile endpoint fails
+                  const res = await apiFetch<ProfileResponse>("/auth/me");
+                  // Handle different response formats
+                  let userData: User;
+                  if ("user" in res && res.user) {
+                    userData = res.user;
+                  } else if ("data" in res && res.data) {
+                    if (typeof res.data === "object" && res.data !== null && "id" in res.data && "firstName" in res.data) {
+                      userData = res.data as unknown as User;
+                    } else {
+                      throw new Error("Unable to extract user data from response");
+                    }
+                  } else {
+                    userData = res as unknown as User;
+                  }
+                  
+                  // Map alternative field names
+                  const mappedData: Record<string, unknown> = { ...userData };
+                  if ((mappedData.school as string) && !(mappedData.campus as string)) {
+                    mappedData.campus = mappedData.school;
+                  }
+                  if ((mappedData.studentId as string) && !(mappedData.studentRefNumber as string)) {
+                    mappedData.studentRefNumber = mappedData.studentId;
+                  }
+                  
+                  set({ user: mappedData as unknown as User, token, loading: false });
+                }
+                return;
+              } catch {
+                // Token is invalid, clear everything
+                setAuthToken(null);
+                setAuthCookie(null);
+                localStorage.removeItem("auth-storage");
+                set({ user: null, token: null, loading: false });
+                return;
+              }
             }
           }
 
-          // restore partials
+          // restore partials (only if no auth token exists)
           const savedSignup = localStorage.getItem("signup-data");
           const savedExtra = localStorage.getItem("extra-booking-details");
           if (savedSignup) set({ signupData: JSON.parse(savedSignup) });
@@ -260,6 +619,12 @@ export const useAuthStore = create<AuthState>()(
         signupData: state.signupData,
         extraBookingDetails: state.extraBookingDetails,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Sync token to api.ts when store rehydrates from localStorage
+        if (state?.token) {
+          setAuthToken(state.token);
+        }
+      },
     }
   )
 );

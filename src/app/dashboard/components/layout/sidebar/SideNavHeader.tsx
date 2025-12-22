@@ -15,13 +15,25 @@ export default function SideNavHeader({ closeMenu }: SideNavHeaderProps) {
     <div>
       <Link href="/dashboard" className="hidden md:block">
         <div className="bg-black h-[3.75rem] flex justify-around items-center pb-3">
-          <Image src={images.hostellaLogo} alt="logo" />
+          <Image 
+            src={images.hostellaLogo} 
+            alt="logo" 
+            width={121}
+            height={67}
+            priority 
+          />
         </div>
       </Link>
       <div className="flex w-full mb-6 md:hidden bg-black ">
         <Link href="/dashboard" className="block md:hidden w-full">
           <div className=" w-full h-[3.75rem] flex justify-around items-center pb-3">
-            <Image src={images.hostellaLogo} alt="logo" />
+            <Image 
+              src={images.hostellaLogo} 
+              alt="logo" 
+              width={121}
+              height={67}
+              priority 
+            />
           </div>
         </Link>
         <button

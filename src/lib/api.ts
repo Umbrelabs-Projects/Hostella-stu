@@ -14,12 +14,47 @@ import {
   CreateBookingData
 } from '@/types/api';
 import { User } from '@/store/useAuthStore';
+import { Notification } from '@/types/notifications';
+import {
+  transformListHostelsResponse,
+  transformHostelResponse,
+  transformHostel,
+  BackendHostel
+} from '@/utils/hostelTransformers';
 
 let authToken: string | null = null;
 
 export const setAuthToken = (token: string | null) => {
   authToken = token;
 };
+
+// Get token from multiple sources (store, localStorage, or module variable)
+function getAuthToken(): string | null {
+  // First, try the module variable (set by setAuthToken)
+  if (authToken) {
+    return authToken;
+  }
+
+  // Fallback: Try to get from localStorage (Zustand persist)
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('auth-storage');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const token = parsed?.state?.token;
+        if (token) {
+          // Sync it to module variable for future use
+          authToken = token;
+          return token;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to read token from localStorage:', error);
+    }
+  }
+
+  return null;
+}
 
 // Generic API response wrapper
 export interface ApiResponse<T> {
@@ -66,7 +101,7 @@ export async function apiFetch<T>(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = process.env.API_URL ?? "https://example-prod.up.railway.app/api/v1";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "https://api.hostella.app/api/v1";
   
   // Don't set Content-Type for FormData (browser will set it with boundary)
   const isFormData = options.body instanceof FormData;
@@ -76,8 +111,10 @@ export async function apiFetch<T>(
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  if (authToken) {
-    headers["Authorization"] = `Bearer ${authToken}`;
+  // Get token from store/localStorage/module variable
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   try {
@@ -130,6 +167,24 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
     }),
 
+  initiateSignup: (data: { email: string; password: string; confirmPassword: string }) =>
+    apiFetch<ApiResponse<{ message: string; sessionId: string; expiresIn: number }>>(
+      '/auth/signup/initiate',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    ),
+
+  verifyOtp: (data: { email: string; otp: string; sessionId: string }) =>
+    apiFetch<ApiResponse<{ message: string; verifiedSessionId: string; expiresIn: number }>>(
+      '/auth/signup/verify-otp',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    ),
+
   register: (data: FormData) =>
     apiFetch<ApiResponse<{ user: User; token: string }>>('/auth/register', {
       method: 'POST',
@@ -137,6 +192,8 @@ export const authApi = {
     }),
 
   me: () => apiFetch<ApiResponse<User>>('/auth/me'),
+
+  getCompleteProfile: () => apiFetch<ApiResponse<User>>('/onboarding/profile'),
 
   forgotPassword: (email: string) =>
     apiFetch<ApiResponse<{ message: string }>>('/auth/forgot-password', {
@@ -167,32 +224,86 @@ export const authApi = {
 // ============================================
 export const userApi = {
   updateProfile: (data: FormData) =>
-    apiFetch<ApiResponse<User>>('/user/profile', {
+    apiFetch<ApiResponse<User>>('/auth/profile', {
       method: 'PUT',
       body: data,
     }),
 
   updatePassword: (currentPassword: string, newPassword: string) =>
-    apiFetch<ApiResponse<{ message: string }>>('/user/password', {
-      method: 'PUT',
+    apiFetch<ApiResponse<{ message: string }>>('/auth/password', {
+      method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
 
-  getProfile: () => apiFetch<ApiResponse<User>>('/user/profile'),
+  getProfile: () => apiFetch<ApiResponse<User>>('/auth/me'),
 };
 
 // ============================================
 // HOSTEL API ENDPOINTS
 // ============================================
+// Backend response types for hostels
+interface BackendHostelListResponse {
+  success: boolean;
+  data: {
+    hostels: BackendHostel[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  };
+}
+
+interface BackendHostelSingleResponse {
+  success: boolean;
+  data: {
+    hostel: BackendHostel;
+  };
+}
+
 export const hostelApi = {
-  getAll: (params?: { page?: number; limit?: number; search?: string }) =>
-    apiFetch<PaginatedResponse<Hostel>>(
+  getAll: async (params?: { page?: number; limit?: number; search?: string }) => {
+    const response = await apiFetch<BackendHostelListResponse>(
       `/hostels?${buildQueryString(params)}`
-    ),
+    );
+    // Transform backend response to frontend format
+    return transformListHostelsResponse(response);
+  },
 
-  getById: (id: number) => apiFetch<ApiResponse<Hostel>>(`/hostels/${id}`),
+  getById: async (id: string | number) => {
+    const response = await apiFetch<BackendHostelSingleResponse>(`/hostels/${id}`);
+    // Transform backend response to frontend format
+    return transformHostelResponse(response);
+  },
 
-  getFeatured: () => apiFetch<ApiResponse<Hostel[]>>('/hostels/featured'),
+  getFeatured: async (): Promise<ApiResponse<Hostel[]>> => {
+    const response = await apiFetch<BackendHostelListResponse | ApiResponse<BackendHostel[]>>('/hostels/featured');
+    // Check if response has nested structure (like getAll) or direct array
+    if ('data' in response && 'hostels' in (response.data as { hostels?: unknown })) {
+      // Nested structure like getAll
+      const transformed = transformListHostelsResponse(response as BackendHostelListResponse);
+      return {
+        success: transformed.success,
+        data: transformed.data,
+      };
+    } else if ('data' in response && Array.isArray(response.data)) {
+      // Direct array format - check if items need transformation
+      const firstItem = response.data[0];
+      // Check if it's a BackendHostel (has images array) or already transformed (has image string)
+      if (firstItem && 'images' in firstItem && Array.isArray(firstItem.images)) {
+        // Needs transformation
+        return {
+          success: response.success,
+          data: (response.data as BackendHostel[]).map(transformHostel),
+        };
+      }
+      // Already in frontend format
+      return response as unknown as ApiResponse<Hostel[]>;
+    }
+    // Fallback: assume it's already in frontend format
+    return response as unknown as ApiResponse<Hostel[]>;
+  },
 };
 
 // ============================================
@@ -271,29 +382,40 @@ export const paymentApi = {
 // ============================================
 // NOTIFICATION API ENDPOINTS
 // ============================================
-export const notificationApi = {
-  getAll: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
-    apiFetch<PaginatedResponse<unknown>>(
-      `/notifications?${buildQueryString(params)}`
-    ),
+export interface NotificationResponse {
+  success: boolean;
+  notifications: Notification[];
+  total: number;
+  unreadCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 
-  markAsRead: (id: number) =>
+export const notificationApi = {
+  getAll: (params?: { page?: number; pageSize?: number; unreadOnly?: boolean }) => {
+    const queryParams: Record<string, string> = {};
+    if (params?.page) queryParams.page = String(params.page);
+    if (params?.pageSize) queryParams.pageSize = String(params.pageSize);
+    if (params?.unreadOnly !== undefined) queryParams.unreadOnly = String(params.unreadOnly);
+    
+    return apiFetch<NotificationResponse>(
+      `/notifications?${buildQueryString(queryParams)}`
+    );
+  },
+
+  markAsRead: (id: string) =>
     apiFetch<ApiResponse<{ message: string }>>(`/notifications/${id}/read`, {
-      method: 'PUT',
+      method: 'POST',
     }),
 
   markAllAsRead: () =>
-    apiFetch<ApiResponse<{ message: string }>>('/notifications/read-all', {
-      method: 'PUT',
+    apiFetch<ApiResponse<{ message: string }>>('/notifications/mark-all-read', {
+      method: 'POST',
     }),
 
-  delete: (id: number) =>
+  delete: (id: string) =>
     apiFetch<ApiResponse<{ message: string }>>(`/notifications/${id}`, {
-      method: 'DELETE',
-    }),
-
-  deleteAll: () =>
-    apiFetch<ApiResponse<{ message: string }>>('/notifications', {
       method: 'DELETE',
     }),
 };
@@ -394,5 +516,39 @@ export const contactApi = {
     apiFetch<ApiResponse<{ message: string }>>('/contact', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+};
+
+// ============================================
+// EMERGENCY CONTACTS API ENDPOINTS
+// ============================================
+export interface EmergencyContactResponse {
+  id: string;
+  name: string;
+  phone: string;
+  relation: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const emergencyContactsApi = {
+  getAll: () =>
+    apiFetch<ApiResponse<EmergencyContactResponse[]>>('/emergency-contacts'),
+
+  create: (data: { name: string; phone: string; relation: string }) =>
+    apiFetch<ApiResponse<EmergencyContactResponse>>('/emergency-contacts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: string, data: { name?: string; phone?: string; relation?: string }) =>
+    apiFetch<ApiResponse<EmergencyContactResponse>>(`/emergency-contacts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    apiFetch<ApiResponse<{ message: string }>>(`/emergency-contacts/${id}`, {
+      method: 'DELETE',
     }),
 };

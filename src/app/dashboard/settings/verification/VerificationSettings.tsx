@@ -44,14 +44,13 @@ export default function VerificationSettings() {
       </div>
 
       <div className="space-y-4">
+        {/* Email verification removed - email is verified during registration */}
         <VerificationItem
           title="Email Address"
           description={verificationStatus.email.value}
           status={verificationStatus.email}
-          actionLabel={
-            !verificationStatus.email.verified ? "Verify" : undefined
-          }
-          onAction={() => handleVerify("email")}
+          actionLabel={undefined}
+          onAction={() => {}}
         />
         <VerificationItem
           title="Phone Number"

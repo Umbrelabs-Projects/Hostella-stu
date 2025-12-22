@@ -33,7 +33,13 @@ export default function FeatureCard({
       whileHover={{ scale: 1.05 }}
     >
       <div className="bg-yellow-400 w-fit p-2 rounded-md">
-        <Image src={icon} width={40} height={40} alt={title} />
+        <Image 
+          src={icon} 
+          width={40} 
+          height={40} 
+          alt={title}
+          style={{ width: "auto", height: "auto" }}
+        />
       </div>
       <h2 className="text-xl font-bold">{title}</h2>
       <p className="text-sm text-gray-600">{description}</p>

@@ -19,7 +19,8 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
 
-  const { updateSignupData, signupData, loading } = useAuthStore();
+  const { updateSignupData, signupData } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -34,10 +35,26 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
     },
   });
 
-  const onSubmit = (data: Step1Data) => {
-    updateSignupData(data);
-    toast.info("Otp sent to your email");
-    onNext();
+  const onSubmit = async (data: Step1Data) => {
+    try {
+      setIsLoading(true);
+      const { authApi } = await import('@/lib/api');
+      const response = await authApi.initiateSignup(data);
+      
+      // Store email, password, and sessionId
+      updateSignupData({
+        ...data,
+        sessionId: response.data.sessionId,
+      });
+      
+      toast.success("OTP sent to your email");
+      onNext();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to send OTP";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -118,10 +135,10 @@ export default function MainSignUp({ onNext }: MainSignUpProps) {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-lg shadow-md disabled:opacity-70"
           >
-            {loading ? "Processing..." : "Continue"}
+            {isLoading ? "Sending OTP..." : "Continue"}
           </Button>
           {/* Divider */}
           <div className="relative flex items-center justify-center">

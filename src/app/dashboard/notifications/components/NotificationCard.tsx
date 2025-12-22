@@ -7,8 +7,8 @@ import { CheckCheck, TrashIcon } from "lucide-react";
 
 interface NotificationCardProps {
   notification: Notification;
-  markAsRead: (id: number) => void;
-  deleteNotification: (id: number) => void;
+  markAsRead: (id: string) => void;
+  deleteNotification: (id: string) => void;
 }
 
 const NotificationCard: React.FC<NotificationCardProps> = ({
@@ -21,11 +21,11 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   const containerClass = useMemo(
     () =>
       `p-4 rounded-2xl border ${
-        notification.read
+        notification.isRead
           ? "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
           : `border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/30`
       } shadow-sm transition-colors duration-200`,
-    [notification.read]
+    [notification.isRead]
   );
 
   const Icon = config.icon;
@@ -42,7 +42,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           </h3>
         </div>
         <div className="flex justify-end items-center gap-2">
-          {!notification.read && (
+          {!notification.isRead && (
             <button
               onClick={() => markAsRead(notification.id)}
               className="px-2 text-xs text-blue-500 rounded-md bg-blue-100 hover:bg-gray-200 transition md:text-sm font-semibold"
@@ -64,7 +64,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
       </p>
       <div>
         <span className="text-gray-500 text-xs dark:text-gray-400">
-          {notification.time}
+          {new Date(notification.createdAt).toLocaleString()}
         </span>
       </div>
     </div>

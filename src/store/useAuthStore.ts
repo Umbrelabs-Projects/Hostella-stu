@@ -17,7 +17,11 @@ function setAuthCookie(token: string | null) {
     if (token) {
       document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
     } else {
-      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+      // Clear cookie with multiple attempts to ensure it's deleted
+      const pastDate = 'Thu, 01 Jan 1970 00:00:01 GMT';
+      document.cookie = `auth-token=; path=/; expires=${pastDate}`;
+      document.cookie = `auth-token=; path=/; domain=${window.location.hostname}; expires=${pastDate}`;
+      document.cookie = `auth-token=; path=/; expires=${pastDate}; SameSite=Lax`;
     }
   }
 }
@@ -31,6 +35,13 @@ export interface User {
   avatar?: string;
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  hasHealthCondition?: boolean;
+  healthCondition?: string;
+  bloodType?: string;
+  allergies?: string;
 }
 
 interface AuthState {
@@ -93,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
         set({ loading: true, error: null });
         try {
           const res = await apiFetch<{ success: boolean; data: User }>(
-            "/user/profile"
+            "/auth/me"
           );
           set({ user: res.data, loading: false });
         } catch (err: unknown) {
@@ -132,9 +143,10 @@ export const useAuthStore = create<AuthState>()(
               body: JSON.stringify(data),
             }
           );
-          setAuthToken(res.data.token);
-          setAuthCookie(res.data.token);
-          set({ user: res.data.user, token: res.data.token, loading: false });
+          const token = res.data.token;
+          setAuthToken(token);
+          setAuthCookie(token);
+          set({ user: res.data.user, token, loading: false });
         } catch (err: unknown) {
           const errorMessage =
             err instanceof Error ? err.message : "SignIn failed";
@@ -161,9 +173,10 @@ export const useAuthStore = create<AuthState>()(
             }
           );
 
-          setAuthToken(res.data.token);
-          setAuthCookie(res.data.token);
-          set({ user: res.data.user, token: res.data.token, loading: false });
+          const token = res.data.token;
+          setAuthToken(token);
+          setAuthCookie(token);
+          set({ user: res.data.user, token, loading: false });
           get().clearSignupProgress();
         } catch (err: unknown) {
           const errorMessage =
@@ -177,7 +190,7 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: async (formData) => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ success: boolean; data: User }>("/user/profile", {
+          const res = await apiFetch<ApiResponse<User>>("/auth/profile", {
             method: "PUT",
             body: formData,
           });
@@ -194,8 +207,8 @@ export const useAuthStore = create<AuthState>()(
       updatePassword: async (payload) => {
         set({ loading: true, error: null });
         try {
-          await apiFetch("/user/password", {
-            method: "PUT",
+          await apiFetch("/auth/password", {
+            method: "POST",
             body: JSON.stringify(payload),
           });
           set({ loading: false });
@@ -211,12 +224,22 @@ export const useAuthStore = create<AuthState>()(
         try {
           await apiFetch("/auth/logout", { method: "POST" });
         } catch {
-          // Ignore logout errors
+          // Ignore logout errors - still clear local state
         } finally {
+          // Clear all authentication data
           setAuthToken(null);
           setAuthCookie(null);
-          set({ user: null, token: null });
+          
+          // Clear Zustand store state
+          set({ user: null, token: null, error: null });
+          
+          // Clear all localStorage items related to auth
           localStorage.removeItem("auth-storage");
+          localStorage.removeItem("signup-data");
+          localStorage.removeItem("signup-step");
+          localStorage.removeItem("extra-booking-details");
+          
+          // Clear signup progress and extra booking details from store
           get().clearSignupProgress();
           get().resetExtraBookingDetails();
         }
@@ -230,15 +253,25 @@ export const useAuthStore = create<AuthState>()(
             const parsed = JSON.parse(stored);
             const token = parsed?.state?.token;
             if (token) {
-              setAuthToken(token);
-              setAuthCookie(token);
-              const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
-              set({ user: res.data, token, loading: false });
-              return;
+              // Verify token is still valid by fetching user profile
+              try {
+                setAuthToken(token);
+                setAuthCookie(token);
+                const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
+                set({ user: res.data, token, loading: false });
+                return;
+              } catch (error) {
+                // Token is invalid, clear everything
+                setAuthToken(null);
+                setAuthCookie(null);
+                localStorage.removeItem("auth-storage");
+                set({ user: null, token: null, loading: false });
+                return;
+              }
             }
           }
 
-          // restore partials
+          // restore partials (only if no auth token exists)
           const savedSignup = localStorage.getItem("signup-data");
           const savedExtra = localStorage.getItem("extra-booking-details");
           if (savedSignup) set({ signupData: JSON.parse(savedSignup) });
@@ -260,6 +293,12 @@ export const useAuthStore = create<AuthState>()(
         signupData: state.signupData,
         extraBookingDetails: state.extraBookingDetails,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Sync token to api.ts when store rehydrates from localStorage
+        if (state?.token) {
+          setAuthToken(state.token);
+        }
+      },
     }
   )
 );

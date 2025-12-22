@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,6 +39,16 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
     },
   });
 
+  // Debug: Log signupData when component mounts
+  useEffect(() => {
+    console.log("Step 3 - Signup data:", {
+      email: signupData.email,
+      hasPassword: !!signupData.password,
+      hasVerifiedSessionId: !!signupData.verifiedSessionId,
+      verifiedSessionId: signupData.verifiedSessionId,
+    });
+  }, [signupData]);
+
   const onSubmit = async (data: Step2Data) => {
     try {
       if (
@@ -50,20 +60,35 @@ export default function DetailsForm({ onPrev }: DetailsFormProps) {
         return;
       }
 
+      if (!signupData.verifiedSessionId) {
+        console.error("Missing verifiedSessionId. Signup data:", signupData);
+        toast.error("Please verify your email first. Go back to Step 2 and verify your OTP.");
+        return;
+      }
+
       const fullData = {
         email: signupData.email,
         password: signupData.password,
         confirmPassword: signupData.confirmPassword,
+        verifiedSessionId: signupData.verifiedSessionId,
         ...data,
       };
+
+      // Debug: Log the data being sent (without password)
+      console.log("Registration data:", {
+        ...fullData,
+        password: "***",
+        confirmPassword: "***",
+      });
 
       await signUp(fullData);
       toast.success("Signup successful!");
 
       clearSignupProgress();
       router.push("/dashboard");
-    } catch {
-      toast.error("Signup failed. Please try again.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Signup failed. Please try again.";
+      toast.error(errorMessage);
     }
   };
 

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileSettings from "./profile-settings/ProfileSettings";
 import PasswordSettings from "./password-settings/PasswordSettings";
-import VerificationSettings from "./verification/VerificationSettings";
 import SettingsSidebar from "./components/SettingsSidebar";
 import { EmergencyDetails } from "./emergency-details/EmergencyDetails";
 
@@ -19,8 +18,6 @@ export default function SettingsPage() {
         return <PasswordSettings />;
       case "emergency":
         return <EmergencyDetails />;
-      case "verification":
-        return <VerificationSettings />;
       default:
         return <ProfileSettings />;
     }

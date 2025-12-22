@@ -17,7 +17,7 @@ interface HostelState {
 
   fetchHostels: (params?: { page?: number; limit?: number; search?: string }) => Promise<void>;
   fetchFeaturedHostels: () => Promise<void>;
-  fetchHostelById: (id: number) => Promise<void>;
+  fetchHostelById: (id: string | number) => Promise<void>;
   setSelectedHostel: (hostel: Hostel | null) => void;
   clearError: () => void;
 }

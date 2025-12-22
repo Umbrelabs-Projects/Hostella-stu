@@ -16,6 +16,7 @@ export default function Footer() {
               width={100}
               height={80}
               alt="HostellaLOGO"
+              style={{ width: "auto", height: "auto" }}
             />
             <p className="text-sm max-w-60 text-white">
               Feel at Home for Academic Excellence

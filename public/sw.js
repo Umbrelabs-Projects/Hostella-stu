@@ -1,8 +1,10 @@
 // Service Worker for Hostella PWA
 const CACHE_NAME = 'hostella-v1';
 const RUNTIME_CACHE = 'hostella-runtime-v1';
+const CACHE_VERSION = 'v1';
+const MAX_CACHE_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-// Assets to cache on install
+// Assets to cache on install (static assets only)
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -10,7 +12,37 @@ const STATIC_ASSETS = [
   '/icons/icon-512x512.png',
 ];
 
-// Install event - cache static assets
+// URLs/patterns to NEVER cache
+const NO_CACHE_PATTERNS = [
+  /\/api\/v1\//,           // API endpoints
+  /localhost:5000/,        // Backend API
+  /127\.0\.0\.1:5000/,     // Backend API (alternative)
+  /\.json$/,               // JSON files (likely API responses)
+  /\/_next\/data\//,       // Next.js data routes
+];
+
+// Check if URL should be cached
+function shouldCache(url) {
+  // Don't cache if it matches any exclusion pattern
+  for (const pattern of NO_CACHE_PATTERNS) {
+    if (pattern.test(url)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Check if request is for static asset
+function isStaticAsset(url) {
+  return (
+    url.includes('/_next/static/') ||
+    url.includes('/icons/') ||
+    url.includes('/images/') ||
+    url.match(/\.(jpg|jpeg|png|gif|svg|webp|ico|woff|woff2|ttf|eot)$/i)
+  );
+}
+
+// Install event - cache static assets only
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -18,74 +50,133 @@ self.addEventListener('install', (event) => {
         console.log('[Service Worker] Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
-      .then(() => self.skipWaiting())
+      .then(() => {
+        // Don't skip waiting immediately - let it activate naturally
+        console.log('[Service Worker] Installed');
+      })
+      .catch((error) => {
+        console.error('[Service Worker] Install failed:', error);
+      })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => {
-            return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
-          })
-          .map((cacheName) => {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          })
-      );
-    })
-    .then(() => self.clients.claim())
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((cacheName) => {
+              return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
+            })
+            .map((cacheName) => {
+              console.log('[Service Worker] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            })
+        );
+      })
+      .then(() => {
+        // Claim clients only after cleanup
+        return self.clients.claim();
+      })
+      .then(() => {
+        console.log('[Service Worker] Activated');
+      })
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network-first for API, cache-first for static assets
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
   // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (request.method !== 'GET') {
     return;
   }
 
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Skip cross-origin requests (unless it's a static asset from CDN)
+  if (url.origin !== self.location.origin) {
+    // Only cache static assets from external origins
+    if (!isStaticAsset(url.href)) {
+      return;
+    }
+  }
+
+  // NEVER cache API calls
+  if (!shouldCache(url.href)) {
+    // Network-only for API calls
+    event.respondWith(
+      fetch(request)
+        .catch(() => {
+          // If network fails for API, return a proper error response
+          return new Response(
+            JSON.stringify({ error: 'Network request failed' }),
+            {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        })
+    );
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        // Return cached version if available
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        // Otherwise fetch from network
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+  // For static assets, use cache-first strategy
+  if (isStaticAsset(url.href)) {
+    event.respondWith(
+      caches.match(request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return fetch(request)
+            .then((response) => {
+              // Only cache successful responses
+              if (response && response.status === 200) {
+                const responseToCache = response.clone();
+                caches.open(RUNTIME_CACHE).then((cache) => {
+                  cache.put(request, responseToCache);
+                });
+              }
               return response;
-            }
+            });
+        })
+    );
+    return;
+  }
 
-            // Clone the response
-            const responseToCache = response.clone();
-
-            // Cache the response
-            caches.open(RUNTIME_CACHE)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          })
-          .catch(() => {
-            // If network fails and it's a navigation request, return offline page
-            if (event.request.mode === 'navigate') {
-              return caches.match('/');
-            }
+  // For HTML pages and other content, use network-first strategy
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        // Only cache successful responses that should be cached
+        if (response && response.status === 200 && shouldCache(url.href)) {
+          const responseToCache = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => {
+            cache.put(request, responseToCache);
           });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Network failed, try cache as fallback
+        return caches.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // If it's a navigation request and cache fails, return offline page
+          if (request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          // Otherwise return a proper error
+          return new Response('Offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+          });
+        });
       })
   );
 });
@@ -122,4 +213,3 @@ self.addEventListener('notificationclick', (event) => {
     clients.openWindow('/')
   );
 });
-

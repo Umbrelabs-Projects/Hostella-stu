@@ -1,7 +1,7 @@
 export interface EmergencyContact {
   id: string;
   name: string;
-  relationship: string;
+  relationship: string; // Frontend uses "relationship", backend uses "relation"
   phone: string;
 }
 

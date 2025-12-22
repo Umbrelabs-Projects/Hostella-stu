@@ -7,7 +7,7 @@ export interface Hostel {
   location: string | null;
   campus: string | null;
   rating: number;
-  description: string;
+  description: string | null;
   image: string | null;
   images: string[];
   amenities: string[];

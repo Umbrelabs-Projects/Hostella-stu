@@ -34,18 +34,26 @@ export const step2Schema = z.object({
   admissionLetter: z
     .any()
     .nullable()
+    .optional()
     .superRefine((files, ctx) => {
-      if (!files || !files.length) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please upload your admission letter",
-        });
-      } else {
+      // Only validate if file is provided (it's optional)
+      if (files && files.length > 0) {
         const file = files[0];
-        if (file.type !== "application/pdf") {
+        const allowedTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        
+        if (!allowedTypes.includes(file.type)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Only PDF files are allowed",
+            message: "File must be jpeg, jpg, png, gif, webp, pdf, doc, or docx",
           });
         } else if (file.size > 5 * 1024 * 1024) {
           ctx.addIssue({

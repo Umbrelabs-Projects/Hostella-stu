@@ -9,6 +9,7 @@ interface ContactFormProps {
   onCancel: () => void;
   onSave: () => void;
   editing?: boolean;
+  loading?: boolean;
 }
 
 export const ContactForm = ({
@@ -17,6 +18,7 @@ export const ContactForm = ({
   onCancel,
   onSave,
   editing,
+  loading = false,
 }: ContactFormProps) => (
   <div className="border-2 border-gray-200 rounded-lg p-4 sm:p-6 space-y-4 bg-gray-50">
     <h3 className="font-semibold text-gray-900">
@@ -41,9 +43,10 @@ export const ContactForm = ({
     <div className="flex flex-col sm:flex-row gap-3 pt-2">
       <Button
         onClick={onSave}
+        disabled={loading}
         className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
       >
-        {editing ? "Update Contact" : "Add Contact"}
+        {loading ? "Saving..." : editing ? "Update Contact" : "Add Contact"}
       </Button>
       <Button
         onClick={onCancel}

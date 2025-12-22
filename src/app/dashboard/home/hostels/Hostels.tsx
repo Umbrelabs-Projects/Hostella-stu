@@ -7,6 +7,7 @@ import HostelsList from "./components/HostelsList";
 import { useHostelStore } from "@/store/useHostelStore";
 import { ErrorState } from "@/components/ui/error";
 import { SkeletonBanner, SkeletonCardGrid } from "@/components/ui/skeleton";
+import AnnouncementsSection from "../components/AnnouncementsSection";
 
 export default function Hostels() {
   const { loading, error, fetchHostels } = useHostelStore();
@@ -34,6 +35,9 @@ export default function Hostels() {
         paragraph="Choose a room made with you in mind"
         image={images.dashboardImg}
       />
+      <div className="px-4 md:px-0">
+        <AnnouncementsSection />
+      </div>
       <HostelsList />
     </div>
   );

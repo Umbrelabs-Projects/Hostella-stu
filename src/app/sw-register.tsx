@@ -87,7 +87,7 @@ export default function ServiceWorkerRegister() {
           }
         }, 600000); // Check every 10 minutes
 
-        // Handle updates
+        // Handle updates - don't force reload, let user decide
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -96,23 +96,23 @@ export default function ServiceWorkerRegister() {
                 newWorker.state === 'installed' &&
                 navigator.serviceWorker.controller
               ) {
-                // New service worker available, prompt user to refresh
-                if (confirm('New version available! Reload to update?')) {
-                  window.location.reload();
-                }
+                // New service worker available, but don't force reload
+                // The new worker will activate on next page load
+                console.log('[PWA] New service worker available. It will activate on next page load.');
+              } else if (newWorker.state === 'activated') {
+                // New worker activated, but don't force reload
+                console.log('[PWA] New service worker activated');
               }
             });
           }
         });
       };
 
-      // Handle service worker controller change
-      let refreshing = false;
+      // Handle service worker controller change - don't auto-reload
       const controllerChangeHandler = () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
+        console.log('[PWA] Service worker controller changed');
+        // Don't force reload - let the user continue working
+        // The new service worker will handle new requests
       };
 
       navigator.serviceWorker.addEventListener('controllerchange', controllerChangeHandler);

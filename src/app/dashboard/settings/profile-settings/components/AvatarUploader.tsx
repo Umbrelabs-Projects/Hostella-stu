@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Upload, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,9 +14,30 @@ export default function AvatarUploader({
 }: AvatarUploaderProps) {
   const [preview, setPreview] = useState<string | null>(avatar ?? null);
 
+  // Update preview when avatar prop changes
+  useEffect(() => {
+    setPreview(avatar ?? null);
+  }, [avatar]);
+
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        alert("Avatar image must be less than 5MB");
+        e.target.value = ""; // Clear input
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Only image files (JPEG, JPG, PNG, GIF, WEBP) are allowed");
+        e.target.value = ""; // Clear input
+        return;
+      }
+
       onFileSelect(file);
       const reader = new FileReader();
       reader.onloadend = () => setPreview(reader.result as string);
@@ -51,7 +72,7 @@ export default function AvatarUploader({
           id="avatar-upload"
           type="file"
           className="hidden"
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           onChange={handleUpload}
         />
       </div>

@@ -3,15 +3,7 @@
 import Image, { StaticImageData } from "next/image";
 import { Star, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-type Hostel = {
-  id: number;
-  name: string;
-  location: string;
-  rating: number;
-  description: string;
-  image: string | StaticImageData;
-};
+import { Hostel } from "@/types/api";
 
 interface HostelCardProps {
   hostel: Hostel;
@@ -23,11 +15,16 @@ export default function HostelCard({ hostel }: HostelCardProps) {
   const handleViewRooms = () => {
     router.push(`/dashboard/home/rooms/${hostel.id}`);
   };
+
+  // Handle null/undefined values
+  const displayLocation = hostel.location || "Location not specified";
+  const displayDescription = hostel.description || "No description available";
+  const displayImage = hostel.image || "/placeholder-hostel.jpg";
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col">
       <div className="relative w-full h-48">
         <Image
-          src={hostel.image}
+          src={displayImage}
           alt={hostel.name}
           fill
           className="object-cover"
@@ -39,12 +36,12 @@ export default function HostelCard({ hostel }: HostelCardProps) {
             <h3 className="font-semibold text-lg">{hostel.name}</h3>
             <div className="flex items-center gap-1 text-yellow-500">
               <Star size={16} />
-              <span className="text-sm text-gray-700">{hostel.rating}</span>
+              <span className="text-sm text-gray-700">{hostel.rating || 0}</span>
             </div>
           </div>
-          <p className="text-gray-500 text-sm mt-1">{hostel.description}</p>
+          <p className="text-gray-500 text-sm mt-1">{displayDescription}</p>
           <div className="flex items-center mt-2 text-gray-600 text-sm">
-            <MapPin size={14} className="mr-1" /> {hostel.location}
+            <MapPin size={14} className="mr-1" /> {displayLocation}
           </div>
         </div>
         <button

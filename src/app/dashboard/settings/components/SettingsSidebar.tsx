@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Lock, Heart, Shield } from "lucide-react";
+import { User, Lock, Heart } from "lucide-react";
 
 interface SettingsSidebarProps {
   activeTab: string;
@@ -15,7 +15,6 @@ export default function SettingsSidebar({
     { id: "profile", label: "Profile Settings", icon: User },
     { id: "password", label: "Password", icon: Lock },
     { id: "emergency", label: "Emergency Details", icon: Heart },
-    { id: "verification", label: "Verification", icon: Shield },
   ];
 
   return (

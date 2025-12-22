@@ -4,12 +4,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "../../components/SearchBar";
 import HostelCard from "../HostelCard";
-import { hostelsData } from "@/lib/constants";
+import { useHostelStore } from "@/store/useHostelStore";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function HostelsList() {
   const [query, setQuery] = useState("");
+  const { hostels } = useHostelStore();
 
-  const filteredHostels = hostelsData.filter((h) =>
+  const filteredHostels = hostels.filter((h) =>
     h.name.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -54,13 +56,16 @@ export default function HostelsList() {
               </motion.div>
             ))
           ) : (
-            <motion.p
-              className="text-center text-gray-500 col-span-full"
+            <motion.div
+              className="col-span-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              No hostels found.
-            </motion.p>
+              <EmptyState 
+                title="No hostels found" 
+                description={query ? `No hostels match "${query}"` : "No hostels available"} 
+              />
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>

@@ -4,13 +4,15 @@ import React from "react";
 interface PersonalInfoFormProps {
   firstName: string;
   lastName: string;
+  phone: string;
   email: string;
-  onChange: (field: "firstName" | "lastName", value: string) => void;
+  onChange: (field: "firstName" | "lastName" | "phone", value: string) => void;
 }
 
 export default function PersonalInfoForm({
   firstName,
   lastName,
+  phone,
   email,
   onChange,
 }: PersonalInfoFormProps) {
@@ -26,7 +28,7 @@ export default function PersonalInfoForm({
           value={firstName}
           placeholder="First Name"
           onChange={(e) => onChange("firstName", e.target.value)}
-          className="border px-4 py-2 rounded-lg w-full"
+          className="border px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -40,7 +42,21 @@ export default function PersonalInfoForm({
           value={lastName}
           placeholder="Last Name"
           onChange={(e) => onChange("lastName", e.target.value)}
-          className="border px-4 py-2 rounded-lg w-full"
+          className="border px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
+      {/* Phone */}
+      <div className="flex flex-col sm:col-span-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
+          Phone Number
+        </label>
+        <input
+          type="tel"
+          value={phone}
+          placeholder="0241234567"
+          onChange={(e) => onChange("phone", e.target.value)}
+          className="border px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 

@@ -33,26 +33,40 @@ export interface User {
   email: string;
   phone?: string;
   avatar?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
   emailVerified?: boolean;
   phoneVerified?: boolean;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  emergencyContactRelation?: string;
+  // University Information
+  campus?: string;
+  programme?: string;
+  studentRefNumber?: string;
+  level?: string;
+  // Health Information
   hasHealthCondition?: boolean;
   healthCondition?: string;
   bloodType?: string;
   allergies?: string;
+  // Emergency Contact (Legacy - Single Contact)
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
 }
+
+// Extended signup data type to include session IDs
+type ExtendedSignupData = Partial<FullSignUpData> & {
+  sessionId?: string;
+  verifiedSessionId?: string;
+};
 
 interface AuthState {
   user: User | null;
   token: string | null;
   loading: boolean;
   error: string | null;
-  signupData: Partial<FullSignUpData>;
+  signupData: ExtendedSignupData;
   extraBookingDetails: Partial<ExtraDetailsFormValues>;
 
-  updateSignupData: (newData: Partial<FullSignUpData>) => void;
+  updateSignupData: (newData: Partial<ExtendedSignupData>) => void;
   resetSignupData: () => void;
   clearSignupProgress: () => void;
 
@@ -103,10 +117,49 @@ export const useAuthStore = create<AuthState>()(
       fetchProfile: async () => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ success: boolean; data: User }>(
-            "/auth/me"
-          );
-          set({ user: res.data, loading: false });
+          // Try to get complete profile first, fallback to basic profile
+          try {
+            const res = await apiFetch<{ success: boolean; data: User }>(
+              "/onboarding/profile"
+            );
+            console.log("fetchProfile: Complete profile response", res.data);
+            console.log("fetchProfile: Programme field check", {
+              programme: res.data.programme,
+              hasProgramme: 'programme' in res.data,
+              programmeType: typeof res.data.programme,
+              allKeys: Object.keys(res.data),
+            });
+            // Map alternative field names if backend uses different names
+            const userData = res.data as any;
+            if (userData.school && !userData.campus) {
+              userData.campus = userData.school;
+            }
+            if (userData.studentId && !userData.studentRefNumber) {
+              userData.studentRefNumber = userData.studentId;
+            }
+            // Check for alternative programme field names
+            if (!userData.programme) {
+              // Try common alternative names
+              if (userData.program) {
+                userData.programme = userData.program;
+              } else if (userData.course) {
+                userData.programme = userData.course;
+              } else if (userData.degree) {
+                userData.programme = userData.degree;
+              } else if (userData.major) {
+                userData.programme = userData.major;
+              }
+            }
+            set({ user: res.data, loading: false });
+          } catch (error) {
+            console.error("fetchProfile: Complete profile failed, trying basic profile", error);
+            // Fallback to basic profile if complete profile endpoint fails
+            const res = await apiFetch<{ success: boolean; data: User }>(
+              "/auth/me"
+            );
+            console.log("fetchProfile: Basic profile response", res.data);
+            set({ user: res.data, loading: false });
+          }
         } catch (err: unknown) {
           const errorMessage =
             err instanceof Error ? err.message : "Profile fetch failed";
@@ -257,8 +310,15 @@ export const useAuthStore = create<AuthState>()(
               try {
                 setAuthToken(token);
                 setAuthCookie(token);
-                const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
-                set({ user: res.data, token, loading: false });
+                // Try to get complete profile first, fallback to basic profile
+                try {
+                  const res = await apiFetch<{ success: boolean; data: User }>("/onboarding/profile");
+                  set({ user: res.data, token, loading: false });
+                } catch {
+                  // Fallback to basic profile if complete profile endpoint fails
+                  const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
+                  set({ user: res.data, token, loading: false });
+                }
                 return;
               } catch (error) {
                 // Token is invalid, clear everything

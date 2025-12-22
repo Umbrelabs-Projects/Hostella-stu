@@ -193,6 +193,8 @@ export const authApi = {
 
   me: () => apiFetch<ApiResponse<User>>('/auth/me'),
 
+  getCompleteProfile: () => apiFetch<ApiResponse<User>>('/onboarding/profile'),
+
   forgotPassword: (email: string) =>
     apiFetch<ApiResponse<{ message: string }>>('/auth/forgot-password', {
       method: 'POST',

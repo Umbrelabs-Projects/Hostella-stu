@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ContactForm } from "./components/ContactForm";
 import { ContactCard } from "./components/ContactCard";
-import { HealthInfo } from "./components/HealthInfo";
-import { EmergencyContact, HealthDetails } from "./components/types";
+import EmergencyContactForm from "../profile-settings/components/EmergencyContactForm";
+import { EmergencyContact } from "./components/types";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
 import { SkeletonForm } from "@/components/ui/skeleton";
+import { ApiError } from "@/lib/api";
 
 export const EmergencyDetails = () => {
-  const { user, fetchProfile, loading: storeLoading } = useAuthStore();
+  const { user, updateProfile, fetchProfile, loading: storeLoading } = useAuthStore();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Omit<EmergencyContact, "id">>({
@@ -21,9 +22,13 @@ export const EmergencyDetails = () => {
     phone: "",
   });
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [healthDetails, setHealthDetails] = useState<HealthDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  // Legacy Emergency Contact (Single Contact)
+  const [emergencyContactName, setEmergencyContactName] = useState(user?.emergencyContactName || "");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState(user?.emergencyContactPhone || "");
+  const [emergencyContactRelation, setEmergencyContactRelation] = useState(user?.emergencyContactRelation || "");
 
   // Load emergency contacts from API
   const loadEmergencyContacts = async () => {
@@ -73,22 +78,12 @@ export const EmergencyDetails = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchProfile]);
 
-  // Initialize health details from user data
+  // Update legacy contact form when user data changes
   useEffect(() => {
     if (user) {
-
-      // Build health details from user data
-      if (user.bloodType || user.allergies || user.healthCondition) {
-        setHealthDetails({
-          bloodType: user.bloodType || "",
-          allergies: user.allergies || "",
-          conditions: user.healthCondition || "",
-        });
-      } else {
-        setHealthDetails(null);
-      }
-    } else {
-      setHealthDetails(null);
+      setEmergencyContactName(user.emergencyContactName || "");
+      setEmergencyContactPhone(user.emergencyContactPhone || "");
+      setEmergencyContactRelation(user.emergencyContactRelation || "");
     }
   }, [user]);
 
@@ -199,6 +194,46 @@ export const EmergencyDetails = () => {
     }
   };
 
+  const handleSaveLegacyContact = async () => {
+    try {
+      setLoading(true);
+      
+      // Prepare update data for legacy emergency contact
+      const updateData: Record<string, string | null> = {
+        emergencyContactName: emergencyContactName.trim() || null,
+        emergencyContactPhone: emergencyContactPhone.trim() || null,
+        emergencyContactRelation: emergencyContactRelation.trim() || null,
+      };
+
+      // Use FormData for updates
+      const formData = new FormData();
+      
+      Object.entries(updateData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
+      });
+      
+      await updateProfile(formData);
+      
+      // Refresh profile to get all updated data from backend
+      await fetchProfile();
+      
+      toast.success("Emergency contact updated successfully");
+    } catch (error: unknown) {
+      let errorMessage = "Failed to update emergency contact";
+      if (error instanceof ApiError) {
+        errorMessage = error.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message || errorMessage;
+      }
+      toast.error(errorMessage);
+      console.error("Error updating emergency contact:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Show skeleton while loading
   if (initialLoading || storeLoading) {
     return (
@@ -212,108 +247,103 @@ export const EmergencyDetails = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-8 space-y-6">
-      {/* Contacts Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            Emergency Contacts
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Add trusted contacts to be notified in emergencies
-          </p>
+    <div className="space-y-6">
+      {/* Multiple Emergency Contacts Section */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-8 space-y-6">
+        {/* Contacts Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Emergency Contacts
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Add multiple trusted contacts to be notified in emergencies
+            </p>
+          </div>
+          {!editingId && (
+            <Button
+              onClick={() => {
+                setShowForm(true);
+                setFormData({ name: "", relationship: "", phone: "" });
+                setEditingId(null);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 w-full sm:w-auto"
+            >
+              <Plus className="w-4 h-4" /> Add Contact
+            </Button>
+          )}
         </div>
-        {!editingId && (
-          <Button
-            onClick={() => {
-              setShowForm(true);
-              setFormData({ name: "", relationship: "", phone: "" });
+
+        {/* Contact Form */}
+        {showForm && (
+          <ContactForm
+            formData={formData}
+            onChange={(field, value) =>
+              setFormData((prev) => ({ ...prev, [field]: value }))
+            }
+            onCancel={() => {
+              setShowForm(false);
               setEditingId(null);
+              setFormData({ name: "", relationship: "", phone: "" });
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 w-full sm:w-auto"
-          >
-            <Plus className="w-4 h-4" /> Add Contact
-          </Button>
+            onSave={handleAddOrUpdateContact}
+            editing={!!editingId}
+            loading={loading}
+          />
+        )}
+
+        {/* Contacts List */}
+        {!editingId && (
+          <div className="space-y-3">
+            {contacts.map((contact) => (
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                onEdit={handleEditContact}
+                onDelete={handleDeleteContact}
+              />
+            ))}
+            {contacts.length === 0 && !showForm && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No emergency contacts added yet</p>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Contact Form */}
-      {showForm && (
-        <ContactForm
-          formData={formData}
-          onChange={(field, value) =>
-            setFormData((prev) => ({ ...prev, [field]: value }))
-          }
-          onCancel={() => {
-            setShowForm(false);
-            setEditingId(null);
-            setFormData({ name: "", relationship: "", phone: "" });
-          }}
-          onSave={handleAddOrUpdateContact}
-          editing={!!editingId}
-          loading={loading}
-        />
-      )}
-
-      {/* Contacts List */}
-      {!editingId && (
-        <div className="space-y-3">
-          {contacts.map((contact) => (
-            <ContactCard
-              key={contact.id}
-              contact={contact}
-              onEdit={handleEditContact}
-              onDelete={handleDeleteContact}
-            />
-          ))}
-          {contacts.length === 0 && !showForm && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No emergency contacts added yet</p>
-            </div>
-          )}
+      {/* Legacy Single Emergency Contact Section */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-8 space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Legacy Emergency Contact
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Single emergency contact (legacy format). For multiple contacts, use the section above.
+          </p>
         </div>
-      )}
 
-      {/* Health Info */}
-      <HealthInfo 
-        healthDetails={healthDetails} 
-        onUpdate={async (data: HealthDetails) => {
-          try {
-            setLoading(true);
-            const { apiFetch, ApiResponse } = await import('@/lib/api');
-            const { user } = useAuthStore.getState();
-            
-            if (!user?.id) {
-              toast.error("User not found. Please refresh the page.");
-              return;
-            }
+        <EmergencyContactForm
+          emergencyContactName={emergencyContactName}
+          emergencyContactPhone={emergencyContactPhone}
+          emergencyContactRelation={emergencyContactRelation}
+          onChange={(field, value) => {
+            if (field === "emergencyContactName") setEmergencyContactName(value);
+            else if (field === "emergencyContactPhone") setEmergencyContactPhone(value);
+            else if (field === "emergencyContactRelation") setEmergencyContactRelation(value);
+          }}
+        />
 
-            const response = await apiFetch<ApiResponse<typeof user>>("/auth/profile", {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                bloodType: data.bloodType?.trim() || null,
-                allergies: data.allergies?.trim() || null,
-                healthCondition: data.conditions?.trim() || null,
-                hasHealthCondition: Boolean(data.conditions?.trim()), // Send as boolean, not string
-              }),
-            });
-
-            // Update store with new user data
-            useAuthStore.setState({ user: response.data });
-            setHealthDetails(data);
-            toast.success("Health information saved successfully");
-          } catch (error) {
-            toast.error("Failed to save health information");
-            console.error("Error saving health info:", error);
-            throw error;
-          } finally {
-            setLoading(false);
-          }
-        }} 
-      />
+        <div className="pt-4">
+          <Button
+            onClick={handleSaveLegacyContact}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -4,16 +4,26 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import AvatarUploader from "./components/AvatarUploader";
 import PersonalInfoForm from "./components/PersonalInfoForm";
+import UniversityInfoForm from "./components/UniversityInfoForm";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
-import { SkeletonForm, Skeleton } from "@/components/ui/skeleton";
+import { SkeletonForm } from "@/components/ui/skeleton";
 
 export default function ProfileSettings() {
   const { user, updateProfile, loading, fetchProfile } = useAuthStore();
+  
+  // Basic Information
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  
+  // University Information
+  const [campus, setCampus] = useState(user?.campus || "");
+  const [programme, setProgramme] = useState(user?.programme || "");
+  const [studentRefNumber, setStudentRefNumber] = useState(user?.studentRefNumber || "");
+  const [level, setLevel] = useState(user?.level || "");
+  
   const [initialLoading, setInitialLoading] = useState(true);
 
   // Always fetch profile on mount to ensure fresh data
@@ -21,7 +31,9 @@ export default function ProfileSettings() {
     const loadProfile = async () => {
       setInitialLoading(true);
       try {
+        console.log("ProfileSettings: Fetching complete profile...");
         await fetchProfile();
+        console.log("ProfileSettings: Profile fetched successfully", user);
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -31,11 +43,35 @@ export default function ProfileSettings() {
     loadProfile();
   }, [fetchProfile]);
 
+  // Update form state when user data changes
   useEffect(() => {
-    if (user?.firstName) setFirstName(user.firstName);
-    if (user?.lastName) setLastName(user.lastName);
-    if (user?.phone) setPhone(user.phone);
-  }, [user?.firstName, user?.lastName, user?.phone]);
+    if (user) {
+      console.log("ProfileSettings: Loading user data", user);
+      console.log("ProfileSettings: University fields check", {
+        campus: user.campus,
+        programme: user.programme,
+        studentRefNumber: user.studentRefNumber,
+        level: user.level,
+        // Check for alternative field names (in case backend uses different names)
+        school: (user as any).school,
+        studentId: (user as any).studentId,
+        // Check if programme field exists in response
+        hasProgramme: 'programme' in user,
+        programmeType: typeof user.programme,
+        programmeValue: user.programme,
+        // Check all user keys to see what fields are present
+        allUserKeys: Object.keys(user),
+      });
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setPhone(user.phone || "");
+      // Try both field names in case backend uses different names
+      setCampus(user.campus || (user as any).school || "");
+      setProgramme(user.programme || "");
+      setStudentRefNumber(user.studentRefNumber || (user as any).studentId || "");
+      setLevel(user.level || "");
+    }
+  }, [user]);
 
   const handleSave = async () => {
     try {
@@ -56,28 +92,45 @@ export default function ProfileSettings() {
         }
       }
 
-      const formData = new FormData();
-      if (firstName) formData.append("firstName", firstName);
-      if (lastName) formData.append("lastName", lastName);
-      if (phone) formData.append("phone", phone);
-      if (avatarFile) formData.append("avatar", avatarFile);
-      
-      // Check if at least one field is being updated
-      if (!firstName && !lastName && !phone && !avatarFile) {
-        toast.error("Please provide at least one field to update");
+      // Validate required fields
+      if (!firstName.trim()) {
+        toast.error("First name is required");
         return;
       }
+      if (!lastName.trim()) {
+        toast.error("Last name is required");
+        return;
+      }
+
+      // Prepare update data (only profile and university fields)
+      const updateData: Record<string, string | null> = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim() || null,
+        campus: campus.trim() || null,
+        programme: programme.trim() || null,
+        studentRefNumber: studentRefNumber.trim() || null,
+        level: level.trim() || null,
+      };
+
+      // Use FormData for all updates
+      const formData = new FormData();
       
-      // Debug: Log FormData contents
-      console.log("Sending profile update:", {
-        firstName,
-        lastName,
-        phone,
-        hasAvatar: !!avatarFile,
-        avatarSize: avatarFile?.size,
+      Object.entries(updateData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
       });
       
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+      
       await updateProfile(formData);
+      
+      // Refresh profile to get all updated data from backend
+      await fetchProfile();
+      
       toast.success("Profile updated successfully");
       setAvatarFile(null); // Clear file after successful upload
     } catch (error: unknown) {
@@ -108,32 +161,60 @@ export default function ProfileSettings() {
     <div className="bg-white rounded-lg border p-6 sm:p-8 space-y-6 sm:space-y-8 max-w-3xl mx-auto">
       <h2 className="text-lg font-semibold">Profile Settings</h2>
 
+      {/* Avatar Upload */}
       <AvatarUploader avatar={user?.avatar} onFileSelect={setAvatarFile} />
 
       <hr className="border-gray-200" />
 
-      <h2 className="text-lg font-semibold text-gray-900">
-        Personal Information
-      </h2>
-      <PersonalInfoForm
-        firstName={firstName}
-        lastName={lastName}
-        phone={phone}
-        email={user?.email || ""}
-        onChange={(field, value) => {
-          if (field === "firstName") setFirstName(value);
-          else if (field === "lastName") setLastName(value);
-          else if (field === "phone") setPhone(value);
-        }}
-      />
+      {/* Personal Information */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Personal Information
+        </h2>
+        <PersonalInfoForm
+          firstName={firstName}
+          lastName={lastName}
+          phone={phone}
+          email={user?.email || ""}
+          onChange={(field, value) => {
+            if (field === "firstName") setFirstName(value);
+            else if (field === "lastName") setLastName(value);
+            else if (field === "phone") setPhone(value);
+          }}
+        />
+      </div>
 
-      <Button
-        onClick={handleSave}
-        disabled={loading}
-        className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
-      >
-        {loading ? "Saving..." : "Save Changes"}
-      </Button>
+      <hr className="border-gray-200" />
+
+      {/* University Information */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          University Information
+        </h2>
+        <UniversityInfoForm
+          campus={campus}
+          programme={programme}
+          studentRefNumber={studentRefNumber}
+          level={level}
+          onChange={(field, value) => {
+            if (field === "campus") setCampus(value);
+            else if (field === "programme") setProgramme(value);
+            else if (field === "studentRefNumber") setStudentRefNumber(value);
+            else if (field === "level") setLevel(value);
+          }}
+        />
+      </div>
+
+      {/* Save Button */}
+      <div className="pt-4">
+        <Button
+          onClick={handleSave}
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+        >
+          {loading ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
     </div>
   );
 }

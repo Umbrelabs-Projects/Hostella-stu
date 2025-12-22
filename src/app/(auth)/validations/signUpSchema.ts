@@ -69,4 +69,7 @@ export const fullSignUpSchema = step1Schema.merge(step2Schema);
 
 export type Step1Data = z.infer<typeof step1Schema>;
 export type Step2Data = z.infer<typeof step2Schema>;
-export type FullSignUpData = z.infer<typeof fullSignUpSchema>;
+export type FullSignUpData = z.infer<typeof fullSignUpSchema> & {
+  sessionId?: string;
+  verifiedSessionId?: string;
+};

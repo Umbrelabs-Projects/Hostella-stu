@@ -48,7 +48,7 @@ export default function UserDropdown() {
               src={user.avatar}
               alt={`${user.firstName || 'User'} ${user.lastName || ''}`}
               className="w-full h-full object-cover rounded-full"
-              onError={(e) => {
+              onError={() => {
                 console.error("UserDropdown: Avatar failed to load", user.avatar);
                 // The error will be caught and we can handle it if needed
               }}

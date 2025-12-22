@@ -1,13 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, User } from "@/store/useAuthStore";
 import AvatarUploader from "./components/AvatarUploader";
 import PersonalInfoForm from "./components/PersonalInfoForm";
 import UniversityInfoForm from "./components/UniversityInfoForm";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
 import { SkeletonForm } from "@/components/ui/skeleton";
+
+// Extended user type that includes alternative field names from backend
+type ExtendedUser = User & {
+  school?: string;
+  studentId?: string;
+};
 
 export default function ProfileSettings() {
   const { user, updateProfile, loading, fetchProfile } = useAuthStore();
@@ -58,6 +64,7 @@ export default function ProfileSettings() {
       }
     };
     loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchProfile]);
 
   // Update form state when user data changes
@@ -70,8 +77,8 @@ export default function ProfileSettings() {
         studentRefNumber: user.studentRefNumber,
         level: user.level,
         // Check for alternative field names (in case backend uses different names)
-        school: (user as any).school,
-        studentId: (user as any).studentId,
+        school: (user as ExtendedUser).school,
+        studentId: (user as ExtendedUser).studentId,
         // Check if programme field exists in response
         hasProgramme: 'programme' in user,
         programmeType: typeof user.programme,
@@ -84,18 +91,19 @@ export default function ProfileSettings() {
       setLastName(user.lastName ?? "");
       setPhone(user.phone ?? "");
       // Try both field names in case backend uses different names
-      setCampus(user.campus ?? (user as any).school ?? "");
+      const extendedUser = user as ExtendedUser;
+      setCampus(user.campus ?? extendedUser.school ?? "");
       setProgramme(user.programme ?? "");
-      setStudentRefNumber(user.studentRefNumber ?? (user as any).studentId ?? "");
+      setStudentRefNumber(user.studentRefNumber ?? extendedUser.studentId ?? "");
       setLevel(user.level ?? "");
       
       console.log("ProfileSettings: State updated", {
         firstName: user.firstName ?? "",
         lastName: user.lastName ?? "",
         phone: user.phone ?? "",
-        campus: user.campus ?? (user as any).school ?? "",
+        campus: user.campus ?? (user as ExtendedUser).school ?? "",
         programme: user.programme ?? "",
-        studentRefNumber: user.studentRefNumber ?? (user as any).studentId ?? "",
+        studentRefNumber: user.studentRefNumber ?? (user as ExtendedUser).studentId ?? "",
         level: user.level ?? "",
       });
     } else {

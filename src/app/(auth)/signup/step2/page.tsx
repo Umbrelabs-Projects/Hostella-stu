@@ -189,7 +189,7 @@ export default function VerificationPage({ email, onNext, maskOtp = false }: Ver
               disabled={isLoading}
               className="w-full text-sm text-gray-600 hover:text-gray-800 underline disabled:opacity-50"
             >
-              Didn't receive code? Resend OTP
+              Didn&apos;t receive code? Resend OTP
             </button>
           </form>
         </div>

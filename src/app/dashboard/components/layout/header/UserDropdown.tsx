@@ -20,7 +20,7 @@ const dropdownItems = [
 export default function UserDropdown() {
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut } = useAuthStore();
+  const { signOut, user } = useAuthStore();
 
   const handleSignOut = async () => {
     try {
@@ -39,10 +39,26 @@ export default function UserDropdown() {
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full cursor-pointer border border-gray-200"
+          className="rounded-full cursor-pointer border border-gray-200 overflow-hidden p-0 w-10 h-10"
           aria-label="User menu"
         >
-          <User className="h-5 w-5 text-gray-700" />
+          {user?.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.avatar}
+              alt={`${user.firstName || 'User'} ${user.lastName || ''}`}
+              className="w-full h-full object-cover rounded-full"
+              onError={(e) => {
+                console.error("UserDropdown: Avatar failed to load", user.avatar);
+                // The error will be caught and we can handle it if needed
+              }}
+              onLoad={() => {
+                console.log("UserDropdown: Avatar loaded successfully", user.avatar);
+              }}
+            />
+          ) : (
+            <User className="h-5 w-5 text-gray-700" />
+          )}
         </Button>
       </DropdownMenuTrigger>
 

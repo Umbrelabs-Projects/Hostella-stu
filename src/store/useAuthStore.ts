@@ -194,6 +194,12 @@ export const useAuthStore = create<AuthState>()(
             }
             
             console.log("fetchProfile: Mapped user data", mappedData);
+            console.log("fetchProfile: Avatar check", {
+              avatar: mappedData.avatar,
+              avatarType: typeof mappedData.avatar,
+              hasAvatar: 'avatar' in mappedData,
+              avatarValue: mappedData.avatar,
+            });
             set({ user: mappedData as User, loading: false });
           } catch (error) {
             console.error("fetchProfile: Complete profile failed, trying basic profile", error);

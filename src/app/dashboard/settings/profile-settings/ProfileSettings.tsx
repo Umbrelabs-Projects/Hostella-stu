@@ -31,9 +31,15 @@ export default function ProfileSettings() {
     hasUser: !!user,
     userCampus: user?.campus,
     userProgramme: user?.programme,
+    userAvatar: user?.avatar,
     stateCampus: campus,
     stateProgramme: programme,
   });
+  
+  // Debug: Log avatar specifically
+  useEffect(() => {
+    console.log("ProfileSettings: Avatar value", user?.avatar);
+  }, [user?.avatar]);
 
   // Always fetch profile on mount to ensure fresh data
   useEffect(() => {
@@ -193,7 +199,10 @@ export default function ProfileSettings() {
       <h2 className="text-lg font-semibold">Profile Settings</h2>
 
       {/* Avatar Upload */}
-      <AvatarUploader avatar={user?.avatar} onFileSelect={setAvatarFile} />
+      <AvatarUploader 
+        avatar={user?.avatar || null} 
+        onFileSelect={setAvatarFile} 
+      />
 
       <hr className="border-gray-200" />
 

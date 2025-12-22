@@ -119,46 +119,145 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Try to get complete profile first, fallback to basic profile
           try {
-            const res = await apiFetch<{ success: boolean; data: User }>(
+            const res = await apiFetch<any>(
               "/onboarding/profile"
             );
-            console.log("fetchProfile: Complete profile response", res.data);
-            console.log("fetchProfile: Programme field check", {
-              programme: res.data.programme,
-              hasProgramme: 'programme' in res.data,
-              programmeType: typeof res.data.programme,
-              allKeys: Object.keys(res.data),
-            });
-            // Map alternative field names if backend uses different names
-            const userData = res.data as any;
-            if (userData.school && !userData.campus) {
-              userData.campus = userData.school;
+            console.log("fetchProfile: Complete profile response", res);
+            console.log("fetchProfile: Response keys", Object.keys(res));
+            
+            // Handle different response formats:
+            // 1. { success: true, data: { user: User } } - nested user in data
+            // 2. { success: true, data: User } - user directly in data
+            // 3. { user: User } - user at top level
+            // 4. Direct User object
+            let userData: User;
+            
+            // First check if data exists and has a nested user
+            if ("data" in res && res.data && typeof res.data === "object" && res.data !== null) {
+              if ("user" in res.data && res.data.user && typeof res.data.user === "object") {
+                // Format: { success: true, data: { user: User } }
+                userData = res.data.user as User;
+                console.log("fetchProfile: Found nested user in data.user");
+              } else if ("id" in res.data) {
+                // Format: { success: true, data: User }
+                userData = res.data as User;
+                console.log("fetchProfile: Found user directly in data");
+              } else {
+                // Fallback: treat data as user
+                userData = res.data as User;
+                console.log("fetchProfile: Treating data as user (fallback)");
+              }
+            } else if ("user" in res && res.user && typeof res.user === "object") {
+              // Format: { user: User }
+              userData = res.user as User;
+              console.log("fetchProfile: Found user at top level");
+            } else if (typeof res === "object" && res !== null && "id" in res) {
+              // Direct User object
+              userData = res as User;
+              console.log("fetchProfile: Treating response as direct user object");
+            } else {
+              throw new Error("Unable to extract user data from response");
             }
-            if (userData.studentId && !userData.studentRefNumber) {
-              userData.studentRefNumber = userData.studentId;
+            
+            console.log("fetchProfile: Extracted user data", userData);
+            console.log("fetchProfile: User data keys", Object.keys(userData));
+            console.log("fetchProfile: Programme field check", {
+              programme: userData.programme,
+              hasProgramme: 'programme' in userData,
+              programmeType: typeof userData.programme,
+              campus: userData.campus,
+              studentRefNumber: userData.studentRefNumber,
+              level: userData.level,
+              allKeys: Object.keys(userData),
+            });
+            
+            // Map alternative field names if backend uses different names
+            const mappedData = { ...userData } as any;
+            if (mappedData.school && !mappedData.campus) {
+              mappedData.campus = mappedData.school;
+            }
+            if (mappedData.studentId && !mappedData.studentRefNumber) {
+              mappedData.studentRefNumber = mappedData.studentId;
             }
             // Check for alternative programme field names
-            if (!userData.programme) {
+            if (!mappedData.programme) {
               // Try common alternative names
-              if (userData.program) {
-                userData.programme = userData.program;
-              } else if (userData.course) {
-                userData.programme = userData.course;
-              } else if (userData.degree) {
-                userData.programme = userData.degree;
-              } else if (userData.major) {
-                userData.programme = userData.major;
+              if (mappedData.program) {
+                mappedData.programme = mappedData.program;
+              } else if (mappedData.course) {
+                mappedData.programme = mappedData.course;
+              } else if (mappedData.degree) {
+                mappedData.programme = mappedData.degree;
+              } else if (mappedData.major) {
+                mappedData.programme = mappedData.major;
               }
             }
-            set({ user: res.data, loading: false });
+            
+            console.log("fetchProfile: Mapped user data", mappedData);
+            set({ user: mappedData as User, loading: false });
           } catch (error) {
             console.error("fetchProfile: Complete profile failed, trying basic profile", error);
             // Fallback to basic profile if complete profile endpoint fails
-            const res = await apiFetch<{ success: boolean; data: User }>(
+            const res = await apiFetch<any>(
               "/auth/me"
             );
-            console.log("fetchProfile: Basic profile response", res.data);
-            set({ user: res.data, loading: false });
+            console.log("fetchProfile: Basic profile response", res);
+            console.log("fetchProfile: Basic response keys", Object.keys(res));
+            
+            // Handle different response formats (same logic as above)
+            let userData: User;
+            
+            // First check if data exists and has a nested user
+            if ("data" in res && res.data && typeof res.data === "object" && res.data !== null) {
+              if ("user" in res.data && res.data.user && typeof res.data.user === "object") {
+                // Format: { success: true, data: { user: User } }
+                userData = res.data.user as User;
+                console.log("fetchProfile: Found nested user in data.user (basic)");
+              } else if ("id" in res.data) {
+                // Format: { success: true, data: User }
+                userData = res.data as User;
+                console.log("fetchProfile: Found user directly in data (basic)");
+              } else {
+                // Fallback: treat data as user
+                userData = res.data as User;
+                console.log("fetchProfile: Treating data as user (basic fallback)");
+              }
+            } else if ("user" in res && res.user && typeof res.user === "object") {
+              // Format: { user: User }
+              userData = res.user as User;
+              console.log("fetchProfile: Found user at top level (basic)");
+            } else if (typeof res === "object" && res !== null && "id" in res) {
+              // Direct User object
+              userData = res as User;
+              console.log("fetchProfile: Treating response as direct user object (basic)");
+            } else {
+              throw new Error("Unable to extract user data from response (basic)");
+            }
+            
+            console.log("fetchProfile: Extracted user data (basic)", userData);
+            console.log("fetchProfile: User data keys (basic)", Object.keys(userData));
+            
+            // Map alternative field names
+            const mappedData = { ...userData } as any;
+            if (mappedData.school && !mappedData.campus) {
+              mappedData.campus = mappedData.school;
+            }
+            if (mappedData.studentId && !mappedData.studentRefNumber) {
+              mappedData.studentRefNumber = mappedData.studentId;
+            }
+            if (!mappedData.programme) {
+              if (mappedData.program) {
+                mappedData.programme = mappedData.program;
+              } else if (mappedData.course) {
+                mappedData.programme = mappedData.course;
+              } else if (mappedData.degree) {
+                mappedData.programme = mappedData.degree;
+              } else if (mappedData.major) {
+                mappedData.programme = mappedData.major;
+              }
+            }
+            
+            set({ user: mappedData as User, loading: false });
           }
         } catch (err: unknown) {
           const errorMessage =
@@ -189,17 +288,37 @@ export const useAuthStore = create<AuthState>()(
       signIn: async (data) => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<{ success: boolean; data: { user: User; token: string } }>(
+          const res = await apiFetch<any>(
             "/auth/login",
             {
               method: "POST",
               body: JSON.stringify(data),
             }
           );
-          const token = res.data.token;
+          
+          // Handle different response formats
+          let user: User;
+          let token: string;
+          
+          if ("data" in res && res.data) {
+            if ("user" in res.data && "token" in res.data) {
+              user = res.data.user;
+              token = res.data.token;
+            } else {
+              // Fallback: try direct access
+              user = (res as any).user || res.data;
+              token = (res as any).token || res.data.token;
+            }
+          } else if ("user" in res && "token" in res) {
+            user = res.user;
+            token = res.token;
+          } else {
+            throw new Error("Invalid response format from login endpoint");
+          }
+          
           setAuthToken(token);
           setAuthCookie(token);
-          set({ user: res.data.user, token, loading: false });
+          set({ user, token, loading: false });
         } catch (err: unknown) {
           const errorMessage =
             err instanceof Error ? err.message : "SignIn failed";
@@ -218,18 +337,37 @@ export const useAuthStore = create<AuthState>()(
             else if (value != null) formData.append(key, String(value));
           });
 
-          const res = await apiFetch<{ success: boolean; data: { user: User; token: string } }>(
+          const res = await apiFetch<any>(
             "/auth/register",
             {
               method: "POST",
               body: formData,
             }
           );
+          
+          // Handle different response formats
+          let user: User;
+          let token: string;
+          
+          if ("data" in res && res.data) {
+            if ("user" in res.data && "token" in res.data) {
+              user = res.data.user;
+              token = res.data.token;
+            } else {
+              // Fallback: try direct access
+              user = (res as any).user || res.data;
+              token = (res as any).token || res.data.token;
+            }
+          } else if ("user" in res && "token" in res) {
+            user = res.user;
+            token = res.token;
+          } else {
+            throw new Error("Invalid response format from register endpoint");
+          }
 
-          const token = res.data.token;
           setAuthToken(token);
           setAuthCookie(token);
-          set({ user: res.data.user, token, loading: false });
+          set({ user, token, loading: false });
           get().clearSignupProgress();
         } catch (err: unknown) {
           const errorMessage =
@@ -243,11 +381,42 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: async (formData) => {
         set({ loading: true, error: null });
         try {
-          const res = await apiFetch<ApiResponse<User>>("/auth/profile", {
+          const res = await apiFetch<any>("/auth/profile", {
             method: "PUT",
             body: formData,
           });
-          set({ user: res.data, loading: false });
+          
+          // Handle different response formats
+          let userData: User;
+          if ("user" in res && res.user) {
+            userData = res.user;
+          } else if ("data" in res && res.data) {
+            userData = res.data;
+          } else {
+            userData = res as User;
+          }
+          
+          // Map alternative field names
+          const mappedData = { ...userData } as any;
+          if (mappedData.school && !mappedData.campus) {
+            mappedData.campus = mappedData.school;
+          }
+          if (mappedData.studentId && !mappedData.studentRefNumber) {
+            mappedData.studentRefNumber = mappedData.studentId;
+          }
+          if (!mappedData.programme) {
+            if (mappedData.program) {
+              mappedData.programme = mappedData.program;
+            } else if (mappedData.course) {
+              mappedData.programme = mappedData.course;
+            } else if (mappedData.degree) {
+              mappedData.programme = mappedData.degree;
+            } else if (mappedData.major) {
+              mappedData.programme = mappedData.major;
+            }
+          }
+          
+          set({ user: mappedData as User, loading: false });
         } catch (err: unknown) {
           const errorMessage =
             err instanceof Error ? err.message : "Profile update failed";
@@ -312,12 +481,50 @@ export const useAuthStore = create<AuthState>()(
                 setAuthCookie(token);
                 // Try to get complete profile first, fallback to basic profile
                 try {
-                  const res = await apiFetch<{ success: boolean; data: User }>("/onboarding/profile");
-                  set({ user: res.data, token, loading: false });
+                  const res = await apiFetch<any>("/onboarding/profile");
+                  // Handle different response formats
+                  let userData: User;
+                  if ("user" in res && res.user) {
+                    userData = res.user;
+                  } else if ("data" in res && res.data) {
+                    userData = res.data;
+                  } else {
+                    userData = res as User;
+                  }
+                  
+                  // Map alternative field names
+                  const mappedData = { ...userData } as any;
+                  if (mappedData.school && !mappedData.campus) {
+                    mappedData.campus = mappedData.school;
+                  }
+                  if (mappedData.studentId && !mappedData.studentRefNumber) {
+                    mappedData.studentRefNumber = mappedData.studentId;
+                  }
+                  
+                  set({ user: mappedData as User, token, loading: false });
                 } catch {
                   // Fallback to basic profile if complete profile endpoint fails
-                  const res = await apiFetch<{ success: boolean; data: User }>("/auth/me");
-                  set({ user: res.data, token, loading: false });
+                  const res = await apiFetch<any>("/auth/me");
+                  // Handle different response formats
+                  let userData: User;
+                  if ("user" in res && res.user) {
+                    userData = res.user;
+                  } else if ("data" in res && res.data) {
+                    userData = res.data;
+                  } else {
+                    userData = res as User;
+                  }
+                  
+                  // Map alternative field names
+                  const mappedData = { ...userData } as any;
+                  if (mappedData.school && !mappedData.campus) {
+                    mappedData.campus = mappedData.school;
+                  }
+                  if (mappedData.studentId && !mappedData.studentRefNumber) {
+                    mappedData.studentRefNumber = mappedData.studentId;
+                  }
+                  
+                  set({ user: mappedData as User, token, loading: false });
                 }
                 return;
               } catch (error) {

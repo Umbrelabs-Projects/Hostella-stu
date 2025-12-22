@@ -13,18 +13,27 @@ export default function ProfileSettings() {
   const { user, updateProfile, loading, fetchProfile } = useAuthStore();
   
   // Basic Information
-  const [firstName, setFirstName] = useState(user?.firstName || "");
-  const [lastName, setLastName] = useState(user?.lastName || "");
-  const [phone, setPhone] = useState(user?.phone || "");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   
   // University Information
-  const [campus, setCampus] = useState(user?.campus || "");
-  const [programme, setProgramme] = useState(user?.programme || "");
-  const [studentRefNumber, setStudentRefNumber] = useState(user?.studentRefNumber || "");
-  const [level, setLevel] = useState(user?.level || "");
+  const [campus, setCampus] = useState("");
+  const [programme, setProgramme] = useState("");
+  const [studentRefNumber, setStudentRefNumber] = useState("");
+  const [level, setLevel] = useState("");
   
   const [initialLoading, setInitialLoading] = useState(true);
+  
+  // Debug: Log when component renders
+  console.log("ProfileSettings: Component render", {
+    hasUser: !!user,
+    userCampus: user?.campus,
+    userProgramme: user?.programme,
+    stateCampus: campus,
+    stateProgramme: programme,
+  });
 
   // Always fetch profile on mount to ensure fresh data
   useEffect(() => {
@@ -33,6 +42,8 @@ export default function ProfileSettings() {
       try {
         console.log("ProfileSettings: Fetching complete profile...");
         await fetchProfile();
+        // Small delay to ensure store is updated before we check user
+        await new Promise(resolve => setTimeout(resolve, 100));
         console.log("ProfileSettings: Profile fetched successfully", user);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -62,14 +73,34 @@ export default function ProfileSettings() {
         // Check all user keys to see what fields are present
         allUserKeys: Object.keys(user),
       });
-      setFirstName(user.firstName || "");
-      setLastName(user.lastName || "");
-      setPhone(user.phone || "");
+      // Use nullish coalescing to preserve null values, but default to empty string for display
+      setFirstName(user.firstName ?? "");
+      setLastName(user.lastName ?? "");
+      setPhone(user.phone ?? "");
       // Try both field names in case backend uses different names
-      setCampus(user.campus || (user as any).school || "");
-      setProgramme(user.programme || "");
-      setStudentRefNumber(user.studentRefNumber || (user as any).studentId || "");
-      setLevel(user.level || "");
+      setCampus(user.campus ?? (user as any).school ?? "");
+      setProgramme(user.programme ?? "");
+      setStudentRefNumber(user.studentRefNumber ?? (user as any).studentId ?? "");
+      setLevel(user.level ?? "");
+      
+      console.log("ProfileSettings: State updated", {
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
+        phone: user.phone ?? "",
+        campus: user.campus ?? (user as any).school ?? "",
+        programme: user.programme ?? "",
+        studentRefNumber: user.studentRefNumber ?? (user as any).studentId ?? "",
+        level: user.level ?? "",
+      });
+    } else {
+      // Reset to empty if user is null
+      setFirstName("");
+      setLastName("");
+      setPhone("");
+      setCampus("");
+      setProgramme("");
+      setStudentRefNumber("");
+      setLevel("");
     }
   }, [user]);
 

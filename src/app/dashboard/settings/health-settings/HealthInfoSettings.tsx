@@ -36,10 +36,31 @@ export default function HealthInfoSettings() {
   // Update form state when user data changes
   useEffect(() => {
     if (user) {
-      setHasHealthCondition(user.hasHealthCondition || false);
-      setHealthCondition(user.healthCondition || "");
-      setBloodType(user.bloodType || "");
-      setAllergies(user.allergies || "");
+      console.log("HealthInfoSettings: Loading user data", user);
+      console.log("HealthInfoSettings: Health fields check", {
+        hasHealthCondition: user.hasHealthCondition,
+        healthCondition: user.healthCondition,
+        bloodType: user.bloodType,
+        allergies: user.allergies,
+      });
+      // Use nullish coalescing to preserve null values, but default appropriately
+      setHasHealthCondition(user.hasHealthCondition ?? false);
+      setHealthCondition(user.healthCondition ?? "");
+      setBloodType(user.bloodType ?? "");
+      setAllergies(user.allergies ?? "");
+      
+      console.log("HealthInfoSettings: State updated", {
+        hasHealthCondition: user.hasHealthCondition ?? false,
+        healthCondition: user.healthCondition ?? "",
+        bloodType: user.bloodType ?? "",
+        allergies: user.allergies ?? "",
+      });
+    } else {
+      // Reset to defaults if user is null
+      setHasHealthCondition(false);
+      setHealthCondition("");
+      setBloodType("");
+      setAllergies("");
     }
   }, [user]);
 

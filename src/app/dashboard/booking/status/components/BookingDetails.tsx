@@ -25,9 +25,9 @@ export default function BookingDetails({
     >
       <div className="flex flex-col md:flex-row gap-6">
         {/* Hostel Image */}
-        <div className="relative w-full md:w-1/3 h-60 md:h-auto rounded-xl overflow-hidden shadow-sm">
+        <div className="relative w-full md:w-1/3 h-60 md:h-auto rounded-xl overflow-hidden shadow-sm bg-gray-200">
           <Image
-            src={booking.hostelImage || "/placeholder.jpg"}
+            src="/placeholder.jpg"
             alt={booking.hostelName || "Hostel"}
             fill
             className="object-cover transition-transform duration-500 hover:scale-105"
@@ -55,17 +55,21 @@ export default function BookingDetails({
               <span className="font-semibold">{booking.price}</span>
             </div>
 
-            {booking.status === "room allocated" && (
+            {(booking.status.toLowerCase() === "room allocated" || booking.status.toLowerCase() === "room_allocated") && (
               <div className="flex flex-col md:flex-row md:items-center gap-4 mt-2 text-gray-700">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">Room Number:</span>{" "}
-                  {booking.roomNumber}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar size={18} className="text-green-600" />
-                  <span className="font-semibold">Arrival Date:</span>{" "}
-                  {booking.arrivalDate}
-                </div>
+                {booking.allocatedRoomNumber && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Room Number:</span>{" "}
+                    {booking.allocatedRoomNumber}
+                  </div>
+                )}
+                {booking.date && (
+                  <div className="flex items-center gap-2">
+                    <Calendar size={18} className="text-green-600" />
+                    <span className="font-semibold">Booking Date:</span>{" "}
+                    {new Date(booking.date).toLocaleDateString()}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 export default function AnnouncementsSection() {
-  const { broadcastNotifications, markAsRead, deleteNotification } = useNotificationsStore();
+  const { broadcastNotifications, markAsRead } = useNotificationsStore();
 
   // Show only unread broadcast notifications (limit to 3 most recent)
   const unreadBroadcasts = broadcastNotifications

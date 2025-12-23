@@ -1,6 +1,14 @@
 // Type definitions for API entities
 // IMPORTANT: All prices and monetary amounts are in Ghana Cedis (GHC)
 
+export interface RoomType {
+  type: 'One-in-one' | 'Two-in-one';
+  title: string;
+  total: number;
+  available: number;
+  price: number | { min: number; max: number };
+}
+
 export interface Hostel {
   id: string;
   name: string;
@@ -11,62 +19,76 @@ export interface Hostel {
   image: string | null;
   images: string[];
   amenities: string[];
+  facilities?: string[];
   priceRange: {
     min: number;
     max: number;
   };
   availableRooms: number;
   totalRooms: number;
+  singleRooms?: number;
+  doubleRooms?: number;
+  noOfFloors?: string;
+  phoneNumber?: string;
+  roomTypes?: RoomType[];
   createdAt: string;
 }
 
 export interface Room {
-  id: number;
-  hostelId: number;
+  id: string;
+  hostelId: string;
+  roomNumber?: string;
   title: string;
-  type: string;
-  price: string | number;
+  type: 'SINGLE' | 'DOUBLE' | 'shared_4' | 'shared_6' | 'dormitory';
+  price: number;
   description: string;
-  available: string | number;
+  available: number;
   capacity: number;
-  image: string;
+  currentOccupants?: number;
+  image?: string;
   images?: string[];
   amenities?: string[];
   isAvailable?: boolean;
+  status?: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'UNAVAILABLE';
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Booking {
-  id: number;
-  userId: number;
-  hostelId: number;
-  roomId: number;
-  roomNumber?: string;
-  status: 'pending_payment' | 'pending_approval' | 'approved' | 'rejected' | 'room_allocated' | 'completed' | 'cancelled';
-  arrivalDate?: string;
-  departureDate?: string;
-  totalAmount?: number;
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
-  paymentMethod?: 'bank' | 'momo';
-  bookingId?: string;
+  id: string;
+  bookingId: string; // e.g., "BK-1234"
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  gender?: 'male' | 'female' | null;
+  level?: string | null;
+  school?: string | null; // campus
+  studentId?: string | null; // studentRefNumber
+  phone?: string | null;
+  hostelName?: string | null;
+  roomTitle?: string | null; // "One-in-one" or "Two-in-one"
+  price?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactNumber?: string | null;
+  relation?: string | null;
+  hasMedicalCondition?: boolean;
+  medicalCondition?: string | null;
+  status: 'pending payment' | 'pending approval' | 'approved' | 'room_allocated' | 'completed' | 'cancelled' | 'rejected' | 'expired';
+  allocatedRoomNumber?: number | null;
+  date?: string; // ISO date string
   createdAt?: string;
   updatedAt?: string;
-  hostel?: Hostel;
-  room?: Room;
-  // Extra booking details
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  emergencyContact?: string;
-  guardian?: string;
-  guardianPhone?: string;
-  occupation?: string;
-  specialRequests?: string;
-  hasAllergies?: boolean;
-  allergyDetails?: string;
-  price?: string | number;
+}
+
+// Response structure for getUserBookings
+export interface UserBookingsResponse {
+  success: boolean;
+  data: {
+    bookings: Booking[];
+    total: number;
+    page: number;
+    pageSize: number;
+  };
 }
 
 export interface Testimonial {
@@ -174,22 +196,14 @@ export interface ContactMessage {
   createdAt: string;
 }
 
-// Type for creating a new booking
+// Type for creating a new booking (simplified)
 export interface CreateBookingData {
-  hostelId: number;
-  roomId: number;
-  arrivalDate?: string;
-  departureDate?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  emergencyContact?: string;
-  guardian?: string;
-  guardianPhone?: string;
-  occupation?: string;
-  specialRequests?: string;
-  hasAllergies?: boolean;
-  allergyDetails?: string;
-  paymentMethod?: 'bank' | 'momo';
+  hostelId: string;
+  preferredRoomType: 'SINGLE' | 'DOUBLE';
+  // Optional - backend auto-sets to academic year
+  startMonth?: number; // 1-12
+  startYear?: number; // 2024+
+  endMonth?: number; // 1-12
+  endYear?: number; // 2024+
+  phoneNumber?: string;
 }

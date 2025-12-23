@@ -16,10 +16,10 @@ interface BookingState {
 
   fetchBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
   fetchUserBookings: () => Promise<void>;
-  fetchBookingById: (id: number) => Promise<void>;
+  fetchBookingById: (id: string) => Promise<void>;
   createBooking: (data: CreateBookingData) => Promise<Booking | null>;
-  updateBooking: (id: number, data: Partial<Booking>) => Promise<void>;
-  cancelBooking: (id: number, reason?: string) => Promise<void>;
+  updateBooking: (id: string, data: Partial<Booking>) => Promise<void>;
+  cancelBooking: (id: string, reason?: string) => Promise<void>;
   setSelectedBooking: (booking: Booking | null) => void;
   clearError: () => void;
 }
@@ -48,12 +48,18 @@ export const useBookingStore = create<BookingState>((set) => ({
     }
   },
 
-  fetchUserBookings: async () => {
+  fetchUserBookings: async (params?: { page?: number; limit?: number; status?: string }) => {
     set({ loading: true, error: null });
     try {
-      const response = await bookingApi.getUserBookings();
+      const response = await bookingApi.getUserBookings(params);
       set({
-        bookings: response.data,
+        bookings: response.data.bookings,
+        pagination: {
+          page: response.data.page,
+          limit: response.data.pageSize,
+          total: response.data.total,
+          totalPages: Math.ceil(response.data.total / response.data.pageSize),
+        },
         loading: false,
       });
     } catch (error: unknown) {
@@ -121,14 +127,18 @@ export const useBookingStore = create<BookingState>((set) => ({
     }
   },
 
-  cancelBooking: async (id, reason) => {
+  cancelBooking: async (id, reason?: string) => {
     set({ loading: true, error: null });
     try {
-      await bookingApi.cancel(id, reason);
+      const response = await bookingApi.cancel(id, reason);
       set((state) => ({
         bookings: state.bookings.map((b) =>
-          b.id === id ? { ...b, status: 'cancelled' as const } : b
+          b.id === id ? response.data.booking : b
         ),
+        selectedBooking:
+          state.selectedBooking?.id === id
+            ? response.data.booking
+            : state.selectedBooking,
         loading: false,
       }));
     } catch (error: unknown) {
@@ -136,6 +146,7 @@ export const useBookingStore = create<BookingState>((set) => ({
         error: error instanceof Error ? error.message : 'Failed to cancel booking',
         loading: false,
       });
+      throw error;
     }
   },
 

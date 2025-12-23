@@ -1,6 +1,6 @@
 "use client";
 
-import Image, { StaticImageData } from "next/image";
+import Image from "next/image";
 import { Star, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Hostel } from "@/types/api";
@@ -13,7 +13,7 @@ export default function HostelCard({ hostel }: HostelCardProps) {
   const router = useRouter();
 
   const handleViewRooms = () => {
-    router.push(`/dashboard/home/rooms/${hostel.id}`);
+    router.push(`/dashboard/home/rooms/${String(hostel.id)}`);
   };
 
   // Handle null/undefined values

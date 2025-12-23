@@ -24,11 +24,11 @@ export function printBookingDetails(booking?: Booking) {
     { label: "Price", value: extraBookingDetails.price || "N/A" },
     {
       label: "Room Number",
-      value: booking?.roomNumber || "N/A",
+      value: booking?.allocatedRoomNumber?.toString() || "N/A",
     },
     {
-      label: "Arrival Date",
-      value: booking?.arrivalDate || "N/A",
+      label: "Booking Date",
+      value: booking?.date ? new Date(booking.date).toLocaleDateString() : "N/A",
     },
     {
       label: "Emergency Contact Name",

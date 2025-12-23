@@ -16,7 +16,7 @@ export default function BookingConfirmation() {
 
   useEffect(() => {
     if (bookingId) {
-      fetchBookingById(parseInt(bookingId));
+      fetchBookingById(bookingId);
     }
   }, [bookingId, fetchBookingById]);
 
@@ -30,7 +30,7 @@ export default function BookingConfirmation() {
       </div>
     );
   }
-  if (error) return <ErrorState message={error} onRetry={() => fetchBookingById(parseInt(bookingId))} />;
+  if (error) return <ErrorState message={error} onRetry={() => fetchBookingById(bookingId)} />;
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-8">

@@ -11,7 +11,8 @@ import {
   ChatMessage,
   Service,
   ContactMessage,
-  CreateBookingData
+  CreateBookingData,
+  UserBookingsResponse
 } from '@/types/api';
 import { User } from '@/store/useAuthStore';
 import { Notification } from '@/types/notifications';
@@ -258,8 +259,8 @@ interface BackendHostelListResponse {
 interface BackendHostelSingleResponse {
   success: boolean;
   data: {
-    hostel: BackendHostel;
-  };
+    hostel?: BackendHostel;
+  } | BackendHostel;
 }
 
 export const hostelApi = {
@@ -310,12 +311,12 @@ export const hostelApi = {
 // ROOM API ENDPOINTS
 // ============================================
 export const roomApi = {
-  getByHostelId: (hostelId: number) =>
+  getByHostelId: (hostelId: string) =>
     apiFetch<ApiResponse<Room[]>>(`/hostels/${hostelId}/rooms`),
 
-  getById: (id: number) => apiFetch<ApiResponse<Room>>(`/rooms/${id}`),
+  getById: (id: string) => apiFetch<ApiResponse<Room>>(`/rooms/${id}`),
 
-  checkAvailability: (roomId: number, startDate: string, endDate: string) =>
+  checkAvailability: (roomId: string, startDate: string, endDate: string) =>
     apiFetch<ApiResponse<{ available: boolean; availableCount: number }>>(
       `/rooms/${roomId}/availability?startDate=${startDate}&endDate=${endDate}`
     ),
@@ -336,21 +337,24 @@ export const bookingApi = {
       `/bookings?${buildQueryString(params)}`
     ),
 
-  getById: (id: number) => apiFetch<ApiResponse<Booking>>(`/bookings/${id}`),
+  getById: (id: string) => apiFetch<ApiResponse<Booking>>(`/bookings/${id}`),
 
-  update: (id: number, data: Partial<Booking>) =>
+  update: (id: string, data: Partial<Booking>) =>
     apiFetch<ApiResponse<Booking>>(`/bookings/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
-  cancel: (id: number, reason?: string) =>
-    apiFetch<ApiResponse<{ message: string }>>(`/bookings/${id}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
+  cancel: (id: string, reason?: string) =>
+    apiFetch<ApiResponse<{ booking: Booking }>>(`/bookings/${id}/cancel`, {
+      method: 'DELETE',
+      body: reason ? JSON.stringify({ reason }) : undefined,
     }),
 
-  getUserBookings: () => apiFetch<ApiResponse<Booking[]>>('/bookings/my-bookings'),
+  getUserBookings: (params?: { page?: number; limit?: number; status?: string }) => {
+    const queryString = params ? `?${buildQueryString(params)}` : '';
+    return apiFetch<UserBookingsResponse>(`/bookings/my-bookings${queryString}`);
+  },
 };
 
 // ============================================

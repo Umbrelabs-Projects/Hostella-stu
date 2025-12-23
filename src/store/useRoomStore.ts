@@ -12,9 +12,9 @@ interface RoomState {
     availableCount: number;
   } | null;
 
-  fetchRoomsByHostelId: (hostelId: number) => Promise<void>;
-  fetchRoomById: (id: number) => Promise<void>;
-  checkAvailability: (roomId: number, startDate: string, endDate: string) => Promise<void>;
+  fetchRoomsByHostelId: (hostelId: string) => Promise<void>;
+  fetchRoomById: (id: string) => Promise<void>;
+  checkAvailability: (roomId: string, startDate: string, endDate: string) => Promise<void>;
   setSelectedRoom: (room: Room | null) => void;
   clearError: () => void;
 }
@@ -30,14 +30,17 @@ export const useRoomStore = create<RoomState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await roomApi.getByHostelId(hostelId);
+      // Ensure data is always an array
+      const roomsData = Array.isArray(response.data) ? response.data : [];
       set({
-        rooms: response.data,
+        rooms: roomsData,
         loading: false,
       });
     } catch (error: unknown) {
       set({
         error: error instanceof Error ? error.message : 'Failed to fetch rooms',
         loading: false,
+        rooms: [], // Reset to empty array on error
       });
     }
   },

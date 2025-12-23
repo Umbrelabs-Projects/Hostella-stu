@@ -41,7 +41,7 @@ export default function Bookings() {
           <EmptyState title="No bookings yet" description="Start booking a hostel room" />
         ) : (
           <BookingList
-            bookings={bookings as Booking[]}
+            bookings={bookings}
             onViewDetails={(b) => setSelectedBooking(b)}
           />
         )

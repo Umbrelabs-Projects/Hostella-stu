@@ -23,9 +23,9 @@ export default function BookingCard({
       className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 group"
     >
       {/* Image Section */}
-      <div className="relative h-48 w-full overflow-hidden">
+      <div className="relative h-48 w-full overflow-hidden bg-gray-200">
         <Image
-          src={booking.hostelImage || "/placeholder.jpg"}
+          src="/placeholder.jpg"
           alt={booking.hostelName || "Hostel"}
           width={400}
           height={200}
@@ -51,19 +51,17 @@ export default function BookingCard({
           {booking.roomTitle}
         </div>
 
-        {booking.status != "room allocated" ? (
+        {booking.price && (
           <p className="mt-2 font-bold text-yellow-600 text-lg">
-            {booking.price}
+            GHC {booking.price}
           </p>
-        ) : (
-          <p className="mt-2 font-bold text-blue-700 text-lg"></p>
         )}
 
         {/* Extra Info (if room allocated) */}
-        {booking.status === "room allocated" && (
+        {(booking.status.toLowerCase() === "room allocated" || booking.status.toLowerCase() === "room_allocated") && booking.allocatedRoomNumber && (
           <div className="text-sm text-gray-700 flex items-center gap-2 mt-1">
             <Calendar size={16} className="text-green-600" />
-            Arrival: <span className="font-medium">{booking.arrivalDate}</span>
+            Room: <span className="font-medium">{booking.allocatedRoomNumber}</span>
           </div>
         )}
 

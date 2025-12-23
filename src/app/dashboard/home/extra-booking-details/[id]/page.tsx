@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import BookingDetails from "../components/BookingDetails";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useHostelStore } from "@/store/useHostelStore";
 import { useBookingStore } from "@/store/useBookingStore";
@@ -12,7 +11,6 @@ import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error";
-import PaymentMethodSelector from "@/app/dashboard/booking/success/components/PaymentMethodSelector";
 
 type RoomType = 'SINGLE' | 'DOUBLE';
 
@@ -111,8 +109,7 @@ export default function ExtraBookingDetails() {
 
       if (booking) {
         toast.success("Booking created successfully!");
-        window.scrollTo(0, 0);
-        router.push(`/dashboard/booking/success/${booking.id}`);
+        router.push("/dashboard/booking");
       } else {
         toast.error("Failed to create booking");
       }
@@ -144,138 +141,133 @@ export default function ExtraBookingDetails() {
   }
 
   return (
-    <section className="px-3 md:px-8 flex flex-col items-center py-10">
-      {/* Main Booking Form Card */}
-      <motion.div
-        className="bg-white w-full max-w-5xl rounded-3xl shadow-lg overflow-hidden flex flex-col md:flex-row mb-8"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        {/* Image Section */}
-        <div className="relative w-full h-64 md:h-auto md:w-1/2">
-          {selectedHostel.image ? (
-            <Image
-              src={selectedHostel.image}
-              alt={selectedHostel.name}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No image</span>
-            </div>
-          )}
-        </div>
-
-        {/* Booking Details Section */}
-        <div className="w-full md:w-1/2 pt-6 px-6 pb-6">
-          <BookingDetails
-            hostelName={bookingDetails.hostelName}
-            roomTitle={bookingDetails.roomTitle}
-            price={bookingDetails.price}
-            bookingId={bookingDetails.bookingId}
-          />
-
-          {/* Profile Incomplete Warning */}
-          {!profileStatus.isComplete && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4"
-            >
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-semibold text-red-800">Profile Incomplete</p>
-                  <p className="text-sm text-red-700 mt-1">
-                    Please complete the following fields before booking: {profileStatus.missingFields.join(", ")}
-                  </p>
-                  <button
-                    onClick={() => router.push("/dashboard/settings?incomplete=true")}
-                    className="mt-2 text-sm text-red-600 hover:text-red-700 underline font-medium"
-                  >
-                    Complete Profile Now →
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Profile Summary (Read-only) */}
-          {user && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-6 space-y-4"
-            >
-              <h3 className="text-lg font-semibold text-gray-800">Profile Information</h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <p><span className="text-gray-600">Name:</span> {user.firstName} {user.lastName}</p>
-                  <p><span className="text-gray-600">Email:</span> {user.email}</p>
-                  <p><span className="text-gray-600">Campus:</span> {user.campus || 'N/A'}</p>
-                  <p><span className="text-gray-600">Programme:</span> {user.programme || 'N/A'}</p>
-                  <p><span className="text-gray-600">Level:</span> {user.level || 'N/A'}</p>
-                  <p><span className="text-gray-600">Student ID:</span> {user.studentRefNumber || 'N/A'}</p>
-                </div>
-                <div className="pt-2 border-t border-gray-200">
-                  <p className="font-medium text-gray-700 mb-1">Emergency Contact</p>
-                  <p><span className="text-gray-600">Name:</span> {user.emergencyContactName || 'N/A'}</p>
-                  <p><span className="text-gray-600">Phone:</span> {user.emergencyContactPhone || 'N/A'}</p>
-                  <p><span className="text-gray-600">Relation:</span> {user.emergencyContactRelation || 'N/A'}</p>
-                </div>
-                {(user.hasHealthCondition || user.bloodType || user.allergies) && (
-                  <div className="pt-2 border-t border-gray-200">
-                    <p className="font-medium text-gray-700 mb-1">Health Information</p>
-                    {user.hasHealthCondition && (
-                      <p><span className="text-gray-600">Condition:</span> {user.healthCondition || 'Not specified'}</p>
-                    )}
-                    {user.bloodType && (
-                      <p><span className="text-gray-600">Blood Type:</span> {user.bloodType}</p>
-                    )}
-                    {user.allergies && (
-                      <p><span className="text-gray-600">Allergies:</span> {user.allergies}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">
-                To update your profile information, visit{" "}
-                <button
-                  onClick={() => router.push("/dashboard/settings")}
-                  className="text-blue-600 hover:text-blue-700 underline"
-                >
-                  Settings
-                </button>
-              </p>
-            </motion.div>
-          )}
-
-          {/* Confirm Button */}
+    <section className="px-3 md:px-8 flex flex-col items-center py-8 md:py-12">
+      <div className="w-full max-w-4xl space-y-6">
+        {/* Profile Incomplete Warning - Top of page */}
+        {!profileStatus.isComplete && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-6"
+            className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-sm"
           >
-            <button
-              onClick={handleConfirm}
-              disabled={loading || !profileStatus.isComplete}
-              className={`w-full cursor-pointer font-semibold py-3 rounded-xl transition-colors shadow-sm ${
-                loading || !profileStatus.isComplete
-                  ? 'bg-gray-400 cursor-not-allowed text-gray-600'
-                  : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
-              }`}
-            >
-              {loading ? "Creating Booking..." : profileStatus.isComplete ? "Confirm Booking Details" : "Complete Profile to Continue"}
-            </button>
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-red-900">Complete Your Profile</p>
+                <p className="text-sm text-red-700 mt-1">
+                  Please complete the following fields before booking: <span className="font-medium">{profileStatus.missingFields.join(", ")}</span>
+                </p>
+                <button
+                  onClick={() => router.push("/dashboard/settings?incomplete=true")}
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-lg transition-colors"
+                >
+                  Go to Settings
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
           </motion.div>
-        </div>
-      </motion.div>
+        )}
 
-      {/* Payment Options Section - Below the form */}
-      <PaymentMethodSelector />
+        {/* Main Booking Summary Card */}
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Header with Image */}
+          <div className="relative h-48 md:h-64 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600">
+            {selectedHostel.image && (
+              <Image
+                src={selectedHostel.image}
+                alt={selectedHostel.name}
+                fill
+                className="object-cover opacity-90"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                {selectedHostel.name}
+              </h1>
+              <p className="text-yellow-200 text-sm md:text-base">
+                {selectedHostel.location || selectedHostel.campus}
+              </p>
+            </div>
+          </div>
+
+          {/* Booking Details */}
+          <div className="p-6 md:p-8">
+            <div className="space-y-6">
+              {/* Booking Summary */}
+              <div className="border-b border-gray-200 pb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h2>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Room Type</span>
+                    <span className="font-semibold text-gray-900">{roomTitle}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Price</span>
+                    <span className="text-2xl font-bold text-gray-900">GHC {parseFloat(price).toLocaleString()}</span>
+                  </div>
+                  {selectedHostel.facilities && selectedHostel.facilities.length > 0 && (
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-sm text-gray-600 mb-2">Facilities</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedHostel.facilities.slice(0, 4).map((facility, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                          >
+                            {facility}
+                          </span>
+                        ))}
+                        {selectedHostel.facilities.length > 4 && (
+                          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                            +{selectedHostel.facilities.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Confirm Button */}
+              <motion.button
+                onClick={handleConfirm}
+                disabled={loading || !profileStatus.isComplete}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg ${
+                  loading || !profileStatus.isComplete
+                    ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
+                    : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 hover:shadow-xl transform hover:scale-[1.02]'
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                    Creating Booking...
+                  </span>
+                ) : profileStatus.isComplete ? (
+                  "Confirm & Create Booking"
+                ) : (
+                  "Complete Profile to Continue"
+                )}
+              </motion.button>
+
+              {/* Info Note */}
+              <p className="text-xs text-center text-gray-500 pt-2">
+                By confirming, you agree to our booking terms and conditions
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

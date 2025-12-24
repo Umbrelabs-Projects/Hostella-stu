@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useHostelStore } from "@/store/useHostelStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
+import { useBookingStore } from "@/store/useBookingStore";
 import StatusMessageBox from "./StatusMessageBox";
 import RoomAllocationInfo from "./RoomAllocationInfo";
 import PaymentHistory from "@/app/dashboard/payment/components/PaymentHistory";
@@ -24,16 +25,19 @@ import PaymentHistory from "@/app/dashboard/payment/components/PaymentHistory";
 interface BookingDetailsProps {
   booking: Booking;
   onBack: () => void;
+  onBookingUpdate?: (updatedBooking: Booking) => void;
 }
 
 export default function BookingDetails({
   booking,
   onBack,
+  onBookingUpdate,
 }: BookingDetailsProps) {
   const [hostelImage, setHostelImage] = useState<string | null>(null);
   const { hostels, fetchHostels, fetchHostelById, selectedHostel } =
     useHostelStore();
   const { currentPayment, fetchPaymentsByBookingId } = usePaymentStore();
+  const { fetchBookingById, selectedBooking } = useBookingStore();
   
   // Fetch payment for this booking
   useEffect(() => {
@@ -41,6 +45,82 @@ export default function BookingDetails({
       fetchPaymentsByBookingId(booking.id);
     }
   }, [booking.id, fetchPaymentsByBookingId]);
+
+  // Poll payment status every 30 seconds when payment is AWAITING_VERIFICATION
+  // According to guide: Poll GET /payments/booking/:bookingId every 30 seconds when payment is AWAITING_VERIFICATION
+  useEffect(() => {
+    if (!booking.id || !currentPayment) return;
+    
+    const isAwaitingVerification = 
+      currentPayment.status === 'AWAITING_VERIFICATION' || 
+      currentPayment.status === 'awaiting_verification';
+    
+    if (!isAwaitingVerification) return;
+
+    // Poll every 30 seconds
+    const interval = setInterval(() => {
+      fetchPaymentsByBookingId(booking.id);
+    }, 30000); // 30 seconds
+
+    // Cleanup interval on unmount or when payment status changes
+    return () => clearInterval(interval);
+  }, [booking.id, currentPayment?.status, fetchPaymentsByBookingId]);
+
+  // Refresh booking when payment status changes to CONFIRMED
+  // According to guide: When payment status becomes CONFIRMED, booking status automatically changes to "pending approval"
+  // We need to refresh the booking to see the updated status
+  useEffect(() => {
+    if (!booking.id || !currentPayment) return;
+    
+    const isConfirmed = 
+      currentPayment.status === 'CONFIRMED' || 
+      currentPayment.status === 'confirmed';
+    
+    if (!isConfirmed) return;
+
+    // Refresh booking to get updated status (should be "pending approval" now)
+    const refreshBooking = async () => {
+      try {
+        await fetchBookingById(booking.id);
+        // If onBookingUpdate callback is provided, update the parent component
+        if (onBookingUpdate && selectedBooking) {
+          onBookingUpdate(selectedBooking);
+        }
+      } catch (error) {
+        console.error('Failed to refresh booking:', error);
+      }
+    };
+
+    refreshBooking();
+  }, [booking.id, currentPayment?.status, fetchBookingById, onBookingUpdate, selectedBooking]);
+
+  // Poll booking status every 30 seconds when payment is CONFIRMED
+  // This detects when booking status automatically changes to "pending approval"
+  useEffect(() => {
+    if (!booking.id || !currentPayment) return;
+    
+    const isConfirmed = 
+      currentPayment.status === 'CONFIRMED' || 
+      currentPayment.status === 'confirmed';
+    
+    if (!isConfirmed) return;
+
+    // Poll every 30 seconds to check for booking status update
+    const interval = setInterval(async () => {
+      try {
+        await fetchBookingById(booking.id);
+        // Update parent component if callback provided
+        if (onBookingUpdate && selectedBooking) {
+          onBookingUpdate(selectedBooking);
+        }
+      } catch (error) {
+        console.error('Failed to poll booking status:', error);
+      }
+    }, 30000); // 30 seconds
+
+    // Cleanup interval on unmount or when payment status changes
+    return () => clearInterval(interval);
+  }, [booking.id, currentPayment?.status, fetchBookingById, onBookingUpdate, selectedBooking]);
   
   // Check if booking is cancelled - show delete option instead of full details
   const isCancelled = booking.status.toLowerCase() === 'cancelled';

@@ -58,6 +58,7 @@ export default function Bookings() {
         <BookingDetails
           booking={selectedBooking}
           onBack={() => setSelectedBooking(null)}
+          onBookingUpdate={(updatedBooking) => setSelectedBooking(updatedBooking)}
         />
       )}
     </div>

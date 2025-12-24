@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +12,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import { useBookingStore } from "@/store/useBookingStore";
-import { AlertTriangle, CreditCard, DollarSign, Upload, Loader2 } from "lucide-react";
+
+// Dynamically import icons to prevent hydration issues
+const AlertTriangle = dynamic(() => import("lucide-react").then(mod => ({ default: mod.AlertTriangle })), { ssr: false });
+const CreditCard = dynamic(() => import("lucide-react").then(mod => ({ default: mod.CreditCard })), { ssr: false });
+const DollarSign = dynamic(() => import("lucide-react").then(mod => ({ default: mod.DollarSign })), { ssr: false });
+const Loader2 = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Loader2 })), { ssr: false });
 
 // Define Zod Schema
 const paymentSchema = z.object({
@@ -28,17 +34,11 @@ const paymentSchema = z.object({
 type PaymentForm = z.infer<typeof paymentSchema>;
 
 export default function BankDetails() {
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
   const { selectedBooking } = useBookingStore();
   const { uploadReceipt, currentPayment, initiatePayment, loading } = usePaymentStore();
-
-  // Prevent hydration mismatch by only rendering icons on client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   
   // Get booking ID from query params, selected booking, or extraBookingDetails
   const bookingIdFromQuery = searchParams?.get("bookingId");
@@ -136,7 +136,7 @@ export default function BankDetails() {
       >
         <div className="flex items-start gap-2">
           <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-            {mounted && <AlertTriangle className="w-4 h-4 text-white" />}
+            <AlertTriangle className="w-4 h-4 text-white" />
           </div>
           <p className="text-xs text-amber-900 leading-relaxed">
             Please make payment to the account below. Hostella won&apos;t be responsible for any wrong transaction.
@@ -158,7 +158,7 @@ export default function BankDetails() {
           transition={{ delay: 0.3 }}
         >
           <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-            {mounted && <CreditCard className="w-4 h-4 text-white" />}
+            <CreditCard className="w-4 h-4 text-white" />
           </div>
           Bank Account Details
         </motion.h3>
@@ -182,12 +182,10 @@ export default function BankDetails() {
                     ? "bg-yellow-500" 
                     : "bg-gray-200"
                 }`}>
-                  {mounted && (
-                    detail.title === "Amount" ? (
-                      <DollarSign className="w-3 h-3 text-white" />
-                    ) : (
-                      <CreditCard className="w-3 h-3 text-gray-600" />
-                    )
+                  {detail.title === "Amount" ? (
+                    <DollarSign className="w-3 h-3 text-white" />
+                  ) : (
+                    <CreditCard className="w-3 h-3 text-gray-600" />
                   )}
                 </div>
                 <span className={`text-xs font-medium ${detail.title === "Amount" ? "text-gray-700" : "text-gray-600"}`}>

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import PdfUploadField from "@/app/(auth)/signup/step3/components/PdfUploadField";
+import ImageUploadField from "./ImageUploadField";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
@@ -19,8 +19,26 @@ const paymentSchema = z.object({
     .any()
     .refine((files) => files && files.length > 0, "Receipt upload is required.")
     .refine(
-      (files) => files?.[0]?.type === "application/pdf",
-      "Only PDF files are allowed."
+      (files) => {
+        if (!files?.[0]) return false;
+        const allowedTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
+        return allowedTypes.includes(files[0].type);
+      },
+      "Only image files are allowed (JPEG, PNG, GIF, or WEBP)."
+    )
+    .refine(
+      (files) => {
+        if (!files?.[0]) return false;
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        return files[0].size <= maxSize;
+      },
+      "File size must be less than 5MB."
     ),
 });
 
@@ -208,7 +226,7 @@ export default function BankDetails() {
         transition={{ delay: 0.3, duration: 0.6 }}
       >
         <div className="mb-4">
-          <PdfUploadField
+          <ImageUploadField
             name="receipt"
             register={register}
             setValue={setValue}

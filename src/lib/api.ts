@@ -474,7 +474,7 @@ export const paymentApi = {
     }),
 
   uploadReceipt: (paymentId: number, receipt: FormData) =>
-    apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/receipt`, {
+    apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/upload-receipt-file`, {
       method: 'POST',
       body: receipt,
     }),

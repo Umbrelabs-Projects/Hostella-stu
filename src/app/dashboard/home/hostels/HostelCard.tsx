@@ -21,7 +21,7 @@ export default function HostelCard({ hostel }: HostelCardProps) {
   const displayDescription = hostel.description || "No description available";
   const displayImage = hostel.image || "/placeholder-hostel.jpg";
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col">
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col h-full">
       <div className="relative w-full h-48">
         <Image
           src={displayImage}
@@ -31,7 +31,7 @@ export default function HostelCard({ hostel }: HostelCardProps) {
         />
       </div>
       <div className="p-4 flex-1 flex flex-col justify-between">
-        <div>
+        <div className="flex flex-col justify-between h-full">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-lg">{hostel.name}</h3>
             <div className="flex items-center gap-1 text-yellow-500">

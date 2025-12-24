@@ -7,6 +7,8 @@ import {
   BlogPost, 
   FAQ, 
   Payment,
+  PaymentInitiationResponse,
+  BankDetails,
   Chat,
   ChatMessage,
   Service,
@@ -102,7 +104,26 @@ export async function apiFetch<T>(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "https://api.hostella.app/api/v1";
+  // Ensure API URL includes /api/v1 if not already present
+  // Supports API_URL without /api/v1 - will automatically add it
+  const getBaseUrl = () => {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL;
+    if (envUrl) {
+      // Remove trailing slash if present
+      const cleanUrl = envUrl.replace(/\/$/, '');
+      
+      // If URL already contains /api/v1, use as is
+      if (cleanUrl.includes('/api/v1')) {
+        return cleanUrl;
+      }
+      
+      // If URL doesn't have /api/v1, add it
+      return `${cleanUrl}/api/v1`;
+    }
+    return "https://api.hostella.app/api/v1";
+  };
+  
+  const baseUrl = getBaseUrl();
   
   // Don't set Content-Type for FormData (browser will set it with boundary)
   const isFormData = options.body instanceof FormData;
@@ -152,7 +173,11 @@ export async function apiFetch<T>(
         
         // Only log detailed error if errorData has meaningful content
         const errorDataKeys = Object.keys(errorData || {});
-        if (errorDataKeys.length > 0 || errorData?.message || errorData?.error) {
+        
+        // Don't log empty error responses - they're usually 404s or permission errors
+        const shouldLogError = (errorDataKeys.length > 0 || errorData?.message || errorData?.error);
+        
+        if (shouldLogError) {
           console.error('API Error Response:', {
             status: res.status,
             statusText: res.statusText,
@@ -162,9 +187,9 @@ export async function apiFetch<T>(
             errorData,
             errorDataKeys,
           });
-        } else {
-          // Log minimal info for empty error responses
-          console.error('API Error Response (empty):', {
+        } else if (process.env.NODE_ENV === 'development') {
+          // Log empty error responses only in development
+          console.warn('API Error Response (empty):', {
             status: res.status,
             statusText: res.statusText,
             url: `${baseUrl}${endpoint}`,
@@ -235,15 +260,26 @@ export async function apiFetch<T>(
         );
       } else {
         const text = await res.text();
-        console.error('API Error Response (non-JSON):', {
-          status: res.status,
-          statusText: res.statusText,
-          url: `${baseUrl}${endpoint}`,
-          method: options.method || 'GET',
-          requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
-          text,
-          textLength: text?.length,
-        });
+        // Only log detailed error if there's actual content (not empty response)
+        if (text && text.trim().length > 0) {
+          console.error('API Error Response (non-JSON):', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+            requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
+            text,
+            textLength: text?.length,
+          });
+        } else {
+          // Empty response - just log minimal info
+          console.warn('API Error Response (empty):', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+          });
+        }
         throw new ApiError(text || `API error: ${res.status} - ${res.statusText}`, res.status);
       }
     }
@@ -457,36 +493,97 @@ export const bookingApi = {
       body: reason ? JSON.stringify({ reason }) : undefined,
     }),
 
+  // Delete booking (only for PENDING_PAYMENT or CANCELLED status)
+  // Endpoint: DELETE /api/v1/bookings/:id
+  delete: (id: string) =>
+    apiFetch<ApiResponse<{ success: boolean; message: string }>>(`/bookings/${id}`, {
+      method: 'DELETE',
+    }),
+
   getUserBookings: (params?: { page?: number; limit?: number; status?: string }) => {
     const queryString = params ? `?${buildQueryString(params)}` : '';
     return apiFetch<UserBookingsResponse>(`/bookings/my-bookings${queryString}`);
   },
+
+  // Get booking statistics
+  // Endpoint: GET /api/v1/bookings/stats/summary
+  getStats: () =>
+    apiFetch<ApiResponse<{
+      stats: {
+        total: number;
+        pendingPayment: number;
+        pendingApproval: number;
+        approved: number;
+        roomAllocated: number;
+        completed: number;
+        cancelled: number;
+      };
+    }>>('/bookings/stats/summary'),
 };
 
 // ============================================
 // PAYMENT API ENDPOINTS
 // ============================================
+// See: STUDENT_PAYMENT_FLOW_GUIDE.md for complete payment flow documentation
 export const paymentApi = {
-  initiate: (bookingId: number, method: 'bank' | 'momo', phoneNumber?: string) =>
-    apiFetch<ApiResponse<Payment>>('/payments/initiate', {
+  // Initiate payment using bookingId
+  // Endpoint: POST /api/v1/payments/booking/:bookingId
+  // Body: { provider: "BANK_TRANSFER" | "PAYSTACK", payerPhone?: string }
+  // Response: { payment: Payment, bankDetails?: BankDetails, isNewPayment: boolean }
+  // ⚠️ CRITICAL: Only call this when user explicitly clicks "Proceed to Payment" button
+  // ⚠️ DO NOT call this automatically on page load - use GET /payments/booking/:bookingId instead
+  // Note: bookingId can be in format BK-XXXX or full UUID
+  initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string) =>
+    apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/booking/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ bookingId, method, phoneNumber }),
+      body: JSON.stringify({ provider, payerPhone }),
     }),
 
-  uploadReceipt: (paymentId: number, receipt: FormData) =>
+  // Upload receipt using paymentId (from initiate payment response)
+  // Endpoint: POST /api/v1/payments/:paymentId/upload-receipt-file
+  // Important: Use payment.id from initiate payment response, NOT bookingId
+  uploadReceipt: (paymentId: string | number, receipt: FormData) =>
     apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/upload-receipt-file`, {
       method: 'POST',
       body: receipt,
     }),
 
-  verify: (paymentId: number, reference: string) =>
+  // Verify payment by reference (for Paystack payments)
+  // Endpoint: GET /api/v1/payments/verify/:reference
+  // Used after Paystack payment completion to verify payment status
+  verifyByReference: (reference: string) =>
+    apiFetch<ApiResponse<Payment>>(`/payments/verify/${reference}`, {
+      method: 'GET',
+    }),
+
+  // Verify payment by paymentId and reference (legacy/alternative method)
+  // Endpoint: POST /api/v1/payments/:paymentId/verify
+  // Body: { reference: string }
+  verify: (paymentId: string | number, reference: string) =>
     apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/verify`, {
       method: 'POST',
       body: JSON.stringify({ reference }),
     }),
 
-  getByBookingId: (bookingId: number) =>
-    apiFetch<ApiResponse<Payment[]>>(`/payments/booking/${bookingId}`),
+  // Get payment for a booking by bookingId
+  // Endpoint: GET /api/v1/payments/booking/:bookingId
+  // Returns single Payment object (not array) for the given booking
+  // Response structure: { success: true, data: { payment: Payment } }
+  getByBookingId: (bookingId: string | number) =>
+    apiFetch<ApiResponse<{ payment: Payment }>>(`/payments/booking/${bookingId}`),
+
+  // Get payment by payment ID
+  // Endpoint: GET /api/v1/payments/:id
+  getById: (paymentId: string | number) =>
+    apiFetch<ApiResponse<{ payment: Payment }>>(`/payments/${paymentId}`),
+
+  // Get my payments (paginated)
+  // Endpoint: GET /api/v1/payments/my-payments
+  // Query params: page, limit, status
+  getMyPayments: (params?: { page?: number; limit?: number; status?: string }) => {
+    const queryString = params ? `?${buildQueryString(params)}` : '';
+    return apiFetch<PaginatedResponse<Payment>>(`/payments/my-payments${queryString}`);
+  },
 };
 
 // ============================================

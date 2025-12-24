@@ -146,13 +146,32 @@ export interface Payment {
   id: number;
   bookingId: number;
   amount: number;
-  method: 'bank' | 'momo';
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  provider: 'BANK_TRANSFER' | 'PAYSTACK' | 'bank' | 'momo'; // Support both formats
+  method?: 'bank' | 'momo'; // Legacy support
+  status: 'PENDING' | 'INITIATED' | 'AWAITING_VERIFICATION' | 'CONFIRMED' | 'FAILED' | 'REFUNDED' | 'pending' | 'initiated' | 'completed' | 'failed' | 'refunded'; // Support both formats
   reference: string;
   receiptUrl?: string;
   transactionId?: string;
+  authorizationUrl?: string; // For Paystack redirect
   createdAt: string;
   updatedAt: string;
+}
+
+// Bank details returned when initiating BANK_TRANSFER payment
+export interface BankDetails {
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  amount: number;
+  reference: string;
+  branch?: string;
+}
+
+// Payment initiation response structure
+export interface PaymentInitiationResponse {
+  payment: Payment;
+  bankDetails?: BankDetails; // Only for BANK_TRANSFER
+  isNewPayment: boolean; // true for new payment, false for existing
 }
 
 export interface Chat {

@@ -17,7 +17,7 @@ describe('usePaymentStore actions', () => {
 
     const { result } = renderHook(() => usePaymentStore());
     await act(async () => {
-      const payment = await result.current.initiatePayment(10, 'momo', '08012345678');
+      const payment = await result.current.initiatePayment(10, 'PAYSTACK', '08012345678');
       expect(payment).not.toBeNull();
     });
     expect(result.current.currentPayment?.status).toBe('pending');

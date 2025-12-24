@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Booking, CreateBookingData } from '@/types/api';
-import { bookingApi } from '@/lib/api';
+import { bookingApi, ApiError } from '@/lib/api';
 
 interface BookingState {
   bookings: Booking[];
@@ -20,6 +20,16 @@ interface BookingState {
   createBooking: (data: CreateBookingData) => Promise<Booking | null>;
   updateBooking: (id: string, data: Partial<Booking>) => Promise<void>;
   cancelBooking: (id: string, reason?: string) => Promise<void>;
+  deleteBooking: (id: string) => Promise<void>;
+  getBookingStats: () => Promise<{
+    total: number;
+    pendingPayment: number;
+    pendingApproval: number;
+    approved: number;
+    roomAllocated: number;
+    completed: number;
+    cancelled: number;
+  } | null>;
   setSelectedBooking: (booking: Booking | null) => void;
   clearError: () => void;
 }
@@ -192,21 +202,32 @@ export const useBookingStore = create<BookingState>((set) => ({
         loading: false,
       });
     } catch (error: unknown) {
+      // Check if it's a 404 or empty response (booking not found)
       let errorMessage = 'Failed to fetch booking';
+      let isNotFound = false;
       
-      if (error instanceof Error) {
+      if (error instanceof ApiError) {
+        if (error.statusCode === 404) {
+          isNotFound = true;
+          errorMessage = 'Booking not found';
+        } else {
+          errorMessage = error.message || `API error: ${error.statusCode}`;
+        }
+      } else if (error instanceof Error) {
         errorMessage = error.message;
-        // If the error message is generic, provide more context
-        if (errorMessage.includes('API error') || errorMessage === 'Failed to fetch booking') {
+        // If the error message is generic or empty, provide more context
+        if (errorMessage.includes('API error') || errorMessage === 'Failed to fetch booking' || !errorMessage.trim()) {
           errorMessage = `Booking not found or you don't have permission to view it. Please check the booking ID: ${id}`;
         }
       }
       
-      console.error('Error fetching booking:', {
-        bookingId: id,
-        error,
-        errorMessage,
-      });
+      // Only log errors that aren't 404s (not found is expected in some cases)
+      if (!isNotFound) {
+        console.warn('Error fetching booking:', {
+          bookingId: id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
       
       set({
         error: errorMessage,
@@ -303,6 +324,41 @@ export const useBookingStore = create<BookingState>((set) => ({
         loading: false,
       });
       throw error;
+    }
+  },
+
+  deleteBooking: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      await bookingApi.delete(id);
+      // Remove booking from state
+      set((state) => ({
+        bookings: state.bookings.filter((b) => b.id !== id),
+        selectedBooking:
+          state.selectedBooking?.id === id ? null : state.selectedBooking,
+        loading: false,
+      }));
+    } catch (error: unknown) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to delete booking',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  getBookingStats: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await bookingApi.getStats();
+      set({ loading: false });
+      return response.data.stats;
+    } catch (error: unknown) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch booking statistics',
+        loading: false,
+      });
+      return null;
     }
   },
 

@@ -20,7 +20,18 @@ export default function BookingConfirmation() {
     }
   }, [bookingId, fetchBookingById]);
 
-  if (loading) {
+  // Silently retry on error
+  useEffect(() => {
+    if (bookingId && error && !loading) {
+      const retryTimer = setTimeout(() => {
+        fetchBookingById(bookingId);
+      }, 2000); // Retry after 2 seconds
+      return () => clearTimeout(retryTimer);
+    }
+  }, [bookingId, error, loading, fetchBookingById]);
+
+  // Show loading skeleton while loading or if there's an error (will retry automatically)
+  if (loading || error) {
     return (
       <div className="min-h-screen flex flex-col items-center px-4 py-8">
         <div className="flex flex-col md:flex-row items-start justify-center gap-8 w-full max-w-5xl">
@@ -30,7 +41,6 @@ export default function BookingConfirmation() {
       </div>
     );
   }
-  if (error) return <ErrorState message={error} onRetry={() => fetchBookingById(bookingId)} />;
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-8">

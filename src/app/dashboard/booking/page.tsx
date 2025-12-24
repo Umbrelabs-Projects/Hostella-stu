@@ -19,7 +19,18 @@ export default function Bookings() {
     fetchUserBookings();
   }, [fetchUserBookings]);
 
-  if (loading) {
+  // Silently retry on error
+  useEffect(() => {
+    if (error && !loading) {
+      const retryTimer = setTimeout(() => {
+        fetchUserBookings();
+      }, 2000); // Retry after 2 seconds
+      return () => clearTimeout(retryTimer);
+    }
+  }, [error, loading, fetchUserBookings]);
+
+  // Show loading skeleton while loading or if there's an error (will retry automatically)
+  if (loading || error) {
     return (
       <div className="md:mx-[5%] space-y-12 mb-9">
         <SkeletonBanner />
@@ -27,7 +38,6 @@ export default function Bookings() {
       </div>
     );
   }
-  if (error) return <ErrorState message={error} onRetry={fetchUserBookings} />;
 
   return (
     <div className="md:mx-[5%] space-y-12 mb-9">

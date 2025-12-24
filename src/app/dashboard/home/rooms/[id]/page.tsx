@@ -19,7 +19,18 @@ export default function Room() {
     }
   }, [hostelId, fetchHostelById]);
 
-  if (loading) {
+  // Silently retry on error
+  useEffect(() => {
+    if (hostelId && error && !loading) {
+      const retryTimer = setTimeout(() => {
+        fetchHostelById(hostelId);
+      }, 2000); // Retry after 2 seconds
+      return () => clearTimeout(retryTimer);
+    }
+  }, [hostelId, error, loading, fetchHostelById]);
+
+  // Show loading skeleton while loading or if no data yet
+  if (loading || !selectedHostel) {
     return (
       <div className="md:mx-[5%]">
         <SkeletonBanner />
@@ -28,13 +39,12 @@ export default function Room() {
     );
   }
 
-  if (error || !selectedHostel) {
+  // If there's an error, show loading skeleton (will retry automatically)
+  if (error) {
     return (
       <div className="md:mx-[5%]">
-        <ErrorState
-          message={error || "Hostel not found"}
-          onRetry={() => hostelId && fetchHostelById(hostelId)}
-        />
+        <SkeletonBanner />
+        <RoomList />
       </div>
     );
   }

@@ -26,13 +26,15 @@ export default function UniversityInfoForm({
         <label className="block text-sm font-medium text-gray-900 mb-2">
           Campus
         </label>
-        <input
-          type="text"
+        <select
           value={campus}
-          placeholder="e.g., KNUST, UG, KSTU"
           onChange={(e) => onChange("campus", e.target.value)}
           className="border px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
+        >
+          <option value="">Select campus</option>
+          <option value="KNUST">KNUST</option>
+          <option value="KSTU">KSTU</option>
+        </select>
       </div>
 
       {/* Programme */}

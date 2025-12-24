@@ -4,6 +4,7 @@
 export interface RoomType {
   type: 'One-in-one' | 'Two-in-one';
   title: string;
+  value?: 'SINGLE' | 'DOUBLE'; // API value for booking creation (required by backend)
   total: number;
   available: number;
   price: number | { min: number; max: number };

@@ -17,7 +17,8 @@ export default function RoomList() {
     router.push(`/dashboard/home/extra-booking-details/${hostelId}?type=${roomType}`);
   };
 
-  if (loading) {
+  // Show loading skeleton while loading or if no data yet
+  if (loading || !selectedHostel) {
     return (
       <div className="min-h-screen py-12 px-4 md:px-8">
         <SkeletonCardGrid count={2} />
@@ -25,10 +26,11 @@ export default function RoomList() {
     );
   }
 
-  if (error || !selectedHostel) {
+  // If there's an error, show loading skeleton (parent will handle retry)
+  if (error) {
     return (
       <div className="min-h-screen py-12 px-4 md:px-8">
-        <ErrorState message={error || "Hostel not found"} onRetry={() => hostelId && window.location.reload()} />
+        <SkeletonCardGrid count={2} />
       </div>
     );
   }

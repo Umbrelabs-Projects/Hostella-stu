@@ -89,7 +89,9 @@ export const useBookingStore = create<BookingState>((set) => ({
   createBooking: async (data) => {
     set({ loading: true, error: null });
     try {
+      console.log('Creating booking with data:', data);
       const response = await bookingApi.create(data);
+      console.log('Booking created successfully:', response);
       set((state) => ({
         bookings: [response.data, ...state.bookings],
         selectedBooking: response.data,
@@ -97,11 +99,16 @@ export const useBookingStore = create<BookingState>((set) => ({
       }));
       return response.data;
     } catch (error: unknown) {
+      console.error('Booking creation error:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+      }
       set({
         error: error instanceof Error ? error.message : 'Failed to create booking',
         loading: false,
       });
-      return null;
+      throw error; // Re-throw so the component can handle it
     }
   },
 

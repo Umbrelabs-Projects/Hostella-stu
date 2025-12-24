@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useHostelStore } from "@/store/useHostelStore";
 import { useBookingStore } from "@/store/useBookingStore";
+import { ApiError } from "@/lib/api";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
@@ -32,6 +33,16 @@ export default function ExtraBookingDetails() {
     }
     fetchProfile();
   }, [hostelId, fetchHostelById, fetchProfile]);
+
+  // Silently retry on error
+  useEffect(() => {
+    if (hostelId && hostelError && !hostelLoading) {
+      const retryTimer = setTimeout(() => {
+        fetchHostelById(hostelId);
+      }, 2000); // Retry after 2 seconds
+      return () => clearTimeout(retryTimer);
+    }
+  }, [hostelId, hostelError, hostelLoading, fetchHostelById]);
 
   // Helper to check if profile is complete
   const checkProfileComplete = () => {
@@ -63,9 +74,24 @@ export default function ExtraBookingDetails() {
   // Get room type data from hostel
   const roomTypes = selectedHostel?.roomTypes || [];
   const selectedRoomType = roomTypes.find(
-    rt => (roomTypeParam === 'SINGLE' && (rt.type === 'One-in-one' || rt.title === 'One-in-one')) ||
-          (roomTypeParam === 'DOUBLE' && (rt.type === 'Two-in-one' || rt.title === 'Two-in-one'))
+    rt => (roomTypeParam === 'SINGLE' && (rt.type === 'One-in-one' || rt.title === 'One-in-one' || rt.value === 'SINGLE')) ||
+          (roomTypeParam === 'DOUBLE' && (rt.type === 'Two-in-one' || rt.title === 'Two-in-one' || rt.value === 'DOUBLE'))
   );
+
+  // Use the 'value' field from roomTypes (required by backend) or map from type/title
+  // Backend requires "SINGLE" or "DOUBLE" - must use the value field from roomTypes array
+  // If value is not available, map from type: "One-in-one" → "SINGLE", "Two-in-one" → "DOUBLE"
+  let preferredRoomTypeValue: 'SINGLE' | 'DOUBLE';
+  if (selectedRoomType?.value) {
+    preferredRoomTypeValue = selectedRoomType.value as 'SINGLE' | 'DOUBLE';
+  } else if (selectedRoomType?.type === 'One-in-one' || selectedRoomType?.title === 'One-in-one') {
+    preferredRoomTypeValue = 'SINGLE';
+  } else if (selectedRoomType?.type === 'Two-in-one' || selectedRoomType?.title === 'Two-in-one') {
+    preferredRoomTypeValue = 'DOUBLE';
+  } else {
+    // Fallback to roomTypeParam (should already be 'SINGLE' or 'DOUBLE')
+    preferredRoomTypeValue = roomTypeParam;
+  }
 
   const roomTitle = selectedRoomType?.title || (roomTypeParam === 'SINGLE' ? 'One-in-one' : 'Two-in-one');
   const price = typeof selectedRoomType?.price === 'number' 
@@ -80,7 +106,7 @@ export default function ExtraBookingDetails() {
   };
 
   const handleConfirm = async () => {
-    if (!selectedHostel || !hostelId) {
+    if (!selectedHostel || !selectedHostel.id) {
       toast.error("Hostel information is missing");
       return;
     }
@@ -101,11 +127,29 @@ export default function ExtraBookingDetails() {
       // Update extra booking details (for reference)
       updateExtraBookingDetails(bookingDetails);
 
+      // Use selectedHostel.id (the actual UUID from backend) instead of URL param
+      // The URL param might not be in UUID format
+      const actualHostelId = selectedHostel.id;
+
+      // Prepare booking payload - MUST use the 'value' field from roomTypes (backend requirement)
+      const bookingPayload = {
+        hostelId: actualHostelId,
+        preferredRoomType: preferredRoomTypeValue, // Use 'value' from roomTypes: "SINGLE" or "DOUBLE"
+      };
+
+      console.log("=== Booking Creation Debug ===");
+      console.log("hostelId (from URL param):", hostelId);
+      console.log("selectedHostel.id (actual UUID):", actualHostelId);
+      console.log("roomTypeParam (from URL):", roomTypeParam);
+      console.log("selectedRoomType:", selectedRoomType);
+      console.log("selectedRoomType?.value:", selectedRoomType?.value);
+      console.log("preferredRoomTypeValue (final):", preferredRoomTypeValue);
+      console.log("bookingPayload:", JSON.stringify(bookingPayload, null, 2));
+      console.log("roomTypes array:", roomTypes);
+      console.log("==============================");
+
       // Create booking using the API
-      const booking = await createBooking({
-        hostelId,
-        preferredRoomType: roomTypeParam,
-      });
+      const booking = await createBooking(bookingPayload);
 
       if (booking) {
         toast.success("Booking created successfully!");
@@ -115,13 +159,33 @@ export default function ExtraBookingDetails() {
       }
     } catch (error: unknown) {
       console.error("Booking creation failed:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create booking");
+      
+      // Extract error message from ApiError if available
+      let errorMessage = "Failed to create booking";
+      if (error instanceof ApiError) {
+        errorMessage = error.message;
+        if (error.errors) {
+          const errorDetails = Object.entries(error.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+          errorMessage = `${error.message}. ${errorDetails}`;
+        }
+        console.error("API Error details:", {
+          message: error.message,
+          statusCode: error.statusCode,
+          errors: error.errors,
+        });
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setLoading(false);
     }
   };
 
-  if (hostelLoading) {
+  if (hostelLoading || !selectedHostel) {
     return (
       <div className="px-3 md:px-8 flex justify-center py-10">
         <SkeletonCard />
@@ -129,13 +193,12 @@ export default function ExtraBookingDetails() {
     );
   }
 
-  if (hostelError || !selectedHostel) {
+  // If there's an error, show loading skeleton (will retry automatically)
+  // This provides a better UX than showing error immediately
+  if (hostelError) {
     return (
       <div className="px-3 md:px-8 flex justify-center py-10">
-        <ErrorState
-          message={hostelError || "Hostel not found"}
-          onRetry={() => hostelId && fetchHostelById(hostelId)}
-        />
+        <SkeletonCard />
       </div>
     );
   }

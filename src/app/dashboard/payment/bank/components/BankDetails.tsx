@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,11 +28,17 @@ const paymentSchema = z.object({
 type PaymentForm = z.infer<typeof paymentSchema>;
 
 export default function BankDetails() {
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
   const { selectedBooking } = useBookingStore();
   const { uploadReceipt, currentPayment, initiatePayment, loading } = usePaymentStore();
+
+  // Prevent hydration mismatch by only rendering icons on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Get booking ID from query params, selected booking, or extraBookingDetails
   const bookingIdFromQuery = searchParams?.get("bookingId");
@@ -56,12 +62,24 @@ export default function BankDetails() {
       });
     }
   }, [bookingIdFromQuery, bookingIdFromBooking, priceFromBooking, extraBookingDetails.price, updateExtraBookingDetails]);
+
+  // Initiate payment early to get the reference number
+  useEffect(() => {
+    if (bookingId && !currentPayment && !loading) {
+      initiatePayment(bookingId, 'bank');
+    }
+  }, [bookingId, currentPayment, loading, initiatePayment]);
+
+  // Get payment reference from currentPayment, formatted bookingId, or fallback to CUID id
+  const formattedBookingId = selectedBooking?.bookingId;
+  const paymentReference = currentPayment?.reference || formattedBookingId || bookingIdString || "N/A";
   
   const BankDetails = [
     { title: "Amount", value: price },
     { title: "Bank Name", value: "Cal Bank" },
     { title: "Account Name", value: "Hostella" },
     { title: "Account Number", value: "000000" },
+    { title: "Payment Reference", value: paymentReference },
   ];
 
   const {
@@ -118,7 +136,7 @@ export default function BankDetails() {
       >
         <div className="flex items-start gap-2">
           <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-            <AlertTriangle className="w-4 h-4 text-white" />
+            {mounted && <AlertTriangle className="w-4 h-4 text-white" />}
           </div>
           <p className="text-xs text-amber-900 leading-relaxed">
             Please make payment to the account below. Hostella won&apos;t be responsible for any wrong transaction.
@@ -140,7 +158,7 @@ export default function BankDetails() {
           transition={{ delay: 0.3 }}
         >
           <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-            <CreditCard className="w-4 h-4 text-white" />
+            {mounted && <CreditCard className="w-4 h-4 text-white" />}
           </div>
           Bank Account Details
         </motion.h3>
@@ -164,10 +182,12 @@ export default function BankDetails() {
                     ? "bg-yellow-500" 
                     : "bg-gray-200"
                 }`}>
-                  {detail.title === "Amount" ? (
-                    <DollarSign className="w-3 h-3 text-white" />
-                  ) : (
-                    <CreditCard className="w-3 h-3 text-gray-600" />
+                  {mounted && (
+                    detail.title === "Amount" ? (
+                      <DollarSign className="w-3 h-3 text-white" />
+                    ) : (
+                      <CreditCard className="w-3 h-3 text-gray-600" />
+                    )
                   )}
                 </div>
                 <span className={`text-xs font-medium ${detail.title === "Amount" ? "text-gray-700" : "text-gray-600"}`}>

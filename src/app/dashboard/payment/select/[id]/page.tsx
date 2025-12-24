@@ -14,7 +14,6 @@ export default function PaymentSelectionPage() {
   const { 
     selectedBooking, 
     bookings, 
-    loading: bookingLoading, 
     error: bookingError, 
     fetchBookingById,
     setSelectedBooking,
@@ -83,8 +82,8 @@ export default function PaymentSelectionPage() {
               {bookingError || "We couldn't load the booking details. This could be due to:"}
             </p>
             <ul className="text-sm text-gray-500 text-left mb-6 space-y-1 list-disc list-inside">
-              <li>The booking doesn't exist</li>
-              <li>You don't have permission to view this booking</li>
+              <li>The booking doesn&apos;t exist</li>
+              <li>You don&apos;t have permission to view this booking</li>
               <li>The booking ID is invalid</li>
               <li>Network or server error</li>
             </ul>

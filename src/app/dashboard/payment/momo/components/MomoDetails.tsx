@@ -50,7 +50,7 @@ const MomoDetails: React.FC = () => {
         price: priceFromBooking || extraBookingDetails.price,
       });
     }
-  }, [bookingIdFromQuery, bookingIdFromBooking, priceFromBooking, updateExtraBookingDetails]);
+  }, [bookingIdFromQuery, bookingIdFromBooking, priceFromBooking, extraBookingDetails.price, updateExtraBookingDetails]);
 
   const colorThemes = {
     MTN: {

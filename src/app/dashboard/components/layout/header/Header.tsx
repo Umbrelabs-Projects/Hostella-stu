@@ -21,7 +21,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
     title = "Booking Successful";
   } else if (segments.includes("rooms") && segments.length > 0) {
     // For rooms page, show hostel name from store
-    const lastSegment = segments[segments.length - 1];
     if (selectedHostel) {
       title = selectedHostel.name;
     } else {

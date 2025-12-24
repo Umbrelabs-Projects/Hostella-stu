@@ -136,7 +136,7 @@ export async function apiFetch<T>(
         let errorData;
         try {
           errorData = await res.json();
-        } catch (parseError) {
+        } catch {
           // If JSON parsing fails, try to get text
           const text = await responseClone.text();
           console.error('API Error - JSON parse failed, got text:', {

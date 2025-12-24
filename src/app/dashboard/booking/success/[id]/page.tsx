@@ -6,7 +6,6 @@ import { useBookingStore } from "@/store/useBookingStore";
 import BookingDetailsCard from "../components/BookingDetailsCard";
 import BookingSuccessCard from "../components/BookingSuccessCard";
 import PaymentMethodSelector from "../components/PaymentMethodSelector";
-import { ErrorState } from "@/components/ui/error";
 import { SkeletonCard } from "@/components/ui/skeleton";
 
 export default function BookingConfirmation() {

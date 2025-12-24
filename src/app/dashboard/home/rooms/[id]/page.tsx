@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useHostelStore } from "@/store/useHostelStore";
 import RoomList from "../components/RoomList";
 import { SkeletonBanner } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/ui/error";
 
 export default function Room() {
   const { id } = useParams();

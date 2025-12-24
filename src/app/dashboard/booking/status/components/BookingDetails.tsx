@@ -64,6 +64,7 @@ export default function BookingDetails({
     };
 
     getHostelImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [booking.hostelName, booking.hostelId, booking.hostelImage, fetchHostels, fetchHostelById, hostels.length]);
 
   // Update image when selectedHostel or hostels list changes

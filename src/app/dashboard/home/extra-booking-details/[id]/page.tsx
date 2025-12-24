@@ -11,7 +11,6 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/ui/error";
 
 type RoomType = 'SINGLE' | 'DOUBLE';
 

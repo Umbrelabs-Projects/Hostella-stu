@@ -7,7 +7,6 @@ import BookingList from "./status/components/BookingList";
 import { Booking } from "@/types/bookingStatus";
 import HostelHeroBanner from "../home/hostels/components/HostelHeroBanner";
 import { images } from "@/lib/images";
-import { ErrorState } from "@/components/ui/error";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonBanner, SkeletonList } from "@/components/ui/skeleton";
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect } from "react";
-import dynamic from "next/dynamic";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,12 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import { useBookingStore } from "@/store/useBookingStore";
-
-// Dynamically import icons to prevent hydration issues
-const AlertTriangle = dynamic(() => import("lucide-react").then(mod => ({ default: mod.AlertTriangle })), { ssr: false });
-const CreditCard = dynamic(() => import("lucide-react").then(mod => ({ default: mod.CreditCard })), { ssr: false });
-const DollarSign = dynamic(() => import("lucide-react").then(mod => ({ default: mod.DollarSign })), { ssr: false });
-const Loader2 = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Loader2 })), { ssr: false });
+import { AlertTriangle, CreditCard, DollarSign, Loader2 } from "lucide-react";
 
 // Define Zod Schema
 const paymentSchema = z.object({

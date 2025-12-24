@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import PaymentMessage from "../reusablecomponent/PaymentMessage";
 import BankDetails from "./components/BankDetails";

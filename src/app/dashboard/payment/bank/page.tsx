@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import PaymentMessage from "../reusablecomponent/PaymentMessage";
 import BankDetails from "./components/BankDetails";
+import { SkeletonCard } from "@/components/ui/skeleton";
 
 export default function BankPayment() {
   return (
@@ -10,7 +11,9 @@ export default function BankPayment() {
       <div className="flex flex-col md:flex-row items-start justify-center gap-8 w-full max-w-5xl">
         <PaymentMessage />
         <div className="w-full md:w-1/2">
-          <BankDetails />
+          <Suspense fallback={<SkeletonCard />}>
+            <BankDetails />
+          </Suspense>
         </div>
       </div>
     </div>

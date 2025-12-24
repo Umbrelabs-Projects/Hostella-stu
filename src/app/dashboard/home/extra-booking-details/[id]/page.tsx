@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -14,7 +14,7 @@ import { SkeletonCard } from "@/components/ui/skeleton";
 
 type RoomType = 'SINGLE' | 'DOUBLE';
 
-export default function ExtraBookingDetails() {
+function ExtraBookingDetailsContent() {
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -331,5 +331,17 @@ export default function ExtraBookingDetails() {
         </motion.div>
       </div>
     </section>
+  );
+}
+
+export default function ExtraBookingDetails() {
+  return (
+    <Suspense fallback={
+      <div className="px-3 md:px-8 flex justify-center py-10">
+        <SkeletonCard />
+      </div>
+    }>
+      <ExtraBookingDetailsContent />
+    </Suspense>
   );
 }

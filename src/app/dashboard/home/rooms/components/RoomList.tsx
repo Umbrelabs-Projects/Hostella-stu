@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { useHostelStore } from "@/store/useHostelStore";
 import RoomTypeCard from "./RoomTypeCard";
-import { ErrorState } from "@/components/ui/error";
-import { SkeletonCardGrid } from "@/components/ui/skeleton";
+import { SkeletonRoomTypeGrid } from "@/components/ui/skeleton";
 
 export default function RoomList() {
   const params = useParams();
@@ -18,20 +17,12 @@ export default function RoomList() {
   };
 
   // Show loading skeleton while loading or if no data yet
-  if (loading || !selectedHostel) {
+  // Use regular section to avoid hydration issues with motion components
+  if (loading || !selectedHostel || error) {
     return (
-      <div className="min-h-screen py-12 px-4 md:px-8">
-        <SkeletonCardGrid count={2} />
-      </div>
-    );
-  }
-
-  // If there's an error, show loading skeleton (parent will handle retry)
-  if (error) {
-    return (
-      <div className="min-h-screen py-12 px-4 md:px-8">
-        <SkeletonCardGrid count={2} />
-      </div>
+      <section className="min-h-screen py-12 px-4 md:px-8 flex flex-col items-center">
+        <SkeletonRoomTypeGrid count={2} />
+      </section>
     );
   }
 

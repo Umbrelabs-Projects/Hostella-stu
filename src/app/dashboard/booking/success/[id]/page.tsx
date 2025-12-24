@@ -12,7 +12,7 @@ import { SkeletonCard } from "@/components/ui/skeleton";
 export default function BookingConfirmation() {
   const params = useParams();
   const bookingId = params?.id as string;
-  const { loading, error, fetchBookingById } = useBookingStore();
+  const { selectedBooking, loading, error, fetchBookingById } = useBookingStore();
 
   useEffect(() => {
     if (bookingId) {
@@ -31,7 +31,7 @@ export default function BookingConfirmation() {
   }, [bookingId, error, loading, fetchBookingById]);
 
   // Show loading skeleton while loading or if there's an error (will retry automatically)
-  if (loading || error) {
+  if (loading || error || !selectedBooking) {
     return (
       <div className="min-h-screen flex flex-col items-center px-4 py-8">
         <div className="flex flex-col md:flex-row items-start justify-center gap-8 w-full max-w-5xl">
@@ -41,6 +41,10 @@ export default function BookingConfirmation() {
       </div>
     );
   }
+
+  // Only show payment options if status is "pending payment"
+  const normalizedStatus = selectedBooking.status.toLowerCase().replace(/_/g, ' ');
+  const showPaymentOptions = normalizedStatus === "pending payment";
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-8">
@@ -53,8 +57,8 @@ export default function BookingConfirmation() {
         <BookingDetailsCard />
       </div>
 
-      {/* Payment Section */}
-      <PaymentMethodSelector />
+      {/* Payment Section - Only show for pending payment status */}
+      {showPaymentOptions && <PaymentMethodSelector />}
     </div>
   );
 }

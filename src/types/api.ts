@@ -67,6 +67,8 @@ export interface Booking {
   studentId?: string | null; // studentRefNumber
   phone?: string | null;
   hostelName?: string | null;
+  hostelId?: string | null; // Hostel ID for fetching hostel details
+  hostelImage?: string | null; // Hostel image URL
   roomTitle?: string | null; // "One-in-one" or "Two-in-one"
   price?: string | null;
   emergencyContactName?: string | null;

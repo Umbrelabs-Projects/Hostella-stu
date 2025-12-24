@@ -15,7 +15,7 @@ interface BookingState {
   } | null;
 
   fetchBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
-  fetchUserBookings: () => Promise<void>;
+  fetchUserBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
   fetchBookingById: (id: string) => Promise<void>;
   createBooking: (data: CreateBookingData) => Promise<Booking | null>;
   updateBooking: (id: string, data: Partial<Booking>) => Promise<void>;
@@ -52,8 +52,67 @@ export const useBookingStore = create<BookingState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await bookingApi.getUserBookings(params);
+      
+      // Debug: Log the raw API response
+      console.log('Raw API response (getUserBookings):', JSON.stringify(response, null, 2));
+      
+      // Transform bookings to extract and normalize all fields
+      const transformedBookings = response.data.bookings.map((booking: unknown) => {
+        // Type assertion for the raw booking data from API
+        const rawBooking = booking as Booking & { 
+          hostel?: { id?: string; image?: string; name?: string };
+          totalAmount?: number | string; // Database field that might be present
+          preferredRoomType?: 'SINGLE' | 'DOUBLE'; // Database field that might be present
+          [key: string]: unknown;
+        };
+        
+        // Debug: Log each raw booking
+        console.log('Raw booking from API:', {
+          id: rawBooking.id,
+          price: rawBooking.price,
+          totalAmount: rawBooking.totalAmount,
+          roomTitle: rawBooking.roomTitle,
+          preferredRoomType: rawBooking.preferredRoomType,
+          allKeys: Object.keys(rawBooking),
+        });
+        
+        // The backend should transform the data via formatBookingForFrontend()
+        // Database: totalAmount → API: price (string)
+        // Database: preferredRoomType (SINGLE/DOUBLE) → API: roomTitle (One-in-one/Two-in-one)
+        // But if the backend hasn't transformed it, we need to do it here as a fallback
+        const price = rawBooking.price ?? 
+          (rawBooking.totalAmount !== undefined ? String(rawBooking.totalAmount) : null);
+        
+        const roomTitle = rawBooking.roomTitle ?? 
+          (rawBooking.preferredRoomType === 'SINGLE' ? 'One-in-one' : 
+           rawBooking.preferredRoomType === 'DOUBLE' ? 'Two-in-one' : null);
+        
+        const transformed: Booking = {
+          ...rawBooking, // This spread includes all fields from API response
+          // Ensure required fields are present
+          id: rawBooking.id || '',
+          bookingId: rawBooking.bookingId || '',
+          status: rawBooking.status || 'pending payment',
+          // Use transformed values or fallback to database fields
+          price: price,
+          roomTitle: roomTitle,
+          // Only override if we need to extract from nested hostel object
+          hostelName: rawBooking.hostelName ?? rawBooking.hostel?.name ?? null,
+          hostelId: rawBooking.hostel?.id ?? rawBooking.hostelId ?? null,
+          hostelImage: rawBooking.hostel?.image ?? rawBooking.hostelImage ?? null,
+        };
+
+        // Debug: Log transformed booking
+        console.log('Transformed booking:', {
+          id: transformed.id,
+          price: transformed.price,
+          roomTitle: transformed.roomTitle,
+        });
+
+        return transformed;
+      });
       set({
-        bookings: response.data.bookings,
+        bookings: transformedBookings,
         pagination: {
           page: response.data.page,
           limit: response.data.pageSize,
@@ -74,8 +133,62 @@ export const useBookingStore = create<BookingState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await bookingApi.getById(id);
+      
+      // Debug: Log the raw API response
+      console.log('Raw API response (getById):', JSON.stringify(response, null, 2));
+      
+      // Transform booking to extract and normalize all fields
+      const booking = response.data as Booking & { 
+        hostel?: { id?: string; image?: string; name?: string };
+        totalAmount?: number | string; // Database field that might be present
+        preferredRoomType?: 'SINGLE' | 'DOUBLE'; // Database field that might be present
+        [key: string]: unknown;
+      };
+
+      // Debug: Log raw booking
+      console.log('Raw booking from API (getById):', {
+        id: booking.id,
+        price: booking.price,
+        totalAmount: booking.totalAmount,
+        roomTitle: booking.roomTitle,
+        preferredRoomType: booking.preferredRoomType,
+        allKeys: Object.keys(booking),
+      });
+
+      // The backend should transform the data via formatBookingForFrontend()
+      // Database: totalAmount → API: price (string)
+      // Database: preferredRoomType (SINGLE/DOUBLE) → API: roomTitle (One-in-one/Two-in-one)
+      // But if the backend hasn't transformed it, we need to do it here as a fallback
+      const price = booking.price ?? 
+        (booking.totalAmount !== undefined ? String(booking.totalAmount) : null);
+      
+      const roomTitle = booking.roomTitle ?? 
+        (booking.preferredRoomType === 'SINGLE' ? 'One-in-one' : 
+         booking.preferredRoomType === 'DOUBLE' ? 'Two-in-one' : null);
+
+      const transformed: Booking = {
+        ...booking, // This spread includes all fields from API response
+        // Ensure required fields are present
+        id: booking.id || id,
+        bookingId: booking.bookingId || '',
+        status: booking.status || 'pending payment',
+        // Use transformed values or fallback to database fields
+        price: price,
+        roomTitle: roomTitle,
+        // Only override if we need to extract from nested hostel object
+        hostelName: booking.hostelName ?? booking.hostel?.name ?? null,
+        hostelId: booking.hostel?.id ?? booking.hostelId ?? null,
+        hostelImage: booking.hostel?.image ?? booking.hostelImage ?? null,
+      };
+
+      // Debug: Log transformed booking
+      console.log('Transformed booking (getById):', {
+        id: transformed.id,
+        price: transformed.price,
+        roomTitle: transformed.roomTitle,
+      });
       set({
-        selectedBooking: response.data,
+        selectedBooking: transformed,
         loading: false,
       });
     } catch (error: unknown) {
@@ -92,12 +205,32 @@ export const useBookingStore = create<BookingState>((set) => ({
       console.log('Creating booking with data:', data);
       const response = await bookingApi.create(data);
       console.log('Booking created successfully:', response);
+      // The backend already transforms the data via formatBookingForFrontend()
+      // Database: totalAmount → API: price (string)
+      // Database: preferredRoomType (SINGLE/DOUBLE) → API: roomTitle (One-in-one/Two-in-one)
+      // So roomTitle and price are already in the correct format in the API response
+      const booking = response.data as Booking & { 
+        hostel?: { id?: string; image?: string; name?: string };
+        [key: string]: unknown;
+      };
+      const transformed: Booking = {
+        ...booking, // This spread includes roomTitle and price from API response
+        // Ensure required fields are present
+        id: booking.id || '',
+        bookingId: booking.bookingId || '',
+        status: booking.status || 'pending payment',
+        // Only override if we need to extract from nested hostel object
+        hostelName: booking.hostelName ?? booking.hostel?.name ?? null,
+        hostelId: booking.hostel?.id ?? booking.hostelId ?? null,
+        hostelImage: booking.hostel?.image ?? booking.hostelImage ?? null,
+        // roomTitle and price are preserved from the spread above
+      };
       set((state) => ({
-        bookings: [response.data, ...state.bookings],
-        selectedBooking: response.data,
+        bookings: [transformed, ...state.bookings],
+        selectedBooking: transformed,
         loading: false,
       }));
-      return response.data;
+      return transformed;
     } catch (error: unknown) {
       console.error('Booking creation error:', error);
       if (error instanceof Error) {

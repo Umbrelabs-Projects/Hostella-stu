@@ -5,8 +5,10 @@ import { motion } from "framer-motion";
 import { Booking } from "@/types/bookingStatus";
 import BookingActions from "./BookingActions";
 import BookingStatusBadge from "./BookingStatusBadge";
-import { Calendar, Building2, DoorOpen } from "lucide-react";
+import { Building2, DoorOpen, CheckCircle, Clock, CreditCard } from "lucide-react";
 import { useHostelStore } from "@/store/useHostelStore";
+import StatusMessageBox from "./StatusMessageBox";
+import RoomAllocationInfo from "./RoomAllocationInfo";
 
 interface BookingDetailsProps {
   booking: Booking;
@@ -111,21 +113,18 @@ export default function BookingDetails({
               <BookingStatusBadge status={booking.status} />
             </div>
 
-            <div className="flex items-center text-gray-600 gap-3">
-              <DoorOpen size={18} className="text-gray-500" />
-              <span className="font-medium">{booking.roomTitle}</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-gray-700">
-              <span className="font-semibold">{booking.price}</span>
-            </div>
-
-            {/* Price Display */}
-            <div className="mt-2 border-t border-gray-100 pt-3">
-              <p className="text-sm text-gray-600">Price:</p>
-              <p className="font-bold text-yellow-600 text-xl">
-                GHC {booking.price ? parseFloat(booking.price).toLocaleString() : "N/A"}
-              </p>
+            {/* Room Type and Price on one line */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center text-gray-600 gap-2">
+                <DoorOpen size={18} className="text-gray-500" />
+                <span className="font-medium">{booking.roomTitle || "Room Type"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Price:</span>
+                <span className="font-bold text-yellow-600 text-md">
+                  GHC {booking.price ? parseFloat(booking.price).toLocaleString() : "N/A"}
+                </span>
+              </div>
             </div>
 
             {/* Status-specific information */}
@@ -134,59 +133,54 @@ export default function BookingDetails({
               
               if (normalizedStatus === "room_allocated" || normalizedStatus === "room allocated" || normalizedStatus === "completed") {
                 return (
-                  <div className="flex flex-col gap-3 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    {booking.allocatedRoomNumber && (
-                      <div className="flex items-center gap-2 text-green-800">
-                        <Calendar size={18} className="text-green-600" />
-                        <span className="font-semibold">Room Number:</span>
-                        <span className="text-lg font-bold">{booking.allocatedRoomNumber}</span>
-                      </div>
-                    )}
-                    {booking.date && (
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <Calendar size={18} className="text-gray-500" />
-                        <span className="font-semibold">Booking Date:</span>
-                        <span>{new Date(booking.date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {normalizedStatus === "room_allocated" || normalizedStatus === "room allocated" ? (
-                      <p className="text-sm text-green-700 mt-2">
-                        ✓ Your room has been allocated! Check the move-in instructions below.
-                      </p>
-                    ) : null}
-                  </div>
+                  <RoomAllocationInfo
+                    allocatedRoomNumber={booking.allocatedRoomNumber}
+                    bookingDate={booking.date}
+                    showAllocationMessage={normalizedStatus === "room_allocated" || normalizedStatus === "room allocated"}
+                  />
                 );
               }
 
               if (normalizedStatus === "approved") {
                 return (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>✓ Payment Approved!</strong> Your booking has been confirmed. 
-                      You will be notified when your room is assigned.
-                    </p>
-                  </div>
+                  <StatusMessageBox
+                    icon={CheckCircle}
+                    iconColor="text-blue-600"
+                    bgColor="bg-blue-50"
+                    borderColor="border-blue-200"
+                    textColor="text-blue-800"
+                    title="Payment Approved!"
+                    message="Your booking has been confirmed. You will be notified when your room is assigned."
+                  />
                 );
               }
 
               if (normalizedStatus === "pending approval") {
                 return (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
-                      <strong>⏳ Payment Under Review</strong> Your payment is being verified by the admin. 
-                      You will be notified once it's approved.
-                    </p>
-                  </div>
+                  <StatusMessageBox
+                    icon={Clock}
+                    iconColor="text-yellow-600"
+                    bgColor="bg-yellow-50"
+                    borderColor="border-yellow-200"
+                    textColor="text-yellow-800"
+                    title="Payment Under Review"
+                    message="Your payment is being verified by the admin. You will be notified once it's approved."
+                  />
                 );
               }
 
               if (normalizedStatus === "pending payment") {
                 return (
-                  <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                    <p className="text-sm text-orange-800">
-                      <strong>💳 Payment Required</strong> Please proceed to payment to confirm your booking.
-                    </p>
-                  </div>
+                  <StatusMessageBox
+                    icon={CreditCard}
+                    iconColor="text-orange-600"
+                    bgColor="bg-orange-50"
+                    borderColor="border-orange-200"
+                    textColor="text-orange-800"
+                    title="Payment Required"
+                    message="Please proceed to payment to confirm your booking."
+                    padding="p-3"
+                  />
                 );
               }
 

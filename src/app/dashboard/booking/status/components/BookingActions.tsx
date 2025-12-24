@@ -6,7 +6,7 @@ import { Booking } from "@/types/bookingStatus";
 import { useBookingStore } from "@/store/useBookingStore";
 import { printBookingDetails } from "../../../../../../utils/printBooking";
 import { toast } from "sonner";
-import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw } from "lucide-react";
+import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle } from "lucide-react";
 
 interface BookingActionsProps {
   booking: Booking;
@@ -127,8 +127,11 @@ export default function BookingActions({
       case "approved":
         return (
           <div className="flex flex-col gap-2">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-              <strong>✓ Booking Approved!</strong> Your payment has been verified. Waiting for room assignment.
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800 flex items-center gap-2">
+              <CheckCircle size={18} className="text-green-600" />
+              <span>
+                <strong>Booking Approved!</strong> Your payment has been verified. Waiting for room assignment.
+              </span>
             </div>
           </div>
         );

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Banknote, Smartphone } from "lucide-react";
+import { Banknote, Smartphone, Check } from "lucide-react";
 import { motion } from "framer-motion";
 
 const paymentOptions = [
@@ -51,11 +51,11 @@ export default function PaymentMethodSelector() {
               <Icon />
               <span className="font-medium">{label}</span>
               <div
-                className={`ml-auto w-5 h-5 border border-gray-300 rounded-full flex items-center justify-center text-white text-xs ${
+                className={`ml-auto w-5 h-5 border border-gray-300 rounded-full flex items-center justify-center ${
                   isSelected ? "bg-yellow-500" : "bg-white"
                 }`}
               >
-                {isSelected && "✓"}
+                {isSelected && <Check size={12} className="text-white" />}
               </div>
             </motion.div>
           );

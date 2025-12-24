@@ -7,7 +7,9 @@ export default function BankPayment() {
     <div className="min-h-screen flex flex-col items-center px-4 py-8">
       <div className="flex flex-col md:flex-row items-start justify-center gap-8 w-full max-w-5xl">
         <PaymentMessage />
-        <BankDetails />
+        <div className="w-full md:w-1/2">
+          <BankDetails />
+        </div>
       </div>
     </div>
   );

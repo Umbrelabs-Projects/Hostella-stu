@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import HeaderLeft from "./HeaderLeft";
 import HeaderRight from "./HeaderRight";
 import { useHostelStore } from "@/store/useHostelStore";
+import { useBookingStore } from "@/store/useBookingStore";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -13,11 +14,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const { selectedHostel } = useHostelStore();
+  const { selectedBooking } = useBookingStore();
 
   let title = "Dashboard";
 
-  // Show "Payment" if the path includes "payment"
-  if (segments.includes("success")) {
+  // Show hostel name for payment pages
+  if (segments.includes("payment")) {
+    if (selectedBooking?.hostelName) {
+      title = selectedBooking.hostelName;
+    } else {
+      title = "Payment";
+    }
+  } else if (segments.includes("success")) {
     title = "Booking Successful";
   } else if (segments.includes("rooms") && segments.length > 0) {
     // For rooms page, show hostel name from store

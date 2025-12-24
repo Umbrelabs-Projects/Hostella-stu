@@ -50,8 +50,8 @@ export default function BookingActions({
     if (onProceedPayment) {
       onProceedPayment();
     } else {
-      // Navigate to payment page
-      router.push(`/dashboard/booking/success/${booking.id}`);
+      // Navigate to payment selection page
+      router.push(`/dashboard/payment/select/${booking.id}`);
     }
   };
 

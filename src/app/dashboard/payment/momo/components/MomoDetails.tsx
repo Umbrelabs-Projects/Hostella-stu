@@ -1,29 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
+import { useBookingStore } from "@/store/useBookingStore";
 import PaymentIcons from "./momoDetails/PaymentIcons";
 import PaymentAlert from "./momoDetails/PaymentAlert";
 import NetworkSelect from "./momoDetails/NetworkSelect";
 import MobileInput from "./momoDetails/MobileInput";
 import PayButton from "./momoDetails/PayButton";
 import { validateMobileNumber } from "./validation/validateMobileNumber";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const MomoDetails: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedNetwork, setSelectedNetwork] = useState<string>("MTN");
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [error, setError] = useState<string>("");
 
-  const { extraBookingDetails } = useAuthStore();
+  const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
+  const { selectedBooking } = useBookingStore();
   const { initiatePayment, loading } = usePaymentStore();
   
-  const rawPrice = extraBookingDetails.price || "0";
+  // Get booking ID from query params, selected booking, or extraBookingDetails
+  const bookingIdFromQuery = searchParams?.get("bookingId");
+  const bookingIdFromBooking = selectedBooking?.id;
+  const bookingIdFromExtra = extraBookingDetails.bookingId;
+  
+  // Determine the booking ID to use
+  const bookingIdString = bookingIdFromQuery || bookingIdFromBooking || bookingIdFromExtra || "";
+  const bookingId = bookingIdString ? parseInt(bookingIdString) : 0;
+  
+  // Get price from selected booking or extraBookingDetails
+  const priceFromBooking = selectedBooking?.price;
+  const rawPrice = priceFromBooking || extraBookingDetails.price || "0";
   const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
-  const bookingId = extraBookingDetails.bookingId ? parseInt(extraBookingDetails.bookingId) : 0;
+
+  // Update extraBookingDetails if we have booking ID from query params or selected booking
+  useEffect(() => {
+    if (bookingIdFromQuery || bookingIdFromBooking) {
+      updateExtraBookingDetails({
+        bookingId: bookingIdFromQuery || bookingIdFromBooking || "",
+        price: priceFromBooking || extraBookingDetails.price,
+      });
+    }
+  }, [bookingIdFromQuery, bookingIdFromBooking, priceFromBooking, updateExtraBookingDetails]);
 
   const colorThemes = {
     MTN: {

@@ -192,8 +192,24 @@ export const useBookingStore = create<BookingState>((set) => ({
         loading: false,
       });
     } catch (error: unknown) {
+      let errorMessage = 'Failed to fetch booking';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // If the error message is generic, provide more context
+        if (errorMessage.includes('API error') || errorMessage === 'Failed to fetch booking') {
+          errorMessage = `Booking not found or you don't have permission to view it. Please check the booking ID: ${id}`;
+        }
+      }
+      
+      console.error('Error fetching booking:', {
+        bookingId: id,
+        error,
+        errorMessage,
+      });
+      
       set({
-        error: error instanceof Error ? error.message : 'Failed to fetch booking',
+        error: errorMessage,
         loading: false,
       });
     }

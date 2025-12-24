@@ -150,21 +150,53 @@ export async function apiFetch<T>(
           throw new ApiError(text || `API error: ${res.status}`, res.status);
         }
         
-        console.error('API Error Response:', {
-          status: res.status,
-          statusText: res.statusText,
-          url: `${baseUrl}${endpoint}`,
-          method: options.method || 'GET',
-          requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
-          errorData,
-          errorDataKeys: Object.keys(errorData || {}),
-        });
+        // Only log detailed error if errorData has meaningful content
+        const errorDataKeys = Object.keys(errorData || {});
+        if (errorDataKeys.length > 0 || errorData?.message || errorData?.error) {
+          console.error('API Error Response:', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+            requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
+            errorData,
+            errorDataKeys,
+          });
+        } else {
+          // Log minimal info for empty error responses
+          console.error('API Error Response (empty):', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+          });
+        }
         
         // Handle different error response formats
         // Backend returns: { success: false, status: "fail", message: "...", errors: [{ field, message }], statusCode: 400 }
         let errorMessage = errorData?.message || 
                           errorData?.error || 
-                          `API error: ${res.status} - ${res.statusText}`;
+                          errorData?.statusText;
+        
+        // If no error message in response, provide meaningful message based on status code
+        if (!errorMessage) {
+          switch (res.status) {
+            case 404:
+              errorMessage = 'Resource not found';
+              break;
+            case 403:
+              errorMessage = 'You do not have permission to access this resource';
+              break;
+            case 401:
+              errorMessage = 'Authentication required';
+              break;
+            case 500:
+              errorMessage = 'Internal server error';
+              break;
+            default:
+              errorMessage = `API error: ${res.status} - ${res.statusText}`;
+          }
+        }
         
         // Extract error messages from errors array if available
         if (Array.isArray(errorData?.errors) && errorData.errors.length > 0) {

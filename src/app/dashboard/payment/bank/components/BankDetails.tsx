@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import PdfUploadField from "@/app/(auth)/signup/step3/components/PdfUploadField";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
+import { useBookingStore } from "@/store/useBookingStore";
 
 // Define Zod Schema
 const paymentSchema = z.object({
@@ -26,12 +27,37 @@ const paymentSchema = z.object({
 type PaymentForm = z.infer<typeof paymentSchema>;
 
 export default function BankDetails() {
-  const { extraBookingDetails } = useAuthStore();
-  const { uploadReceipt, currentPayment, loading } = usePaymentStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
+  const { selectedBooking } = useBookingStore();
+  const { uploadReceipt, currentPayment, initiatePayment, loading } = usePaymentStore();
+  
+  // Get booking ID from query params, selected booking, or extraBookingDetails
+  const bookingIdFromQuery = searchParams?.get("bookingId");
+  const bookingIdFromBooking = selectedBooking?.id;
+  const bookingIdFromExtra = extraBookingDetails.bookingId;
+  
+  // Determine the booking ID to use
+  const bookingIdString = bookingIdFromQuery || bookingIdFromBooking || bookingIdFromExtra || "";
+  const bookingId = bookingIdString ? parseInt(bookingIdString) : 0;
+  
+  // Get price from selected booking or extraBookingDetails
+  const priceFromBooking = selectedBooking?.price;
+  const price = priceFromBooking || extraBookingDetails.price || "";
+
+  // Update extraBookingDetails if we have booking ID from query params or selected booking
+  useEffect(() => {
+    if (bookingIdFromQuery || bookingIdFromBooking) {
+      updateExtraBookingDetails({
+        bookingId: bookingIdFromQuery || bookingIdFromBooking || "",
+        price: priceFromBooking || extraBookingDetails.price,
+      });
+    }
+  }, [bookingIdFromQuery, bookingIdFromBooking, priceFromBooking, updateExtraBookingDetails]);
   
   const BankDetails = [
-    { title: "Amount", value: extraBookingDetails.price },
+    { title: "Amount", value: price },
     { title: "Bank Name", value: "Cal Bank" },
     { title: "Account Name", value: "Hostella" },
     { title: "Account Number", value: "000000" },
@@ -49,11 +75,21 @@ export default function BankDetails() {
 
   const onSubmit = async (data: PaymentForm) => {
     try {
-      const paymentId = currentPayment?.id;
+      if (!bookingId) {
+        alert("Booking ID not found. Please try again.");
+        return;
+      }
+
+      // Initiate payment if not already initiated
+      let paymentId = currentPayment?.id;
       
       if (!paymentId) {
-        alert("Payment ID not found. Please try again.");
-        return;
+        const payment = await initiatePayment(bookingId, 'bank');
+        if (!payment || !payment.id) {
+          alert("Failed to initiate payment. Please try again.");
+          return;
+        }
+        paymentId = payment.id;
       }
 
       // Upload receipt to the payment store
@@ -61,6 +97,7 @@ export default function BankDetails() {
       router.push("/dashboard/payment/paymentCompleted");
     } catch (error: unknown) {
       console.error("Receipt upload failed:", error);
+      alert(error instanceof Error ? error.message : "Failed to submit receipt. Please try again.");
     }
   };
 

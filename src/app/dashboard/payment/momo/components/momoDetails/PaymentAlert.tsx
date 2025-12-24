@@ -8,6 +8,7 @@ interface PaymentAlertProps {
   amount: number;
   alertTheme: string;
   alertTextColor: string;
+  paymentReference?: string;
 }
 
 const PaymentAlert: React.FC<PaymentAlertProps> = ({
@@ -15,6 +16,7 @@ const PaymentAlert: React.FC<PaymentAlertProps> = ({
   amount,
   alertTheme,
   alertTextColor,
+  paymentReference,
 }) => {
   return (
     <AnimatePresence mode="wait">
@@ -26,11 +28,19 @@ const PaymentAlert: React.FC<PaymentAlertProps> = ({
         exit={{ opacity: 0, x: 20 }}
         transition={{ duration: 0.4 }}
       >
-        Hostella will deduct{" "}
-        <span className="font-extrabold text-lg">
-          GHC {typeof amount === "number" ? amount : Number(amount)}
-        </span>{" "}
-        from your account.
+        <span className="mb-2">
+          Hostella will deduct{" "}
+          <span className="font-extrabold text-lg">
+            GHC{" "}
+            {typeof amount === "number"
+              ? amount.toLocaleString()
+              : Number(amount).toLocaleString()}
+          </span>{" "}
+          from your account. Make the Reference:
+        </span>
+        {paymentReference && paymentReference !== "N/A" && (
+          <span className="font-bold text-lg"> {paymentReference}</span>
+        )}
       </motion.div>
     </AnimatePresence>
   );

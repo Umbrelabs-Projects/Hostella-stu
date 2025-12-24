@@ -20,9 +20,9 @@ const MomoDetails: React.FC = () => {
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [error, setError] = useState<string>("");
 
-  const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
+  const { extraBookingDetails, updateExtraBookingDetails, user } = useAuthStore();
   const { selectedBooking } = useBookingStore();
-  const { initiatePayment, loading } = usePaymentStore();
+  const { initiatePayment, loading, currentPayment } = usePaymentStore();
   
   // Get booking ID from query params, selected booking, or extraBookingDetails
   const bookingIdFromQuery = searchParams?.get("bookingId");
@@ -37,6 +37,10 @@ const MomoDetails: React.FC = () => {
   const priceFromBooking = selectedBooking?.price;
   const rawPrice = priceFromBooking || extraBookingDetails.price || "0";
   const amount: number = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
+
+  // Get payment reference - student reference number is first priority
+  const studentRefNumber = user?.studentRefNumber || (user as { studentId?: string })?.studentId;
+  const paymentReference = studentRefNumber || currentPayment?.reference || "N/A";
 
   // Update extraBookingDetails if we have booking ID from query params or selected booking
   useEffect(() => {
@@ -109,6 +113,7 @@ const MomoDetails: React.FC = () => {
         amount={amount}
         alertTheme={alertTheme}
         alertTextColor={alertTextColor}
+        paymentReference={paymentReference}
       />
 
       <form

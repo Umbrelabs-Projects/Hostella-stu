@@ -36,7 +36,7 @@ type PaymentForm = z.infer<typeof paymentSchema>;
 export default function BankDetails() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { extraBookingDetails, updateExtraBookingDetails } = useAuthStore();
+  const { extraBookingDetails, updateExtraBookingDetails, user } = useAuthStore();
   const { selectedBooking } = useBookingStore();
   const { uploadReceipt, currentPayment, initiatePayment, loading } = usePaymentStore();
   
@@ -70,9 +70,10 @@ export default function BankDetails() {
     }
   }, [bookingId, currentPayment, loading, initiatePayment]);
 
-  // Get payment reference from currentPayment, formatted bookingId, or fallback to CUID id
-  const formattedBookingId = selectedBooking?.bookingId;
-  const paymentReference = currentPayment?.reference || formattedBookingId || bookingIdString || "N/A";
+  // Get payment reference - student reference number is first priority
+  // Get from user object (same as profile settings page)
+  const studentRefNumber = user?.studentRefNumber || (user as { studentId?: string })?.studentId;
+  const paymentReference = studentRefNumber || currentPayment?.reference || "N/A";
   
   const BankDetails = [
     { title: "Amount", value: price },

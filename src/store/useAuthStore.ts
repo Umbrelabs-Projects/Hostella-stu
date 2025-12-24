@@ -36,6 +36,7 @@ export interface User {
   gender?: "MALE" | "FEMALE" | "OTHER";
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  role?: string;
   // University Information
   campus?: string;
   programme?: string;
@@ -357,6 +358,11 @@ export const useAuthStore = create<AuthState>()(
           
           if (!user || !token) {
             throw new Error("Invalid response format from login endpoint");
+          }
+          
+          // Check if user role is STUDENT - deny access if role is not STUDENT
+          if (!user.role || user.role !== "STUDENT") {
+            throw new Error("Access denied. Only students can sign in.");
           }
           
           setAuthToken(token);

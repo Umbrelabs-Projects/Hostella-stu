@@ -1,8 +1,6 @@
 // Service Worker for Hostella PWA
 const CACHE_NAME = 'hostella-v1';
 const RUNTIME_CACHE = 'hostella-runtime-v1';
-const CACHE_VERSION = 'v1';
-const MAX_CACHE_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Assets to cache on install (static assets only)
 const STATIC_ASSETS = [

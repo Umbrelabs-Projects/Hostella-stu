@@ -75,7 +75,6 @@ export const EmergencyDetails = () => {
       }
     };
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchProfile]);
 
   // Update legacy contact form when user data changes

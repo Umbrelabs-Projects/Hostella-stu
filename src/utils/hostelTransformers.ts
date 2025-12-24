@@ -6,6 +6,8 @@ export interface BackendHostelImage {
   hostelId: string;
 }
 
+import { RoomType } from '@/types/api';
+
 export interface BackendHostel {
   id: string;
   name: string;
@@ -20,6 +22,11 @@ export interface BackendHostel {
     status: string;
   }>;
   totalRooms?: number;
+  singleRooms?: number;
+  doubleRooms?: number;
+  noOfFloors?: string;
+  phoneNumber?: string;
+  roomTypes?: RoomType[];
   createdAt: string;
 }
 
@@ -60,9 +67,15 @@ export function transformHostel(backendHostel: BackendHostel): FrontendHostel {
     image,
     images,
     amenities: backendHostel.facilities || [], // Map facilities to amenities
+    facilities: backendHostel.facilities || [],
     priceRange,
     availableRooms,
     totalRooms: backendHostel.totalRooms || backendHostel.rooms?.length || 0,
+    singleRooms: backendHostel.singleRooms,
+    doubleRooms: backendHostel.doubleRooms,
+    noOfFloors: backendHostel.noOfFloors,
+    phoneNumber: backendHostel.phoneNumber,
+    roomTypes: backendHostel.roomTypes,
     createdAt: backendHostel.createdAt,
   };
 }
@@ -121,15 +134,25 @@ export function needsTransformation(response: unknown): response is {
 
 /**
  * Transform single hostel response
+ * Handles both nested { data: { hostel: ... } } and direct { data: ... } structures
  */
 export function transformHostelResponse(backendResponse: {
   success: boolean;
   data: {
-    hostel: BackendHostel;
-  };
+    hostel?: BackendHostel;
+  } | BackendHostel;
 }) {
+  // Check if data has nested hostel structure
+  const hostelData = 'hostel' in backendResponse.data 
+    ? backendResponse.data.hostel 
+    : backendResponse.data as BackendHostel;
+  
+  if (!hostelData) {
+    throw new Error('Hostel data not found in response');
+  }
+
   return {
     success: backendResponse.success,
-    data: transformHostel(backendResponse.data.hostel),
+    data: transformHostel(hostelData),
   };
 }

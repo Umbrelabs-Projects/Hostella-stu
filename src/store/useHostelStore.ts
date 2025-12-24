@@ -67,8 +67,10 @@ export const useHostelStore = create<HostelState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await hostelApi.getById(id);
+      // Handle nested structure: response.data.hostel or response.data
+      const hostel = (response.data as { hostel?: typeof response.data })?.hostel || response.data;
       set({
-        selectedHostel: response.data,
+        selectedHostel: hostel,
         loading: false,
       });
     } catch (error: unknown) {

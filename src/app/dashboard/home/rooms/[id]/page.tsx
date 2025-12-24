@@ -1,23 +1,57 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { images } from "@/lib/images";
 import RoomBanner from "../components/RoomBanner";
 import { useParams } from "next/navigation";
-import { hostelsData } from "@/lib/constants";
+import { useHostelStore } from "@/store/useHostelStore";
 import RoomList from "../components/RoomList";
+import { SkeletonBanner } from "@/components/ui/skeleton";
 
 export default function Room() {
   const { id } = useParams();
-  const hostel = hostelsData.find((h) => h.id === Number(id));
+  const hostelId = id as string;
+  const { selectedHostel, loading, error, fetchHostelById } = useHostelStore();
 
-  if (!hostel) {
-    return <p className="text-center text-gray-500 mt-10">Hostel not found</p>;
+  useEffect(() => {
+    if (hostelId) {
+      fetchHostelById(hostelId);
+    }
+  }, [hostelId, fetchHostelById]);
+
+  // Silently retry on error
+  useEffect(() => {
+    if (hostelId && error && !loading) {
+      const retryTimer = setTimeout(() => {
+        fetchHostelById(hostelId);
+      }, 2000); // Retry after 2 seconds
+      return () => clearTimeout(retryTimer);
+    }
+  }, [hostelId, error, loading, fetchHostelById]);
+
+  // Show loading skeleton while loading or if no data yet
+  if (loading || !selectedHostel) {
+    return (
+      <div className="md:mx-[5%]">
+        <SkeletonBanner />
+        <RoomList />
+      </div>
+    );
+  }
+
+  // If there's an error, show loading skeleton (will retry automatically)
+  if (error) {
+    return (
+      <div className="md:mx-[5%]">
+        <SkeletonBanner />
+        <RoomList />
+      </div>
+    );
   }
 
   return (
     <div className="md:mx-[5%]">
       <RoomBanner
-        heading={`Explore rooms of ${hostel.name}`}
+        heading={`Explore rooms of ${selectedHostel.name}`}
         paragraph="Choose a room type"
         image={images.roomBanner}
       />

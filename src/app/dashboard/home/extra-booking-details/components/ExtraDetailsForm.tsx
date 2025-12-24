@@ -10,11 +10,13 @@ import { motion, AnimatePresence } from "framer-motion";
 interface ExtraDetailsFormProps {
   onSubmit: (data: ExtraDetailsFormValues) => void;
   defaultValues?: Partial<ExtraDetailsFormValues>;
+  loading?: boolean;
 }
 
 export default function ExtraDetailsForm({
   onSubmit,
   defaultValues,
+  loading = false,
 }: ExtraDetailsFormProps) {
   const {
     register,
@@ -118,7 +120,7 @@ export default function ExtraDetailsForm({
         )}
       </AnimatePresence>
 
-      <SubmitButton />
+      <SubmitButton loading={loading} />
     </motion.form>
   );
 }

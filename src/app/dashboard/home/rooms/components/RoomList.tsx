@@ -1,19 +1,37 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import SearchBar from "../../components/SearchBar";
-import RoomCard from "./RoomCard";
-import { roomsData } from "@/lib/constants";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useHostelStore } from "@/store/useHostelStore";
+import RoomTypeCard from "./RoomTypeCard";
+import { SkeletonRoomTypeGrid } from "@/components/ui/skeleton";
 
 export default function RoomList() {
-  const [query, setQuery] = useState("");
+  const params = useParams();
   const router = useRouter();
+  const hostelId = params?.id as string;
+  const { selectedHostel, loading, error } = useHostelStore();
 
-  const filteredRooms = roomsData.filter((room) =>
-    room.title.toLowerCase().includes(query.toLowerCase())
-  );
+  const handleBook = (roomType: 'SINGLE' | 'DOUBLE') => {
+    router.push(`/dashboard/home/extra-booking-details/${hostelId}?type=${roomType}`);
+  };
+
+  // Show loading skeleton while loading or if no data yet
+  // Use regular section to avoid hydration issues with motion components
+  if (loading || !selectedHostel || error) {
+    return (
+      <section className="min-h-screen py-12 px-4 md:px-8 flex flex-col items-center">
+        <SkeletonRoomTypeGrid count={2} />
+      </section>
+    );
+  }
+
+  // Get room types from hostel data
+  const roomTypes = selectedHostel.roomTypes || [];
+  
+  // Find One-in-one and Two-in-one room types
+  const oneInOne = roomTypes.find(rt => rt.type === 'One-in-one' || rt.title === 'One-in-one');
+  const twoInOne = roomTypes.find(rt => rt.type === 'Two-in-one' || rt.title === 'Two-in-one');
 
   return (
     <motion.section
@@ -22,16 +40,6 @@ export default function RoomList() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Search */}
-      <motion.div
-        className="w-full max-w-3xl mb-8"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <SearchBar value={query} onChange={setQuery} />
-      </motion.div>
-
       {/* Rooms Grid */}
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-6xl"
@@ -43,39 +51,33 @@ export default function RoomList() {
         animate="visible"
       >
         <AnimatePresence>
-          {filteredRooms.length > 0 ? (
-            filteredRooms.map((room) => (
-              <motion.div
-                key={room.id}
-                initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 40 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <RoomCard
-                  image={room.image}
-                  title={room.title}
-                  price={room.price}
-                  description={room.description}
-                  available={room.available}
-                  onBook={() =>
-                    router.push(
-                      `/dashboard/home/extra-booking-details/${room.id}`
-                    )
-                  }
-                />
-              </motion.div>
-            ))
-          ) : (
-            <motion.p
-              className="text-gray-500 text-center col-span-full"
+          {oneInOne && (
+            <RoomTypeCard
+              key="one-in-one"
+              roomType="SINGLE"
+              roomTypeData={oneInOne}
+              onBook={handleBook}
+            />
+          )}
+          {twoInOne && (
+            <RoomTypeCard
+              key="two-in-one"
+              roomType="DOUBLE"
+              roomTypeData={twoInOne}
+              onBook={handleBook}
+            />
+          )}
+          {!oneInOne && !twoInOne && (
+            <motion.div
+              key="no-rooms"
+              className="text-center col-span-full py-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4 }}
             >
-              No rooms found matching “{query}”
-            </motion.p>
+              <p className="text-gray-500 text-lg mb-2">No rooms available</p>
+              <p className="text-gray-400 text-sm">This hostel doesn&apos;t have any rooms listed yet.</p>
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>

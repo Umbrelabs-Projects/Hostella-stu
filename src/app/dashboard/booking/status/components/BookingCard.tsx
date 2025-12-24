@@ -1,10 +1,11 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Booking } from "@/types/bookingStatus";
 import BookingStatusBadge from "./BookingStatusBadge";
 import { Calendar, Building2, DoorOpen } from "lucide-react";
+import { useHostelStore } from "@/store/useHostelStore";
 
 interface BookingCardProps {
   booking: Booking;
@@ -15,6 +16,87 @@ export default function BookingCard({
   booking,
   onViewDetails,
 }: BookingCardProps) {
+  const [hostelImage, setHostelImage] = useState<string | null>(null);
+  const { hostels, fetchHostels, fetchHostelById, selectedHostel } = useHostelStore();
+
+  // Debug: Log booking data to see what we're receiving
+  React.useEffect(() => {
+    console.log('BookingCard - Booking data:', {
+      id: booking.id,
+      bookingId: booking.bookingId,
+      hostelName: booking.hostelName,
+      roomTitle: booking.roomTitle,
+      price: booking.price,
+      status: booking.status,
+      hasRoomTitle: 'roomTitle' in booking,
+      hasPrice: 'price' in booking,
+      roomTitleType: typeof booking.roomTitle,
+      priceType: typeof booking.price,
+      fullBooking: booking,
+    });
+  }, [booking]);
+
+  // Fetch hostel image
+  useEffect(() => {
+    const getHostelImage = async () => {
+      // Priority 1: Use hostelImage if available
+      if (booking.hostelImage) {
+        setHostelImage(booking.hostelImage);
+        return;
+      }
+
+      // Priority 2: Fetch by hostelId if available
+      if (booking.hostelId) {
+        try {
+          await fetchHostelById(booking.hostelId);
+          return; // Will be handled by the second useEffect
+        } catch (error) {
+          console.error("Error fetching hostel by ID:", error);
+        }
+      }
+
+      // Priority 3: Find in existing hostels list by name
+      if (booking.hostelName && hostels.length > 0) {
+        const hostel = hostels.find(h => 
+          h.name.toLowerCase() === booking.hostelName?.toLowerCase()
+        );
+        if (hostel?.image) {
+          setHostelImage(hostel.image);
+          return;
+        }
+      }
+
+      // Priority 4: Fetch all hostels and search by name (only if not found)
+      if (booking.hostelName && hostels.length === 0) {
+        try {
+          await fetchHostels();
+          // Will be handled by the second useEffect after hostels are loaded
+        } catch (error) {
+          console.error("Error fetching hostels:", error);
+        }
+      }
+    };
+
+    getHostelImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking.hostelName, booking.hostelId, booking.hostelImage, fetchHostels, fetchHostelById, hostels.length]);
+
+  // Update image when selectedHostel or hostels list changes
+  useEffect(() => {
+    if (booking.hostelId && selectedHostel?.id === booking.hostelId && selectedHostel.image) {
+      setHostelImage(selectedHostel.image);
+    } else if (booking.hostelName && hostels.length > 0 && !hostelImage) {
+      const hostel = hostels.find(h => 
+        h.name.toLowerCase() === booking.hostelName?.toLowerCase()
+      );
+      if (hostel?.image) {
+        setHostelImage(hostel.image);
+      }
+    }
+  }, [selectedHostel, hostels, booking.hostelId, booking.hostelName, hostelImage]);
+
+  const imageSrc = hostelImage || "/placeholder.jpg";
+
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
@@ -23,13 +105,14 @@ export default function BookingCard({
       className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 group"
     >
       {/* Image Section */}
-      <div className="relative h-48 w-full overflow-hidden">
+      <div className="relative h-48 w-full overflow-hidden bg-gray-200">
         <Image
-          src={booking.hostelImage || "/placeholder.jpg"}
+          src={imageSrc}
           alt={booking.hostelName || "Hostel"}
           width={400}
           height={200}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={() => setHostelImage("/placeholder.jpg")}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
@@ -41,31 +124,45 @@ export default function BookingCard({
 
       {/* Content Section */}
       <div className="p-5 space-y-2">
+        {/* Hostel Name */}
         <h2 className="font-semibold text-xl text-gray-900 flex items-center gap-2">
           <Building2 size={18} className="text-blue-600" />
-          {booking.hostelName}
+          {booking.hostelName || "Hostel Name"}
         </h2>
 
-        <div className="flex items-center text-sm text-gray-600 gap-2">
+        {/* Room Type */}
+        <div className="flex items-center text-sm text-gray-700 gap-2">
           <DoorOpen size={16} className="text-gray-500" />
-          {booking.roomTitle}
+          <span className="font-medium">
+            {booking.roomTitle && booking.roomTitle.trim() !== '' 
+              ? booking.roomTitle 
+              : "Room Type"}
+          </span>
         </div>
 
-        {booking.status != "room allocated" ? (
-          <p className="mt-2 font-bold text-yellow-600 text-lg">
-            {booking.price}
+        {/* Price - Always show */}
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <span className="text-sm text-gray-600">Price:</span>
+          <p className="font-bold text-yellow-600 text-lg">
+            {booking.price && booking.price.trim() !== '' 
+              ? `GHC ${parseFloat(booking.price).toLocaleString()}` 
+              : "N/A"}
           </p>
-        ) : (
-          <p className="mt-2 font-bold text-blue-700 text-lg"></p>
-        )}
+        </div>
 
-        {/* Extra Info (if room allocated) */}
-        {booking.status === "room allocated" && (
-          <div className="text-sm text-gray-700 flex items-center gap-2 mt-1">
-            <Calendar size={16} className="text-green-600" />
-            Arrival: <span className="font-medium">{booking.arrivalDate}</span>
-          </div>
-        )}
+        {/* Extra Info (if room allocated or completed) */}
+        {(() => {
+          const normalizedStatus = booking.status.toLowerCase().replace(/_/g, ' ');
+          if ((normalizedStatus === "room allocated" || normalizedStatus === "room_allocated" || normalizedStatus === "completed") && booking.allocatedRoomNumber) {
+            return (
+              <div className="text-sm text-gray-700 flex items-center gap-2 mt-1 bg-green-50 px-3 py-2 rounded-lg">
+                <Calendar size={16} className="text-green-600" />
+                <span>Room Number: <span className="font-semibold">{booking.allocatedRoomNumber}</span></span>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {/* Button */}
         <div className="pt-4">

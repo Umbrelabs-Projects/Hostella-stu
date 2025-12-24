@@ -3,7 +3,8 @@
 import { usePathname } from "next/navigation";
 import HeaderLeft from "./HeaderLeft";
 import HeaderRight from "./HeaderRight";
-import { roomsData, hostelsData } from "@/lib/constants";
+import { useHostelStore } from "@/store/useHostelStore";
+import { useBookingStore } from "@/store/useBookingStore";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -12,39 +13,45 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
+  const { selectedHostel } = useHostelStore();
+  const { selectedBooking } = useBookingStore();
 
   let title = "Dashboard";
 
-  // Show "Payment" if the path includes "payment"
-  if (segments.includes("success")) {
+  // Show hostel name for payment pages
+  if (segments.includes("payment")) {
+    if (selectedBooking?.hostelName) {
+      title = selectedBooking.hostelName;
+    } else {
+      title = "Payment";
+    }
+  } else if (segments.includes("success")) {
     title = "Booking Successful";
+  } else if (segments.includes("rooms") && segments.length > 0) {
+    // For rooms page, show hostel name from store
+    if (selectedHostel) {
+      title = selectedHostel.name;
+    } else {
+      // Fallback if hostel not loaded yet
+      title = "Rooms";
+    }
+  } else if (segments.includes("extra-booking-details") && segments.length > 0) {
+    // For extra-booking-details page, show hostel name from store
+    if (selectedHostel) {
+      title = selectedHostel.name;
+    } else {
+      // Fallback if hostel not loaded yet
+      title = "Booking Details";
+    }
   } else if (segments.length > 0) {
     const lastSegment = segments[segments.length - 1];
-
+    
+    // Handle numeric IDs (legacy support)
     if (/^\d+$/.test(lastSegment)) {
       const id = Number(lastSegment);
-      const room = roomsData.find((r) => r.id === id);
-
-      if (segments.includes("extra-booking-details")) {
-        // Show hostel name + room title
-        if (room) {
-          const hostel = hostelsData.find((h) => h.id === room.id);
-          title = hostel ? `${hostel.name} • ${room.title}` : room.title;
-        } else {
-          title = `ID: ${id}`;
-        }
-      } else if (segments.includes("rooms")) {
-        // Show only hostel name
-        if (room) {
-          const hostel = hostelsData.find((h) => h.id === room.id);
-          title = hostel ? hostel.name : `Room ID: ${id}`;
-        } else {
-          title = `Room ID: ${id}`;
-        }
-      } else {
-        title = room ? room.title : `ID: ${id}`;
-      }
+      title = `ID: ${id}`;
     } else {
+      // Capitalize first letter of segment
       title = lastSegment.replace(/^\w/, (c) => c.toUpperCase());
     }
   }

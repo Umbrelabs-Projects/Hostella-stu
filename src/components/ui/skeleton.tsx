@@ -176,4 +176,50 @@ export function SkeletonHeroCarousel() {
   );
 }
 
+export function SkeletonRoomTypeCard() {
+  return (
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col w-full">
+      {/* Image skeleton */}
+      <Skeleton className="w-full h-64 md:h-72 lg:h-80" />
+      
+      {/* Content skeleton */}
+      <div className="flex flex-col flex-1 p-6 space-y-4">
+        {/* Title and price */}
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-5 w-24" />
+        </div>
+        
+        {/* Description */}
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        
+        {/* Availability badge */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-28 rounded-full" />
+        </div>
+        
+        {/* Capacity and total rooms */}
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        
+        {/* Button */}
+        <Skeleton className="h-12 w-full mt-auto rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+export function SkeletonRoomTypeGrid({ count = 2 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-6xl">
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonRoomTypeCard key={i} />
+      ))}
+    </div>
+  );
+}
+
 export { Skeleton };

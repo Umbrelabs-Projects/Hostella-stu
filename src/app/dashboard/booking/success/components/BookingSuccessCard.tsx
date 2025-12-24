@@ -29,7 +29,7 @@ export default function BookingSuccessCard() {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-2xl md:text-3xl font-bold text-yellow-400"
           >
-            Booking Confirmed Successfully!
+            Complete Your Payment
           </motion.h1>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
@@ -37,8 +37,8 @@ export default function BookingSuccessCard() {
             transition={{ delay: 0.7, duration: 0.6 }}
             className="text-white mt-3 md:mt-6 text-sm"
           >
-            Thank you for choosing Hostella! Your reservation is confirmed.
-            Make payment within 24 hours to secure your room.
+            Choose your preferred payment method below to complete your booking.
+            Your room will be secured once payment is confirmed.
           </motion.p>
         </motion.div>
       </div>

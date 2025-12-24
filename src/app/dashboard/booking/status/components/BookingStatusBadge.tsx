@@ -1,18 +1,66 @@
 import React from "react";
 
-
 export default function BookingStatusBadge({ status }: { status: string }) {
   const base = "px-3 py-1 text-xs font-semibold rounded-full shadow-sm";
-  const color =
-    {
-      "pending payment": "bg-yellow-100 text-yellow-800",
-      "pending approval": "bg-orange-100 text-orange-800",
-      "room allocated": "bg-green-100 text-green-800",
-    }[status.toLowerCase()] || "bg-gray-100 text-gray-700";
+  const normalizedStatus = status.toLowerCase().replace(/_/g, ' ');
+  
+  const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+    "pending payment": {
+      bg: "bg-yellow-100",
+      text: "text-yellow-800",
+      label: "Pending Payment"
+    },
+    "pending approval": {
+      bg: "bg-blue-100",
+      text: "text-blue-800",
+      label: "Pending Approval"
+    },
+    "approved": {
+      bg: "bg-green-100",
+      text: "text-green-800",
+      label: "Approved"
+    },
+    "room allocated": {
+      bg: "bg-green-100",
+      text: "text-green-800",
+      label: "Room Allocated"
+    },
+    "room_allocated": {
+      bg: "bg-green-100",
+      text: "text-green-800",
+      label: "Room Allocated"
+    },
+    "completed": {
+      bg: "bg-gray-100",
+      text: "text-gray-800",
+      label: "Completed"
+    },
+    "cancelled": {
+      bg: "bg-red-100",
+      text: "text-red-800",
+      label: "Cancelled"
+    },
+    "rejected": {
+      bg: "bg-red-100",
+      text: "text-red-800",
+      label: "Rejected"
+    },
+    "expired": {
+      bg: "bg-orange-100",
+      text: "text-orange-800",
+      label: "Expired"
+    },
+  };
+
+  const config = statusConfig[normalizedStatus] || {
+    bg: "bg-gray-100",
+    text: "text-gray-700",
+    label: status
+  };
 
   return (
-    <span className={`${base} ${color} backdrop-blur-md`}>
-      {status.toUpperCase()}
+    <span className={`${base} ${config.bg} ${config.text} backdrop-blur-md`}>
+      {config.label}
     </span>
   );
 }

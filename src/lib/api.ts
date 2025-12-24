@@ -11,7 +11,8 @@ import {
   ChatMessage,
   Service,
   ContactMessage,
-  CreateBookingData
+  CreateBookingData,
+  UserBookingsResponse
 } from '@/types/api';
 import { User } from '@/store/useAuthStore';
 import { Notification } from '@/types/notifications';
@@ -128,16 +129,122 @@ export async function apiFetch<T>(
     const isJson = contentType?.includes('application/json');
 
     if (!res.ok) {
+      // Clone response to read it without consuming the stream
+      const responseClone = res.clone();
+      
       if (isJson) {
-        const errorData = await res.json();
+        let errorData;
+        try {
+          errorData = await res.json();
+        } catch {
+          // If JSON parsing fails, try to get text
+          const text = await responseClone.text();
+          console.error('API Error - JSON parse failed, got text:', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+            requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
+            text,
+          });
+          throw new ApiError(text || `API error: ${res.status}`, res.status);
+        }
+        
+        // Only log detailed error if errorData has meaningful content
+        const errorDataKeys = Object.keys(errorData || {});
+        if (errorDataKeys.length > 0 || errorData?.message || errorData?.error) {
+          console.error('API Error Response:', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+            requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
+            errorData,
+            errorDataKeys,
+          });
+        } else {
+          // Log minimal info for empty error responses
+          console.error('API Error Response (empty):', {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+          });
+        }
+        
+        // Handle different error response formats
+        // Backend returns: { success: false, status: "fail", message: "...", errors: [{ field, message }], statusCode: 400 }
+        let errorMessage = errorData?.message || 
+                          errorData?.error || 
+                          errorData?.statusText;
+        
+        // If no error message in response, provide meaningful message based on status code
+        if (!errorMessage) {
+          switch (res.status) {
+            case 404:
+              errorMessage = 'Resource not found';
+              break;
+            case 403:
+              errorMessage = 'You do not have permission to access this resource';
+              break;
+            case 401:
+              errorMessage = 'Authentication required';
+              break;
+            case 500:
+              errorMessage = 'Internal server error';
+              break;
+            default:
+              errorMessage = `API error: ${res.status} - ${res.statusText}`;
+          }
+        }
+        
+        // Extract error messages from errors array if available
+        if (Array.isArray(errorData?.errors) && errorData.errors.length > 0) {
+          const errorMessages = errorData.errors.map((e: { field?: string; message: string }) => 
+            e.message || `${e.field}: ${e.message}`
+          );
+          errorMessage = errorMessages.join(', ');
+        } else if (typeof errorData?.errors === 'object' && errorData.errors !== null) {
+          // Handle object format errors
+          const errorMessages = Object.entries(errorData.errors).map(([field, messages]) => {
+            const msgArray = Array.isArray(messages) ? messages : [messages];
+            return `${field}: ${msgArray.join(', ')}`;
+          });
+          errorMessage = errorMessages.join('; ');
+        }
+        
+        // Convert errors array to the format expected by ApiError
+        let errorDetails: Record<string, string[]> | undefined;
+        if (Array.isArray(errorData?.errors)) {
+          errorDetails = {};
+          errorData.errors.forEach((e: { field?: string; message: string }) => {
+            const field = e.field || 'general';
+            if (!errorDetails![field]) {
+              errorDetails![field] = [];
+            }
+            errorDetails![field].push(e.message);
+          });
+        } else if (errorData?.errors && typeof errorData.errors === 'object') {
+          errorDetails = errorData.errors as Record<string, string[]>;
+        }
+        
         throw new ApiError(
-          errorData.message || `API error: ${res.status}`,
+          errorMessage,
           res.status,
-          errorData.errors
+          errorDetails
         );
       } else {
         const text = await res.text();
-        throw new ApiError(text || `API error: ${res.status}`, res.status);
+        console.error('API Error Response (non-JSON):', {
+          status: res.status,
+          statusText: res.statusText,
+          url: `${baseUrl}${endpoint}`,
+          method: options.method || 'GET',
+          requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
+          text,
+          textLength: text?.length,
+        });
+        throw new ApiError(text || `API error: ${res.status} - ${res.statusText}`, res.status);
       }
     }
 
@@ -258,8 +365,8 @@ interface BackendHostelListResponse {
 interface BackendHostelSingleResponse {
   success: boolean;
   data: {
-    hostel: BackendHostel;
-  };
+    hostel?: BackendHostel;
+  } | BackendHostel;
 }
 
 export const hostelApi = {
@@ -310,12 +417,12 @@ export const hostelApi = {
 // ROOM API ENDPOINTS
 // ============================================
 export const roomApi = {
-  getByHostelId: (hostelId: number) =>
+  getByHostelId: (hostelId: string) =>
     apiFetch<ApiResponse<Room[]>>(`/hostels/${hostelId}/rooms`),
 
-  getById: (id: number) => apiFetch<ApiResponse<Room>>(`/rooms/${id}`),
+  getById: (id: string) => apiFetch<ApiResponse<Room>>(`/rooms/${id}`),
 
-  checkAvailability: (roomId: number, startDate: string, endDate: string) =>
+  checkAvailability: (roomId: string, startDate: string, endDate: string) =>
     apiFetch<ApiResponse<{ available: boolean; availableCount: number }>>(
       `/rooms/${roomId}/availability?startDate=${startDate}&endDate=${endDate}`
     ),
@@ -336,21 +443,24 @@ export const bookingApi = {
       `/bookings?${buildQueryString(params)}`
     ),
 
-  getById: (id: number) => apiFetch<ApiResponse<Booking>>(`/bookings/${id}`),
+  getById: (id: string) => apiFetch<ApiResponse<Booking>>(`/bookings/${id}`),
 
-  update: (id: number, data: Partial<Booking>) =>
+  update: (id: string, data: Partial<Booking>) =>
     apiFetch<ApiResponse<Booking>>(`/bookings/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
-  cancel: (id: number, reason?: string) =>
-    apiFetch<ApiResponse<{ message: string }>>(`/bookings/${id}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
+  cancel: (id: string, reason?: string) =>
+    apiFetch<ApiResponse<{ booking: Booking }>>(`/bookings/${id}/cancel`, {
+      method: 'DELETE',
+      body: reason ? JSON.stringify({ reason }) : undefined,
     }),
 
-  getUserBookings: () => apiFetch<ApiResponse<Booking[]>>('/bookings/my-bookings'),
+  getUserBookings: (params?: { page?: number; limit?: number; status?: string }) => {
+    const queryString = params ? `?${buildQueryString(params)}` : '';
+    return apiFetch<UserBookingsResponse>(`/bookings/my-bookings${queryString}`);
+  },
 };
 
 // ============================================

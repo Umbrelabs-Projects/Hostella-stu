@@ -12,12 +12,13 @@ export default function PaymentMessage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      <div className="relative h-72 md:h-[30rem]">
+      <div className="relative h-72 md:h-[30rem] w-full">
         <Image
           src={images.bookingSuccessful}
           alt="Booking success"
           fill
           className="object-cover"
+          style={{ objectFit: 'cover', objectPosition: 'center' }}
         />
 
         {/* Overlay Content */}

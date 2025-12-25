@@ -53,15 +53,12 @@ export default function BookingActions({
     }
   }, [booking.id, fetchPaymentsByBookingId]);
 
-  const handleCancel = async () => {
-    if (!showCancelConfirm) {
-      setShowCancelConfirm(true);
-      return;
-    }
-
+  const handleCancelConfirm = async () => {
     try {
       await cancelBooking(booking.id, cancelReason || undefined);
       toast.success("Booking cancelled successfully");
+      setShowCancelConfirm(false);
+      setCancelReason("");
       if (onCancelSuccess) {
         onCancelSuccess();
       } else {
@@ -225,42 +222,56 @@ export default function BookingActions({
               Proceed to Payment
             </button>
 
-            {!showCancelConfirm ? (
-              <button
-                onClick={handleCancel}
-                disabled={loading}
-                className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-              >
-                <AlertCircle size={18} />
-                Cancel Booking
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Reason (optional)"
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
+            <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+              <DialogTrigger asChild>
                 <button
-                  onClick={handleCancel}
                   disabled={loading}
-                  className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+                  className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
                 >
-                  {loading ? "Cancelling..." : "Confirm"}
+                  <AlertCircle size={18} />
+                  Cancel Booking
                 </button>
-                <button
-                  onClick={() => {
-                    setShowCancelConfirm(false);
-                    setCancelReason("");
-                  }}
-                  className="bg-gray-500 cursor-pointer hover:bg-gray-600 text-white px-5 py-2 rounded-lg transition-all duration-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Cancel Booking</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to cancel this booking? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason (optional)
+                  </label>
+                  <input
+                    id="cancel-reason"
+                    type="text"
+                    placeholder="Enter cancellation reason (optional)"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <DialogFooter className="mt-6">
+                  <button
+                    onClick={() => {
+                      setShowCancelConfirm(false);
+                      setCancelReason("");
+                    }}
+                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCancelConfirm}
+                    disabled={loading}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Cancelling..." : "Confirm"}
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         );
 

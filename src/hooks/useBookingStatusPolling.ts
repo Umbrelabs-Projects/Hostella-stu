@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { bookingApi } from '@/lib/api';
 
 /**
  * Hook for polling booking status in real-time

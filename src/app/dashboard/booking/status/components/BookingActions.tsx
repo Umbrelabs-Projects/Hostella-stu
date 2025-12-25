@@ -7,7 +7,7 @@ import { useBookingStore } from "@/store/useBookingStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import MoveInInstructions from "./MoveInInstructions";
 import { toast } from "sonner";
-import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle, Trash2, DollarSign, Calendar, ExternalLink } from "lucide-react";
+import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle, Trash2, DollarSign, Calendar, ExternalLink, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import PaymentStatusBadge from "@/app/dashboard/payment/components/PaymentStatusBadge";
 import {
@@ -44,6 +44,8 @@ export default function BookingActions({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
 
   // Note: Payment is already fetched by BookingDetails component
   // We just use the currentPayment from the store to avoid duplicate API calls
@@ -69,8 +71,14 @@ export default function BookingActions({
       onProceedPayment();
     } else {
       // Navigate to payment selection page
+      setNavigatingTo('payment');
       router.push(`/dashboard/payment/select/${booking.id}`);
     }
+  };
+
+  const handleNavigate = (path: string, key: string) => {
+    setNavigatingTo(key);
+    router.push(path);
   };
 
   const handleDeleteClick = () => {
@@ -198,10 +206,20 @@ export default function BookingActions({
           return (
             <button
               onClick={handleProceedPayment}
-              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              disabled={navigatingTo === 'payment'}
+              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <FileText size={18} />
-              View Payment
+              {navigatingTo === 'payment' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  View Payment
+                </>
+              )}
             </button>
           );
         }
@@ -211,10 +229,20 @@ export default function BookingActions({
           <>
             <button
               onClick={handleProceedPayment}
-              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              disabled={navigatingTo === 'payment'}
+              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <FileText size={18} />
-              Proceed to Payment
+              {navigatingTo === 'payment' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  Proceed to Payment
+                </>
+              )}
             </button>
 
             <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
@@ -274,11 +302,21 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => router.push(`/dashboard/booking/receipt/${booking.id}`)}
-              className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={() => handleNavigate(`/dashboard/booking/receipt/${booking.id}`, 'receipt')}
+              disabled={navigatingTo === 'receipt'}
+              className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <FileText size={18} />
-              View Receipt
+              {navigatingTo === 'receipt' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  View Receipt
+                </>
+              )}
             </button>
             <span className="text-sm text-gray-500 italic">Payment under review - cannot cancel</span>
           </>
@@ -287,11 +325,21 @@ export default function BookingActions({
       case "approved":
         return (
           <button
-            onClick={() => router.push(`/dashboard/booking/receipt/${booking.id}`)}
-            className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+            onClick={() => handleNavigate(`/dashboard/booking/receipt/${booking.id}`, 'receipt')}
+            disabled={navigatingTo === 'receipt'}
+            className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
-            <FileText size={18} />
-            View Receipt
+            {navigatingTo === 'receipt' ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <FileText size={18} />
+                View Receipt
+              </>
+            )}
           </button>
         );
 
@@ -300,13 +348,23 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => router.push(`/dashboard/booking/room-details/${booking.id}`)}
-              className="bg-green-600 cursor-pointer hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={() => handleNavigate(`/dashboard/booking/room-details/${booking.id}`, 'room-details')}
+              disabled={navigatingTo === 'room-details'}
+              className="bg-green-600 cursor-pointer hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <FileText size={18} />
-              View Room Details
+              {navigatingTo === 'room-details' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  View Room Details
+                </>
+              )}
             </button>
-            <MoveInInstructions booking={booking} />
+            <MoveInInstructions booking={booking} navigatingTo={navigatingTo} />
           </>
         );
 
@@ -314,11 +372,34 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => printBookingDetails(booking)}
-              className="bg-gray-600 cursor-pointer hover:bg-gray-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={async () => {
+                setIsDownloadingReceipt(true);
+                try {
+                  // Import and call printBookingDetails
+                  const { printBookingDetails } = await import('@/utils/printBooking');
+                  printBookingDetails(booking);
+                  // Reset after a short delay to allow download to start
+                  setTimeout(() => setIsDownloadingReceipt(false), 500);
+                } catch (error) {
+                  console.error('Failed to download receipt:', error);
+                  setIsDownloadingReceipt(false);
+                  toast.error('Failed to download receipt');
+                }
+              }}
+              disabled={isDownloadingReceipt}
+              className="bg-gray-600 cursor-pointer hover:bg-gray-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <Download size={18} />
-              Download Receipt
+              {isDownloadingReceipt ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download size={18} />
+                  Download Receipt
+                </>
+              )}
             </button>
             <button
               onClick={() => {
@@ -434,10 +515,18 @@ export default function BookingActions({
             <strong>Booking Rejected</strong>
             <p className="mt-1">Your booking was rejected. Please contact support for more information.</p>
             <button
-              onClick={() => router.push('/dashboard/home')}
-              className="mt-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all"
+              onClick={() => handleNavigate('/dashboard/home', 'home')}
+              disabled={navigatingTo === 'home'}
+              className="mt-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Contact Support
+              {navigatingTo === 'home' ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Contact Support'
+              )}
             </button>
           </div>
         );
@@ -450,11 +539,21 @@ export default function BookingActions({
               <p className="mt-1">This booking has expired. Please create a new booking.</p>
             </div>
             <button
-              onClick={() => router.push('/dashboard/home')}
-              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={() => handleNavigate('/dashboard/home', 'home')}
+              disabled={navigatingTo === 'home'}
+              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <RefreshCw size={18} />
-              Create New Booking
+              {navigatingTo === 'home' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={18} />
+                  Create New Booking
+                </>
+              )}
             </button>
           </div>
         );

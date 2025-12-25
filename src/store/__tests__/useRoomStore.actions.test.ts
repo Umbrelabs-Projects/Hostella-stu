@@ -16,7 +16,7 @@ describe('useRoomStore actions', () => {
   it('fetches rooms by hostel and sets state', async () => {
     const { result } = renderHook(() => useRoomStore());
     await act(async () => {
-      await result.current.fetchRoomsByHostelId(1);
+      await result.current.fetchRoomsByHostelId('1');
     });
     expect(result.current.rooms.length).toBe(1);
     expect(result.current.loading).toBe(false);

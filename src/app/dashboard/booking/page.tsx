@@ -28,8 +28,9 @@ export default function Bookings() {
     }
   }, [error, loading, fetchUserBookings]);
 
-  // Show loading skeleton while loading or if there's an error (will retry automatically)
-  if (loading || error) {
+  // Show loading skeleton only on initial load, not when viewing booking details
+  // This prevents flashing when polling updates booking data in the background
+  if ((loading || error) && !selectedBooking) {
     return (
       <div className="md:mx-[5%] space-y-12 mb-9">
         <SkeletonBanner />
@@ -58,6 +59,7 @@ export default function Bookings() {
         <BookingDetails
           booking={selectedBooking}
           onBack={() => setSelectedBooking(null)}
+          onBookingUpdate={(updatedBooking) => setSelectedBooking(updatedBooking)}
         />
       )}
     </div>

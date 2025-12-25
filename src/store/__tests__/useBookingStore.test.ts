@@ -29,11 +29,9 @@ describe('useBookingStore', () => {
   it('sets selected booking', () => {
     const { result } = renderHook(() => useBookingStore());
     const mockBooking: Booking = {
-      id: 1,
-      userId: 1,
-      hostelId: 1,
-      roomId: 1,
-      status: 'pending_payment',
+      id: '1',
+      bookingId: 'BK-1',
+      status: 'pending payment',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
     };

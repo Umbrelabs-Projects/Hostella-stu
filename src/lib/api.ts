@@ -7,6 +7,8 @@ import {
   BlogPost, 
   FAQ, 
   Payment,
+  PaymentInitiationResponse,
+  BankDetails,
   Chat,
   ChatMessage,
   Service,
@@ -102,7 +104,26 @@ export async function apiFetch<T>(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "https://api.hostella.app/api/v1";
+  // Ensure API URL includes /api/v1 if not already present
+  // Supports API_URL without /api/v1 - will automatically add it
+  const getBaseUrl = () => {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL;
+    if (envUrl) {
+      // Remove trailing slash if present
+      const cleanUrl = envUrl.replace(/\/$/, '');
+      
+      // If URL already contains /api/v1, use as is
+      if (cleanUrl.includes('/api/v1')) {
+        return cleanUrl;
+      }
+      
+      // If URL doesn't have /api/v1, add it
+      return `${cleanUrl}/api/v1`;
+    }
+    return "https://api.hostella.app/api/v1";
+  };
+  
+  const baseUrl = getBaseUrl();
   
   // Don't set Content-Type for FormData (browser will set it with boundary)
   const isFormData = options.body instanceof FormData;
@@ -152,7 +173,11 @@ export async function apiFetch<T>(
         
         // Only log detailed error if errorData has meaningful content
         const errorDataKeys = Object.keys(errorData || {});
-        if (errorDataKeys.length > 0 || errorData?.message || errorData?.error) {
+        
+        // Don't log empty error responses - they're usually 404s or permission errors
+        const shouldLogError = (errorDataKeys.length > 0 || errorData?.message || errorData?.error);
+        
+        if (shouldLogError) {
           console.error('API Error Response:', {
             status: res.status,
             statusText: res.statusText,
@@ -162,9 +187,9 @@ export async function apiFetch<T>(
             errorData,
             errorDataKeys,
           });
-        } else {
-          // Log minimal info for empty error responses
-          console.error('API Error Response (empty):', {
+        } else if (process.env.NODE_ENV === 'development') {
+          // Log empty error responses only in development
+          console.warn('API Error Response (empty):', {
             status: res.status,
             statusText: res.statusText,
             url: `${baseUrl}${endpoint}`,
@@ -235,16 +260,84 @@ export async function apiFetch<T>(
         );
       } else {
         const text = await res.text();
-        console.error('API Error Response (non-JSON):', {
-          status: res.status,
-          statusText: res.statusText,
-          url: `${baseUrl}${endpoint}`,
-          method: options.method || 'GET',
-          requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
-          text,
-          textLength: text?.length,
-        });
-        throw new ApiError(text || `API error: ${res.status} - ${res.statusText}`, res.status);
+        const trimmedText = text?.trim() || '';
+        const hasContent = trimmedText.length > 0;
+        
+        // Always log error details in development for debugging
+        // In production, only log if there's content or it's a server error (5xx)
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const isServerError = res.status >= 500;
+        const shouldLogError = isDevelopment || hasContent || isServerError;
+        
+        if (shouldLogError) {
+          const errorDetails: Record<string, any> = {
+            status: res.status,
+            statusText: res.statusText,
+            url: `${baseUrl}${endpoint}`,
+            method: options.method || 'GET',
+          };
+          
+          // Only include request body if it's not too large (for security)
+          if (options.body) {
+            const bodyStr = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+            if (bodyStr.length < 1000) {
+              errorDetails.requestBody = bodyStr;
+            } else {
+              errorDetails.requestBody = '[Body too large to log]';
+            }
+          }
+          
+          if (hasContent) {
+            errorDetails.responseText = trimmedText;
+            errorDetails.textLength = trimmedText.length;
+          } else {
+            errorDetails.responseText = '[Empty response body]';
+          }
+          
+          if (isDevelopment || isServerError) {
+            console.error('API Error Response (non-JSON):', errorDetails);
+          } else {
+            console.warn('API Error Response (non-JSON):', errorDetails);
+          }
+        }
+        
+        // Create meaningful error message based on status code
+        let errorMessage = trimmedText;
+        if (!errorMessage) {
+          switch (res.status) {
+            case 400:
+              errorMessage = 'Bad request. Please check your input and try again.';
+              break;
+            case 401:
+              errorMessage = 'Authentication required. Please log in again.';
+              break;
+            case 403:
+              errorMessage = 'You do not have permission to perform this action.';
+              break;
+            case 404:
+              errorMessage = 'Resource not found. Please check the URL and try again.';
+              break;
+            case 409:
+              errorMessage = 'Conflict. This resource may already exist.';
+              break;
+            case 422:
+              errorMessage = 'Validation error. Please check your input.';
+              break;
+            case 500:
+              errorMessage = 'Internal server error. Please try again later.';
+              break;
+            case 502:
+              errorMessage = 'Bad gateway. The server is temporarily unavailable.';
+              break;
+            case 503:
+              errorMessage = 'Service unavailable. Please try again later.';
+              break;
+            default:
+              errorMessage = `API error: ${res.status} ${res.statusText || 'Unknown error'}`;
+          }
+        }
+        
+        throw new ApiError(errorMessage, res.status);
       }
     }
 
@@ -457,36 +550,100 @@ export const bookingApi = {
       body: reason ? JSON.stringify({ reason }) : undefined,
     }),
 
+  // Delete booking (only for PENDING_PAYMENT or CANCELLED status)
+  // Endpoint: DELETE /api/v1/bookings/:id
+  delete: (id: string) =>
+    apiFetch<ApiResponse<{ success: boolean; message: string }>>(`/bookings/${id}`, {
+      method: 'DELETE',
+    }),
+
   getUserBookings: (params?: { page?: number; limit?: number; status?: string }) => {
     const queryString = params ? `?${buildQueryString(params)}` : '';
     return apiFetch<UserBookingsResponse>(`/bookings/my-bookings${queryString}`);
   },
+
+  // Get booking statistics
+  // Endpoint: GET /api/v1/bookings/stats/summary
+  getStats: () =>
+    apiFetch<ApiResponse<{
+      stats: {
+        total: number;
+        pendingPayment: number;
+        pendingApproval: number;
+        approved: number;
+        roomAllocated: number;
+        completed: number;
+        cancelled: number;
+      };
+    }>>('/bookings/stats/summary'),
 };
 
 // ============================================
 // PAYMENT API ENDPOINTS
 // ============================================
+// See: STUDENT_PAYMENT_FLOW_GUIDE.md for complete payment flow documentation
 export const paymentApi = {
-  initiate: (bookingId: number, method: 'bank' | 'momo', phoneNumber?: string) =>
-    apiFetch<ApiResponse<Payment>>('/payments/initiate', {
+  // Initiate payment
+  // Endpoint: POST /api/v1/payments/booking/:bookingId
+  // Body: { provider: "BANK_TRANSFER" | "PAYSTACK" }
+  // Response: { payment: Payment, bankDetails?: BankDetails, authorizationUrl?: string, isNewPayment: boolean, message: string }
+  // ⚠️ CRITICAL: Only call this when user explicitly clicks "Proceed to Payment" button
+  // ⚠️ DO NOT call this automatically on page load - use GET /payments/booking/:bookingId instead
+  // ⚠️ Backend returns existing payment if it exists (doesn't create duplicate)
+  initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string) =>
+    apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/booking/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ bookingId, method, phoneNumber }),
+      body: JSON.stringify({ provider, ...(payerPhone && { payerPhone }) }),
     }),
 
-  uploadReceipt: (paymentId: number, receipt: FormData) =>
-    apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/receipt`, {
+  // Upload receipt using paymentId (from initiate payment response)
+  // Endpoint: POST /api/v1/payments/:id/upload-receipt-file
+  // Important: Use payment.id from initiate payment response, NOT bookingId
+  // Request: FormData with 'receipt' file (field name must be "receipt")
+  // Response: { payment: Payment, message: string }
+  // Note: Content-Type is automatically set by browser for FormData (multipart/form-data with boundary)
+  uploadReceipt: (paymentId: string | number, receipt: FormData) =>
+    apiFetch<ApiResponse<{ payment: Payment; message: string }>>(`/payments/${paymentId}/upload-receipt-file`, {
       method: 'POST',
-      body: receipt,
+      body: receipt, // FormData - Content-Type will be set automatically by browser
     }),
 
-  verify: (paymentId: number, reference: string) =>
+  // Verify payment by reference (for Paystack payments)
+  // Endpoint: GET /api/v1/payments/verify/:reference
+  // Used after Paystack payment completion to verify payment status
+  verifyByReference: (reference: string) =>
+    apiFetch<ApiResponse<Payment>>(`/payments/verify/${reference}`, {
+      method: 'GET',
+    }),
+
+  // Verify payment by paymentId and reference (legacy/alternative method)
+  // Endpoint: POST /api/v1/payments/:paymentId/verify
+  // Body: { reference: string }
+  verify: (paymentId: string | number, reference: string) =>
     apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/verify`, {
       method: 'POST',
       body: JSON.stringify({ reference }),
     }),
 
-  getByBookingId: (bookingId: number) =>
-    apiFetch<ApiResponse<Payment[]>>(`/payments/booking/${bookingId}`),
+  // Get payment for a booking by bookingId
+  // Endpoint: GET /api/v1/payments/booking/:bookingId
+  // Returns single Payment object (not array) for the given booking
+  // Response structure: { success: true, data: { payment: Payment } }
+  getByBookingId: (bookingId: string | number) =>
+    apiFetch<ApiResponse<{ payment: Payment }>>(`/payments/booking/${bookingId}`),
+
+  // Get payment by payment ID
+  // Endpoint: GET /api/v1/payments/:id
+  getById: (paymentId: string | number) =>
+    apiFetch<ApiResponse<{ payment: Payment }>>(`/payments/${paymentId}`),
+
+  // Get my payments (paginated)
+  // Endpoint: GET /api/v1/payments/my-payments
+  // Query params: page, limit, status
+  getMyPayments: (params?: { page?: number; limit?: number; status?: string }) => {
+    const queryString = params ? `?${buildQueryString(params)}` : '';
+    return apiFetch<PaginatedResponse<Payment>>(`/payments/my-payments${queryString}`);
+  },
 };
 
 // ============================================

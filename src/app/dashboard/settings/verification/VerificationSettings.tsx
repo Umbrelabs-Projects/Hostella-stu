@@ -2,6 +2,7 @@
 import { useEffect, useMemo } from "react";
 import VerificationItem from "./components/VerificationItem";
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 
 export default function VerificationSettings() {
   const { user, fetchProfile } = useAuthStore();
@@ -29,7 +30,7 @@ export default function VerificationSettings() {
   );
 
   const handleVerify = (type: keyof typeof verificationStatus) => {
-    alert(`Verification link sent to ${verificationStatus[type].value}`);
+    toast.success(`Verification link sent to ${verificationStatus[type].value}`);
   };
 
   return (

@@ -10,6 +10,16 @@ export default function BookingStatusBadge({ status }: { status: string }) {
       text: "text-yellow-800",
       label: "Pending Payment"
     },
+    "awaiting verification": {
+      bg: "bg-blue-100",
+      text: "text-blue-800",
+      label: "Awaiting Verification"
+    },
+    "awaiting_verification": {
+      bg: "bg-blue-100",
+      text: "text-blue-800",
+      label: "Awaiting Verification"
+    },
     "pending approval": {
       bg: "bg-blue-100",
       text: "text-blue-800",

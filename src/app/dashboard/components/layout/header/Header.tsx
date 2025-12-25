@@ -25,6 +25,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
     } else {
       title = "Payment";
     }
+  } else if (segments.includes("receipt")) {
+    title = "Payment Receipt";
   } else if (segments.includes("success")) {
     title = "Booking Successful";
   } else if (segments.includes("rooms") && segments.length > 0) {
@@ -43,11 +45,30 @@ export default function Header({ onMenuClick }: HeaderProps) {
       // Fallback if hostel not loaded yet
       title = "Booking Details";
     }
+  } else if (segments.includes("room-details")) {
+    title = "Room Details";
+  } else if (segments.includes("move-in-instructions")) {
+    title = "Move-in Instructions";
   } else if (segments.length > 0) {
     const lastSegment = segments[segments.length - 1];
     
-    // Handle numeric IDs (legacy support)
-    if (/^\d+$/.test(lastSegment)) {
+    // Skip showing IDs (non-numeric long strings that look like IDs)
+    // Check if it's a long alphanumeric string (likely an ID)
+    if (/^[a-z0-9]{20,}$/i.test(lastSegment)) {
+      // It's likely an ID, check if we have a better title from context
+      const secondToLast = segments[segments.length - 2];
+      if (secondToLast === "room-details") {
+        title = "Room Details";
+      } else if (secondToLast === "move-in-instructions") {
+        title = "Move-in Instructions";
+      } else if (secondToLast === "receipt") {
+        title = "Payment Receipt";
+      } else {
+        // Default to showing the parent segment or a generic title
+        title = secondToLast ? secondToLast.replace(/^\w/, (c) => c.toUpperCase()) : "Details";
+      }
+    } else if (/^\d+$/.test(lastSegment)) {
+      // Handle numeric IDs (legacy support)
       const id = Number(lastSegment);
       title = `ID: ${id}`;
     } else {

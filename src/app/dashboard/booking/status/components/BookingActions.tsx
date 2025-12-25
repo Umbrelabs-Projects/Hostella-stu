@@ -1,12 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Booking } from "@/types/bookingStatus";
 import { useBookingStore } from "@/store/useBookingStore";
-import { printBookingDetails } from "../../../../../../utils/printBooking";
+import { usePaymentStore } from "@/store/usePaymentStore";
+import MoveInInstructions from "./MoveInInstructions";
 import { toast } from "sonner";
-import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle } from "lucide-react";
+import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle, Trash2, DollarSign, Calendar, ExternalLink, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import PaymentStatusBadge from "@/app/dashboard/payment/components/PaymentStatusBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface BookingActionsProps {
   booking: Booking;
@@ -14,6 +26,7 @@ interface BookingActionsProps {
   onProceedPayment?: () => void; // optional callback if needed
   onDownload?: () => void;
   onCancelSuccess?: () => void; // callback after successful cancellation
+  showDeleteOnly?: boolean; // For cancelled bookings - only show delete button
 }
 
 export default function BookingActions({
@@ -21,21 +34,28 @@ export default function BookingActions({
   onBack,
   onProceedPayment,
   onCancelSuccess,
+  showDeleteOnly = false,
 }: BookingActionsProps) {
   const router = useRouter();
-  const { cancelBooking, loading } = useBookingStore();
+  const { cancelBooking, deleteBooking, loading } = useBookingStore();
+  const { currentPayment, fetchPaymentsByBookingId } = usePaymentStore();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
 
-  const handleCancel = async () => {
-    if (!showCancelConfirm) {
-      setShowCancelConfirm(true);
-      return;
-    }
+  // Note: Payment is already fetched by BookingDetails component
+  // We just use the currentPayment from the store to avoid duplicate API calls
 
+  const handleCancelConfirm = async () => {
     try {
       await cancelBooking(booking.id, cancelReason || undefined);
       toast.success("Booking cancelled successfully");
+      setShowCancelConfirm(false);
+      setCancelReason("");
       if (onCancelSuccess) {
         onCancelSuccess();
       } else {
@@ -51,7 +71,34 @@ export default function BookingActions({
       onProceedPayment();
     } else {
       // Navigate to payment selection page
+      setNavigatingTo('payment');
       router.push(`/dashboard/payment/select/${booking.id}`);
+    }
+  };
+
+  const handleNavigate = (path: string, key: string) => {
+    setNavigatingTo(key);
+    router.push(path);
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteBooking(booking.id);
+      toast.success("Booking deleted successfully");
+      setShowDeleteDialog(false);
+      if (onBack) {
+        onBack();
+      } else {
+        router.push('/dashboard/booking');
+      }
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete booking");
+      setIsDeleting(false);
     }
   };
 
@@ -61,52 +108,193 @@ export default function BookingActions({
   const renderActions = () => {
     switch (normalizedStatus) {
       case "pending payment":
+        // According to guide: Show "Proceed to Payment" only if booking.status === "PENDING_PAYMENT" AND payment === null
+        // If payment exists (even if INITIATED), don't show this button - user should go to payment page instead
+        if (currentPayment) {
+          // If payment is confirmed, don't show duplicate message
+          // Payment status and receipt are already shown in Payment History section
+          if (currentPayment.status === 'CONFIRMED') {
+            // Payment is confirmed - no action needed, status shown in Payment History
+            return null;
+          }
+          
+          // If payment is AWAITING_VERIFICATION, show dialog with payment details
+          if (currentPayment.status === 'AWAITING_VERIFICATION') {
+            return (
+              <>
+                <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+                  <DialogTrigger asChild>
+                    <button
+                      className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+                    >
+                      <FileText size={18} />
+                      View Payment
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Payment History</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4">
+                      <div className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {currentPayment.provider === 'BANK_TRANSFER' || currentPayment.method === 'bank' 
+                                  ? 'Bank Transfer' 
+                                  : 'Mobile Money (Paystack)'}
+                              </span>
+                              <PaymentStatusBadge 
+                                status={
+                                  (currentPayment.status === 'AWAITING_VERIFICATION' || currentPayment.status === 'awaiting_verification') && !currentPayment.receiptUrl
+                                    ? 'INITIATED'
+                                    : (currentPayment.status || 'PENDING')
+                                } 
+                              />
+                            </div>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="w-4 h-4" />
+                                <span className="font-semibold text-gray-900">
+                                  GHS {currentPayment.amount.toLocaleString()}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>
+                                  {format(new Date(currentPayment.createdAt), "MMM dd, yyyy 'at' HH:mm")}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {currentPayment.reference && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-xs text-gray-600">
+                              <strong>Reference:</strong> {currentPayment.reference}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Show receipt link if available */}
+                        {currentPayment.receiptUrl && (
+                          <div className="mt-2">
+                            <a
+                              href={currentPayment.receiptUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              View Receipt
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </>
+            );
+          }
+          
+          // Payment exists but not confirmed and not AWAITING_VERIFICATION - show "View Payment" button
+          return (
+            <button
+              onClick={handleProceedPayment}
+              disabled={navigatingTo === 'payment'}
+              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {navigatingTo === 'payment' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  View Payment
+                </>
+              )}
+            </button>
+          );
+        }
+        
+        // No payment exists - show "Proceed to Payment"
         return (
           <>
             <button
               onClick={handleProceedPayment}
-              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              disabled={navigatingTo === 'payment'}
+              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <FileText size={18} />
-              Proceed to Payment
+              {navigatingTo === 'payment' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  Proceed to Payment
+                </>
+              )}
             </button>
 
-            {!showCancelConfirm ? (
-              <button
-                onClick={handleCancel}
-                disabled={loading}
-                className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-              >
-                <AlertCircle size={18} />
-                Cancel Booking
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Reason (optional)"
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
+            <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+              <DialogTrigger asChild>
                 <button
-                  onClick={handleCancel}
                   disabled={loading}
-                  className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+                  className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
                 >
-                  {loading ? "Cancelling..." : "Confirm"}
+                  <AlertCircle size={18} />
+                  Cancel Booking
                 </button>
-                <button
-                  onClick={() => {
-                    setShowCancelConfirm(false);
-                    setCancelReason("");
-                  }}
-                  className="bg-gray-500 cursor-pointer hover:bg-gray-600 text-white px-5 py-2 rounded-lg transition-all duration-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Cancel Booking</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to cancel this booking? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason (optional)
+                  </label>
+                  <input
+                    id="cancel-reason"
+                    type="text"
+                    placeholder="Enter cancellation reason (optional)"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <DialogFooter className="mt-6">
+                  <button
+                    onClick={() => {
+                      setShowCancelConfirm(false);
+                      setCancelReason("");
+                    }}
+                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCancelConfirm}
+                    disabled={loading}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Cancelling..." : "Confirm"}
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         );
 
@@ -114,11 +302,21 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => router.push(`/dashboard/booking/success/${booking.id}`)}
-              className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={() => handleNavigate(`/dashboard/booking/receipt/${booking.id}`, 'receipt')}
+              disabled={navigatingTo === 'receipt'}
+              className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <FileText size={18} />
-              View Receipt
+              {navigatingTo === 'receipt' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  View Receipt
+                </>
+              )}
             </button>
             <span className="text-sm text-gray-500 italic">Payment under review - cannot cancel</span>
           </>
@@ -126,14 +324,23 @@ export default function BookingActions({
 
       case "approved":
         return (
-          <div className="flex flex-col gap-2">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800 flex items-center gap-2">
-              <CheckCircle size={18} className="text-green-600" />
-              <span>
-                <strong>Booking Approved!</strong> Your payment has been verified. Waiting for room assignment.
-              </span>
-            </div>
-          </div>
+          <button
+            onClick={() => handleNavigate(`/dashboard/booking/receipt/${booking.id}`, 'receipt')}
+            disabled={navigatingTo === 'receipt'}
+            className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {navigatingTo === 'receipt' ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <FileText size={18} />
+                View Receipt
+              </>
+            )}
+          </button>
         );
 
       case "room_allocated":
@@ -141,19 +348,23 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => printBookingDetails(booking)}
-              className="bg-green-600 cursor-pointer hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={() => handleNavigate(`/dashboard/booking/room-details/${booking.id}`, 'room-details')}
+              disabled={navigatingTo === 'room-details'}
+              className="bg-green-600 cursor-pointer hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <Download size={18} />
-              Download Room Details
+              {navigatingTo === 'room-details' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  View Room Details
+                </>
+              )}
             </button>
-            <button
-              onClick={() => printBookingDetails(booking)}
-              className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
-            >
-              <Home size={18} />
-              View Move-in Instructions
-            </button>
+            <MoveInInstructions booking={booking} navigatingTo={navigatingTo} />
           </>
         );
 
@@ -161,11 +372,34 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => printBookingDetails(booking)}
-              className="bg-gray-600 cursor-pointer hover:bg-gray-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={async () => {
+                setIsDownloadingReceipt(true);
+                try {
+                  // Import and call printBookingDetails
+                  const { printBookingDetails } = await import('../../../../../../utils/printBooking');
+                  printBookingDetails(booking);
+                  // Reset after a short delay to allow download to start
+                  setTimeout(() => setIsDownloadingReceipt(false), 500);
+                } catch (error) {
+                  console.error('Failed to download receipt:', error);
+                  setIsDownloadingReceipt(false);
+                  toast.error('Failed to download receipt');
+                }
+              }}
+              disabled={isDownloadingReceipt}
+              className="bg-gray-600 cursor-pointer hover:bg-gray-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <Download size={18} />
-              Download Receipt
+              {isDownloadingReceipt ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download size={18} />
+                  Download Receipt
+                </>
+              )}
             </button>
             <button
               onClick={() => {
@@ -180,12 +414,99 @@ export default function BookingActions({
         );
 
       case "cancelled":
+        // If showDeleteOnly is true, we're in the simplified cancelled view
+        if (showDeleteOnly) {
+          return (
+            <>
+              <div className="space-y-4 w-full">
+                <button
+                  onClick={handleDeleteClick}
+                  disabled={isDeleting || loading}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-md hover:shadow-lg font-medium"
+                >
+                  <Trash2 size={20} />
+                  Delete This Booking
+                </button>
+              </div>
+
+              <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Are you sure you want to delete this booking?</DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <button
+                      onClick={() => setShowDeleteDialog(false)}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteConfirm}
+                      disabled={isDeleting || loading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 size={16} />
+                      {isDeleting ? "Deleting..." : "Yes, Delete"}
+                    </button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          );
+        }
+        
+        // Original view for cancelled bookings (when not in simplified view)
         return (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
-            <strong>Booking Cancelled</strong>
-            {cancelReason && <p className="mt-1">Reason: {cancelReason}</p>}
-            <p className="mt-1">Contact support for refund status.</p>
-          </div>
+          <>
+            <div className="space-y-3">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+                <strong>Booking Cancelled</strong>
+                {cancelReason && <p className="mt-1">Reason: {cancelReason}</p>}
+                <p className="mt-1">Contact support for refund status.</p>
+              </div>
+              <button
+                onClick={handleDeleteClick}
+                disabled={isDeleting || loading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 size={18} />
+                Delete Booking
+              </button>
+            </div>
+
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure you want to delete this booking?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <button
+                    onClick={() => setShowDeleteDialog(false)}
+                    disabled={isDeleting}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    disabled={isDeleting || loading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={16} />
+                    {isDeleting ? "Deleting..." : "Yes, Delete"}
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
         );
 
       case "rejected":
@@ -194,10 +515,18 @@ export default function BookingActions({
             <strong>Booking Rejected</strong>
             <p className="mt-1">Your booking was rejected. Please contact support for more information.</p>
             <button
-              onClick={() => router.push('/dashboard/home')}
-              className="mt-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all"
+              onClick={() => handleNavigate('/dashboard/home', 'home')}
+              disabled={navigatingTo === 'home'}
+              className="mt-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Contact Support
+              {navigatingTo === 'home' ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Contact Support'
+              )}
             </button>
           </div>
         );
@@ -210,11 +539,21 @@ export default function BookingActions({
               <p className="mt-1">This booking has expired. Please create a new booking.</p>
             </div>
             <button
-              onClick={() => router.push('/dashboard/home')}
-              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+              onClick={() => handleNavigate('/dashboard/home', 'home')}
+              disabled={navigatingTo === 'home'}
+              className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <RefreshCw size={18} />
-              Create New Booking
+              {navigatingTo === 'home' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={18} />
+                  Create New Booking
+                </>
+              )}
             </button>
           </div>
         );
@@ -225,7 +564,7 @@ export default function BookingActions({
   };
 
   return (
-    <div className="mt-6 flex flex-col md:flex-row justify-between gap-3">
+    <div className="mt-6 flex flex-wrap gap-3 items-center">
       {/* Back Button */}
       <button
         onClick={onBack}
@@ -235,9 +574,7 @@ export default function BookingActions({
       </button>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 items-center">
-        {renderActions()}
-      </div>
+      {renderActions()}
     </div>
   );
 }

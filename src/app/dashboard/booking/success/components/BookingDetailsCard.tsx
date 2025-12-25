@@ -2,6 +2,7 @@
 import { Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 
 export default function BookingDetailsCard() {
   const { extraBookingDetails } = useAuthStore();
@@ -20,7 +21,8 @@ export default function BookingDetailsCard() {
 
   const handleDownload = () => {
     if (!extraBookingDetails || Object.keys(extraBookingDetails).length === 0)
-      return alert("No booking details to download.");
+      toast.error("No booking details to download.");
+      return;
 
     const allDetails = Object.entries(extraBookingDetails)
       .map(([key, value]) => {

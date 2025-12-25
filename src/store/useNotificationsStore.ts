@@ -2,8 +2,33 @@
 
 import { create } from "zustand";
 import { Notification } from "@/types/notifications";
-import { CheckCircle, CreditCard, Key, ToolCase, Megaphone } from "lucide-react";
+import { CheckCircle, CreditCard, Key, ToolCase, Megaphone, ClipboardList, Wrench, Bell, X, AlertCircle } from "lucide-react";
 import { notificationApi } from "@/lib/api";
+
+// Format relative time helper
+const formatRelativeTime = (timestamp?: string) => {
+  if (!timestamp) return "Just now";
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "Just now";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffSeconds = Math.round(diffMs / 1000);
+  const diffMinutes = Math.round(diffMs / 60000);
+  const diffHours = Math.round(diffMs / 3600000);
+  const diffDays = Math.round(diffMs / 86400000);
+
+  if (diffSeconds < 60) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+  }).format(date);
+};
 
 interface NotificationsState {
   notifications: Notification[];
@@ -17,55 +42,66 @@ interface NotificationsState {
     total: number;
     totalPages: number;
   } | null;
+  filters: {
+    page: number;
+    pageSize: number;
+    unreadOnly: boolean;
+  };
 
   fetchNotifications: (params?: { page?: number; pageSize?: number; unreadOnly?: boolean }) => Promise<void>;
   addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
+  setFilters: (filters: { page?: number; pageSize?: number; unreadOnly?: boolean }) => void;
   clearError: () => void;
 }
 
 export const typeConfig = {
-  broadcast: {
-    icon: Megaphone,
-    color: "bg-purple-100 text-purple-600 border-purple-500",
-  },
-  'booking-approved': {
-    icon: CheckCircle,
-    color: "bg-green-100 text-green-600 border-green-500",
+  'new-booking': {
+    icon: ClipboardList,
+    color: "bg-blue-100 text-blue-600 border-blue-500",
   },
   'payment-received': {
     icon: CreditCard,
-    color: "bg-indigo-100 text-indigo-600 border-indigo-500",
+    color: "bg-green-100 text-green-600 border-green-500",
   },
   'room-allocated': {
     icon: Key,
     color: "bg-blue-100 text-blue-600 border-blue-500",
   },
-  'maintenance-alert': {
-    icon: ToolCase,
-    color: "bg-red-100 text-red-600 border-red-500",
-  },
-  'new-booking': {
-    icon: CreditCard,
-    color: "bg-yellow-100 text-yellow-600 border-yellow-500",
+  'booking-approved': {
+    icon: CheckCircle,
+    color: "bg-green-100 text-green-600 border-green-500",
   },
   'booking-rejected': {
-    icon: ToolCase,
+    icon: X,
     color: "bg-red-100 text-red-600 border-red-500",
   },
   'booking-cancelled': {
-    icon: ToolCase,
-    color: "bg-gray-100 text-gray-600 border-gray-500",
+    icon: X,
+    color: "bg-red-100 text-red-600 border-red-500",
+  },
+  'maintenance-alert': {
+    icon: Wrench,
+    color: "bg-orange-100 text-orange-600 border-orange-500",
+  },
+  'broadcast': {
+    icon: Bell,
+    color: "bg-purple-100 text-purple-600 border-purple-500",
   },
   'complaint-received': {
-    icon: CreditCard,
-    color: "bg-orange-100 text-orange-600 border-orange-500",
+    icon: AlertCircle,
+    color: "bg-yellow-100 text-yellow-600 border-yellow-500",
   },
   'complaint-resolved': {
     icon: CheckCircle,
     color: "bg-green-100 text-green-600 border-green-500",
+  },
+  // Fallback for unknown types
+  'system-alert': {
+    icon: Bell,
+    color: "bg-gray-100 text-gray-600 border-gray-500",
   },
 };
 
@@ -76,6 +112,11 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
   loading: false,
   error: null,
   pagination: null,
+  filters: {
+    page: 1,
+    pageSize: 50,
+    unreadOnly: false,
+  },
 
   fetchNotifications: async (params) => {
     set({ loading: true, error: null });
@@ -86,7 +127,12 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
         unreadOnly: params?.unreadOnly || false,
       });
       
-      const notifications = response.notifications as Notification[];
+      // Add relative time to notifications
+      const notifications = (response.notifications as Notification[]).map(n => ({
+        ...n,
+        time: formatRelativeTime(n.createdAt),
+      }));
+      
       const broadcastNotifications = notifications.filter(
         (n) => n.type === 'broadcast'
       );
@@ -94,7 +140,7 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
       set({
         notifications,
         broadcastNotifications,
-        unreadCount: response.unreadCount,
+        unreadCount: response.unreadCount || 0,
         pagination: {
           page: response.page,
           pageSize: response.pageSize,
@@ -113,7 +159,11 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
 
   addNotification: (notification) =>
     set((state) => {
-      const updated = [notification, ...state.notifications];
+      const notificationWithTime = {
+        ...notification,
+        time: formatRelativeTime(notification.createdAt),
+      };
+      const updated = [notificationWithTime, ...state.notifications];
       const broadcastNotifications = updated.filter((n) => n.type === 'broadcast');
       return {
         notifications: updated,
@@ -183,6 +233,14 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
       });
     }
   },
+
+  setFilters: (newFilters) =>
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        ...newFilters,
+      },
+    })),
 
   clearError: () => set({ error: null }),
 }));

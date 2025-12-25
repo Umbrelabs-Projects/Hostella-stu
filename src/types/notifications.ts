@@ -6,4 +6,5 @@ export interface Notification {
   relatedId?: string;
   isRead: boolean;
   createdAt: string;
+  time?: string; // Human-friendly relative time (e.g., "2 minutes ago")
 }

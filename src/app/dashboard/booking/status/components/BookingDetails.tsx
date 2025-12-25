@@ -20,7 +20,7 @@ import { usePaymentStore } from "@/store/usePaymentStore";
 import { useBookingStore } from "@/store/useBookingStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import StatusMessageBox from "./StatusMessageBox";
-import RoomAllocationInfo from "./RoomAllocationInfo";
+// import RoomAllocationInfo from "./RoomAllocationInfo"; // Hidden - users view details via PDF viewer
 import { useBookingStatusPolling } from "@/hooks/useBookingStatusPolling";
 
 interface BookingDetailsProps {
@@ -379,21 +379,22 @@ export default function BookingDetails({
                 .toLowerCase()
                 .replace(/_/g, " ");
 
-              if (
-                normalizedStatus === "room_allocated" ||
-                normalizedStatus === "room allocated" ||
-                normalizedStatus === "completed"
-              ) {
-                return (
-                  <RoomAllocationInfo
-                    booking={booking}
-                    showAllocationMessage={
-                      normalizedStatus === "room_allocated" ||
-                      normalizedStatus === "room allocated"
-                    }
-                  />
-                );
-              }
+              // Room allocation info is now hidden - users view details via PDF viewer
+              // if (
+              //   normalizedStatus === "room_allocated" ||
+              //   normalizedStatus === "room allocated" ||
+              //   normalizedStatus === "completed"
+              // ) {
+              //   return (
+              //     <RoomAllocationInfo
+              //       booking={booking}
+              //       showAllocationMessage={
+              //         normalizedStatus === "room_allocated" ||
+              //         normalizedStatus === "room allocated"
+              //       }
+              //     />
+              //   );
+              // }
 
               if (normalizedStatus === "approved") {
                 return (

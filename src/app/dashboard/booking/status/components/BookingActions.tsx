@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Booking } from "@/types/bookingStatus";
 import { useBookingStore } from "@/store/useBookingStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
-import { generateRoomDetailsPDF } from "@/utils/roomDetailsPDF";
 import MoveInInstructions from "./MoveInInstructions";
 import { toast } from "sonner";
 import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle, Trash2, DollarSign, Calendar, ExternalLink } from "lucide-react";
@@ -301,18 +300,11 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => {
-                try {
-                  generateRoomDetailsPDF(booking);
-                } catch (error) {
-                  console.error('Failed to generate PDF:', error);
-                  toast.error('Failed to generate PDF. Please try again.');
-                }
-              }}
+              onClick={() => router.push(`/dashboard/booking/room-details/${booking.id}`)}
               className="bg-green-600 cursor-pointer hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
             >
-              <Download size={18} />
-              Download Room Details
+              <FileText size={18} />
+              View Room Details
             </button>
             <MoveInInstructions booking={booking} />
           </>
@@ -473,7 +465,7 @@ export default function BookingActions({
   };
 
   return (
-    <div className="mt-6 flex flex-col md:flex-row justify-between gap-3">
+    <div className="mt-6 flex flex-wrap gap-3 items-center">
       {/* Back Button */}
       <button
         onClick={onBack}
@@ -483,9 +475,7 @@ export default function BookingActions({
       </button>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 items-center">
-        {renderActions()}
-      </div>
+      {renderActions()}
     </div>
   );
 }

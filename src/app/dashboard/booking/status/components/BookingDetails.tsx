@@ -18,8 +18,10 @@ import {
 import { useHostelStore } from "@/store/useHostelStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
 import { useBookingStore } from "@/store/useBookingStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import StatusMessageBox from "./StatusMessageBox";
 import RoomAllocationInfo from "./RoomAllocationInfo";
+import { useBookingStatusPolling } from "@/hooks/useBookingStatusPolling";
 
 interface BookingDetailsProps {
   booking: Booking;
@@ -37,6 +39,21 @@ export default function BookingDetails({
     useHostelStore();
   const { currentPayment, fetchPaymentsByBookingId } = usePaymentStore();
   const { fetchBookingById, selectedBooking } = useBookingStore();
+  
+  // Real-time status polling (per guide)
+  useBookingStatusPolling(
+    booking.id,
+    booking.status,
+    (newStatus) => {
+      // Refresh booking data when status changes
+      fetchBookingById(booking.id, true).then(() => {
+        if (onBookingUpdate && selectedBooking) {
+          onBookingUpdate(selectedBooking);
+        }
+      });
+    },
+    !!booking && !['room_allocated', 'cancelled', 'rejected', 'expired', 'completed'].includes(booking.status)
+  );
   
   // Fetch payment for this booking (only once on mount or when booking.id changes)
   useEffect(() => {

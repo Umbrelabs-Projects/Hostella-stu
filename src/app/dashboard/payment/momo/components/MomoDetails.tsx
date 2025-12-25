@@ -95,24 +95,22 @@ const MomoDetails: React.FC = () => {
     
     try {
       // Call the payment store to initiate payment with PAYSTACK provider
-      // Response structure: { payment, bankDetails?, isNewPayment }
+      // Response structure: { payment, authorizationUrl?, isNewPayment, message }
+      // Note: If authorizationUrl is present, the store will automatically redirect
       const result = await initiatePayment(bookingId, 'PAYSTACK', mobileNumber);
       
-      if (!result || !result.payment) {
+      // If result is null, it means redirect happened (Paystack)
+      if (!result) {
+        return; // Redirect already handled by store
+      }
+      
+      if (!result.payment) {
         setError("Failed to initiate payment");
         return;
       }
       
-      const payment = result.payment;
-      
-      // Check if Paystack authorization URL is provided
-      if (payment?.authorizationUrl) {
-        // Redirect to Paystack payment page
-        window.location.href = payment.authorizationUrl;
-      } else {
-        // If no redirect URL, proceed to completion page
-        router.push("/dashboard/payment/paymentCompleted");
-      }
+      // If we get here, no redirect happened (shouldn't happen for Paystack, but handle gracefully)
+      router.push("/dashboard/payment/paymentCompleted");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to initiate payment");
     }

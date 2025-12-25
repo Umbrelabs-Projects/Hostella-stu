@@ -9,7 +9,7 @@ import { useBookingStore } from "@/store/useBookingStore";
 import { ApiError } from "@/lib/api";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Settings, ArrowRight, CheckCircle2 } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/skeleton";
 
 type RoomType = 'SINGLE' | 'DOUBLE';
@@ -210,22 +210,56 @@ function ExtraBookingDetailsContent() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-sm"
+            className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-200 rounded-xl shadow-lg"
           >
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold text-red-900">Complete Your Profile</p>
-                <p className="text-sm text-red-700 mt-1">
-                  Please complete the following fields before booking: <span className="font-medium">{profileStatus.missingFields.join(", ")}</span>
-                </p>
-                <button
-                  onClick={() => router.push("/dashboard/settings?incomplete=true")}
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-lg transition-colors"
-                >
-                  Go to Settings
-                  <span>→</span>
-                </button>
+            {/* Decorative background pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `radial-gradient(circle at 2px 2px, rgb(239 68 68) 1px, transparent 0)`,
+                backgroundSize: '24px 24px'
+              }}></div>
+            </div>
+            
+            <div className="relative p-6">
+              <div className="flex items-start gap-4">
+                {/* Icon with background */}
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
+                    <AlertCircle className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    Complete Your Profile
+                  </h3>
+                  <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                    Please complete the following fields before booking:
+                  </p>
+                  
+                  {/* Missing fields as badges */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {profileStatus.missingFields.map((field, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm border border-orange-200 rounded-full text-xs font-medium text-orange-800 shadow-sm"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  {/* Action button */}
+                  <button
+                    onClick={() => router.push("/dashboard/settings?incomplete=true")}
+                    className="group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Go to Settings</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>

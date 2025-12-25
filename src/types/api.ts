@@ -183,7 +183,9 @@ export interface BankDetails {
 export interface PaymentInitiationResponse {
   payment: Payment;
   bankDetails?: BankDetails; // Only for BANK_TRANSFER
+  authorizationUrl?: string; // Only for PAYSTACK - redirect URL
   isNewPayment: boolean; // true for new payment, false for existing
+  message?: string; // Response message
 }
 
 export interface Chat {

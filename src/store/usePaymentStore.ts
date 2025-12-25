@@ -5,7 +5,9 @@ import { paymentApi, ApiError } from '@/lib/api';
 interface PaymentInitiationResult {
   payment: Payment;
   bankDetails?: import('@/types/api').BankDetails;
+  authorizationUrl?: string; // For Paystack redirect
   isNewPayment: boolean;
+  message?: string;
 }
 
 interface PaymentState {
@@ -41,11 +43,13 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // DO NOT call this automatically on page load
       const response = await paymentApi.initiate(bookingId, provider, payerPhone);
       
-      // Response structure: { success: true, data: { payment: Payment, bankDetails?: BankDetails, isNewPayment: boolean } }
+      // Response structure: { success: true, data: { payment: Payment, bankDetails?: BankDetails, authorizationUrl?: string, isNewPayment: boolean, message: string } }
       const responseData = response.data as any;
       let payment = responseData?.payment;
       const bankDetails = responseData?.bankDetails;
+      const authorizationUrl = responseData?.authorizationUrl;
       const isNewPayment = responseData?.isNewPayment ?? true;
+      const message = responseData?.message;
       
       // Handle legacy response structure (if payment is directly in data)
       if (!payment && responseData && typeof responseData === 'object' && 'id' in responseData) {
@@ -70,11 +74,19 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         error: null,
       });
       
+      // Handle Paystack redirect
+      if (provider === 'PAYSTACK' && authorizationUrl) {
+        window.location.href = authorizationUrl;
+        return null; // Don't return data if redirecting
+      }
+      
       // Return payment with metadata
       return {
         payment,
         bankDetails,
-        isNewPayment
+        authorizationUrl,
+        isNewPayment,
+        message
       };
     } catch (error: unknown) {
       // Backend returns 200 with existing payment if payment already exists
@@ -94,9 +106,10 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       formData.append('receipt', receipt);
       const response = await paymentApi.uploadReceipt(paymentId, formData);
       
-      // Handle both nested structure (new) and flat structure (legacy) for compatibility
-      // Response structure: { success: true, data: { payment: Payment } } or { success: true, data: Payment }
-      let payment = (response.data as any)?.payment || response.data;
+      // Response structure: { success: true, data: { payment: Payment, message: string } }
+      const responseData = response.data as any;
+      let payment = responseData?.payment || response.data;
+      const message = responseData?.message;
       
       // Payment Status Auto-Correction (per guide)
       // If payment status is AWAITING_VERIFICATION but receiptUrl is null,
@@ -175,19 +188,19 @@ export const usePaymentStore = create<PaymentState>((set) => ({
     try {
       const response = await paymentApi.getByBookingId(bookingId);
       
-      // Backend returns: { success: true, data: { payment: Payment | null } }
-      // Handle both nested structure (new) and flat/array structure (legacy) for compatibility
+      // Response structure: { success: true, data: Payment } (per guide)
+      // Handle both nested structure (legacy) and flat structure (new) for compatibility
       const paymentData = response.data as any;
       let payment: Payment | null = null;
       
       if (paymentData?.payment !== undefined) {
-        // New structure: { payment: Payment | null }
-        payment = paymentData.payment; // Can be null if no payment exists
+        // Legacy nested structure: { payment: Payment | null }
+        payment = paymentData.payment;
       } else if (Array.isArray(paymentData)) {
-        // Legacy structure: Payment[]
+        // Legacy array structure: Payment[]
         payment = paymentData.length > 0 ? paymentData[paymentData.length - 1] : null;
       } else if (paymentData && typeof paymentData === 'object' && 'id' in paymentData) {
-        // Flat structure: Payment (direct)
+        // New flat structure: Payment (direct) - per guide
         payment = paymentData as Payment;
       }
       

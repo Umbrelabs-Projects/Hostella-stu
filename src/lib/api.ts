@@ -526,24 +526,25 @@ export const bookingApi = {
 // ============================================
 // See: STUDENT_PAYMENT_FLOW_GUIDE.md for complete payment flow documentation
 export const paymentApi = {
-  // Initiate payment using bookingId
-  // Endpoint: POST /api/v1/payments/booking/:bookingId
-  // Body: { provider: "BANK_TRANSFER" | "PAYSTACK", payerPhone?: string }
-  // Response: { payment: Payment, bankDetails?: BankDetails, isNewPayment: boolean }
+  // Initiate payment
+  // Endpoint: POST /api/v1/payments/initiate
+  // Body: { bookingId: string, provider: "BANK_TRANSFER" | "PAYSTACK" }
+  // Response: { payment: Payment, bankDetails?: BankDetails, authorizationUrl?: string, isNewPayment: boolean, message: string }
   // ⚠️ CRITICAL: Only call this when user explicitly clicks "Proceed to Payment" button
   // ⚠️ DO NOT call this automatically on page load - use GET /payments/booking/:bookingId instead
-  // Note: bookingId can be in format BK-XXXX or full UUID
   initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string) =>
-    apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/booking/${bookingId}`, {
+    apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/initiate`, {
       method: 'POST',
-      body: JSON.stringify({ provider, payerPhone }),
+      body: JSON.stringify({ bookingId, provider, ...(payerPhone && { payerPhone }) }),
     }),
 
   // Upload receipt using paymentId (from initiate payment response)
-  // Endpoint: POST /api/v1/payments/:paymentId/upload-receipt-file
+  // Endpoint: POST /api/v1/payments/:id/receipt
   // Important: Use payment.id from initiate payment response, NOT bookingId
+  // Request: FormData with 'receipt' file
+  // Response: { payment: Payment, message: string }
   uploadReceipt: (paymentId: string | number, receipt: FormData) =>
-    apiFetch<ApiResponse<Payment>>(`/payments/${paymentId}/upload-receipt-file`, {
+    apiFetch<ApiResponse<{ payment: Payment; message: string }>>(`/payments/${paymentId}/receipt`, {
       method: 'POST',
       body: receipt,
     }),

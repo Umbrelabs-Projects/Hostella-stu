@@ -1,28 +1,97 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense, useMemo, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileSettings from "./profile-settings/ProfileSettings";
 import PasswordSettings from "./password-settings/PasswordSettings";
 import HealthInfoSettings from "./health-settings/HealthInfoSettings";
 import SettingsSidebar from "./components/SettingsSidebar";
 import { EmergencyDetails } from "./emergency-details/EmergencyDetails";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function SettingsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, fetchProfile } = useAuthStore();
   const [activeTab, setActiveTab] = useState("profile");
-  const isIncomplete = searchParams?.get("incomplete") === "true";
+  const [showAlert, setShowAlert] = useState(false);
+  const urlIncomplete = searchParams?.get("incomplete") === "true";
+  const wasAlertShowingRef = useRef(false);
 
+  // Check if profile is actually complete
+  const checkProfileComplete = useMemo(() => {
+    if (!user) return { isComplete: false, missingFields: [] };
+
+    const isEmpty = (value: string | null | undefined): boolean => {
+      if (value === null || value === undefined) return true;
+      if (typeof value === 'string' && value.trim() === '') return true;
+      return false;
+    };
+
+    const missingFields: string[] = [];
+    if (isEmpty(user.campus)) missingFields.push("Campus");
+    if (isEmpty(user.programme)) missingFields.push("Programme");
+    if (isEmpty(user.studentRefNumber)) missingFields.push("Student ID");
+    if (isEmpty(user.level)) missingFields.push("Level");
+    if (isEmpty(user.emergencyContactName)) missingFields.push("Emergency Contact Name");
+    if (isEmpty(user.emergencyContactPhone)) missingFields.push("Emergency Contact Phone");
+    if (isEmpty(user.emergencyContactRelation)) missingFields.push("Emergency Contact Relation");
+
+    return {
+      isComplete: missingFields.length === 0,
+      missingFields,
+    };
+  }, [user]);
+
+  // Show/hide alert based on profile completion status and URL param
   useEffect(() => {
-    if (isIncomplete) {
+    // Only show alert if URL has incomplete param AND profile is actually incomplete
+    if (urlIncomplete && !checkProfileComplete.isComplete) {
+      setShowAlert(true);
+      wasAlertShowingRef.current = true;
       toast.error("Please complete your profile before booking", { duration: 5000 });
-      // Auto-select the profile tab if incomplete
       setActiveTab("profile");
+    } else if (checkProfileComplete.isComplete) {
+      // Profile is complete, always hide alert and remove query param
+      const wasShowing = wasAlertShowingRef.current;
+      setShowAlert(false);
+      wasAlertShowingRef.current = false;
+      if (urlIncomplete) {
+        router.replace("/dashboard/settings", { scroll: false });
+      }
+      // Only show success toast if alert was previously showing
+      if (wasShowing) {
+        toast.success("Profile completed successfully!");
+      }
+    } else if (!urlIncomplete) {
+      // No incomplete param in URL, hide alert
+      setShowAlert(false);
+      wasAlertShowingRef.current = false;
     }
-  }, [isIncomplete]);
+  }, [urlIncomplete, checkProfileComplete.isComplete, router]);
+
+  // Auto-dismiss alert after 10 seconds
+  useEffect(() => {
+    if (showAlert && !checkProfileComplete.isComplete) {
+      const timer = setTimeout(() => {
+        setShowAlert(false);
+      }, 10000); // 10 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert, checkProfileComplete.isComplete]);
+
+  // Fetch profile on mount if needed
+  useEffect(() => {
+    if (!user) {
+      fetchProfile().catch(() => {
+        /* error handled in store */
+      });
+    }
+  }, [user, fetchProfile]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -50,23 +119,69 @@ function SettingsContent() {
 
           {/* Main Content with animations */}
           <div className="md:flex-1 min-w-0">
-            {/* Incomplete Profile Alert */}
-            {isIncomplete && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3"
-              >
-                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-red-800">Profile Incomplete</p>
-                  <p className="text-sm text-red-700 mt-1">
-                    Please complete all required fields in your profile before proceeding with booking.
-                    Make sure to fill in your campus, programme, student ID, level, and emergency contact information.
-                  </p>
-                </div>
-              </motion.div>
-            )}
+            {/* Incomplete Profile Alert - Only show if actually incomplete */}
+            <AnimatePresence>
+              {showAlert && !checkProfileComplete.isComplete && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mb-6 bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-200 rounded-xl p-5 shadow-lg relative overflow-hidden"
+                >
+                  {/* Decorative background */}
+                  <div className="absolute inset-0 opacity-5">
+                    <div className="absolute inset-0" style={{
+                      backgroundImage: `radial-gradient(circle at 2px 2px, rgb(239 68 68) 1px, transparent 0)`,
+                      backgroundSize: '24px 24px'
+                    }}></div>
+                  </div>
+                  
+                  <div className="relative flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
+                        <AlertCircle className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900 text-lg mb-1">Profile Incomplete</p>
+                          <p className="text-sm text-gray-700 mb-3 leading-relaxed">
+                            Please complete all required fields in your profile before proceeding with booking.
+                          </p>
+                          
+                          {/* Missing fields as badges */}
+                          {checkProfileComplete.missingFields.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {checkProfileComplete.missingFields.map((field, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm border border-orange-200 rounded-full text-xs font-medium text-orange-800 shadow-sm"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                  {field}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Close button */}
+                        <button
+                          onClick={() => setShowAlert(false)}
+                          className="flex-shrink-0 w-8 h-8 rounded-full bg-white/80 hover:bg-white border border-orange-200 flex items-center justify-center transition-colors"
+                          aria-label="Dismiss alert"
+                        >
+                          <X className="w-4 h-4 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <AnimatePresence mode="wait">
               <motion.div

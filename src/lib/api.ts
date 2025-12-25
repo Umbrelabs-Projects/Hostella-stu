@@ -597,14 +597,15 @@ export const paymentApi = {
     }),
 
   // Upload receipt using paymentId (from initiate payment response)
-  // Endpoint: POST /api/v1/payments/:id/receipt
+  // Endpoint: POST /api/v1/payments/:id/upload-receipt-file
   // Important: Use payment.id from initiate payment response, NOT bookingId
-  // Request: FormData with 'receipt' file
+  // Request: FormData with 'receipt' file (field name must be "receipt")
   // Response: { payment: Payment, message: string }
+  // Note: Content-Type is automatically set by browser for FormData (multipart/form-data with boundary)
   uploadReceipt: (paymentId: string | number, receipt: FormData) =>
-    apiFetch<ApiResponse<{ payment: Payment; message: string }>>(`/payments/${paymentId}/receipt`, {
+    apiFetch<ApiResponse<{ payment: Payment; message: string }>>(`/payments/${paymentId}/upload-receipt-file`, {
       method: 'POST',
-      body: receipt,
+      body: receipt, // FormData - Content-Type will be set automatically by browser
     }),
 
   // Verify payment by reference (for Paystack payments)

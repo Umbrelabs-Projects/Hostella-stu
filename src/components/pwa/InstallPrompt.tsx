@@ -20,16 +20,31 @@ export default function InstallPrompt() {
       return;
     }
 
-    // Check if user has dismissed the prompt before
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed) {
+    // Check if user has permanently dismissed the prompt
+    const permanentlyDismissed = localStorage.getItem('pwa-install-dismissed');
+    if (permanentlyDismissed === 'true') {
       return;
+    }
+
+    // Check if prompt was shown recently (within last 7 days)
+    const lastShown = localStorage.getItem('pwa-install-last-shown');
+    if (lastShown) {
+      const lastShownTime = parseInt(lastShown, 10);
+      const now = Date.now();
+      const daysSinceLastShown = (now - lastShownTime) / (1000 * 60 * 60 * 24);
+      
+      // Only show again after 7 days
+      if (daysSinceLastShown < 7) {
+        return;
+      }
     }
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowPrompt(true);
+      // Store the current time when prompt is shown
+      localStorage.setItem('pwa-install-last-shown', Date.now().toString());
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -57,7 +72,10 @@ export default function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', 'true');
+    // Store current time so we can show again after interval
+    localStorage.setItem('pwa-install-last-shown', Date.now().toString());
+    // Only permanently dismiss if user explicitly dismisses multiple times
+    // For now, just track the last shown time
   };
 
   if (!showPrompt) return null;

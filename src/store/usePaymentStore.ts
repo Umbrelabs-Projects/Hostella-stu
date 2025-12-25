@@ -149,8 +149,21 @@ export const usePaymentStore = create<PaymentState>((set) => ({
   uploadReceipt: async (paymentId, receipt) => {
     set({ loading: true, error: null });
     try {
+      // Ensure receipt is a File object
+      if (!(receipt instanceof File)) {
+        throw new Error('Invalid file. Please select a valid image file.');
+      }
+      
       const formData = new FormData();
       formData.append('receipt', receipt);
+      
+      console.log('Uploading receipt:', {
+        paymentId,
+        fileName: receipt.name,
+        fileSize: receipt.size,
+        fileType: receipt.type,
+      });
+      
       const response = await paymentApi.uploadReceipt(paymentId, formData);
       
       // Response structure: { success: true, data: { payment: Payment, message: string } }
@@ -175,9 +188,55 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         loading: false,
         error: null,
       });
+      
+      if (message) {
+        console.log('Upload success message:', message);
+      }
     } catch (error: unknown) {
+      console.error('Receipt upload error:', {
+        error,
+        paymentId,
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      
+      let errorMessage = 'Failed to upload receipt. Please try again.';
+      
+      if (error instanceof ApiError) {
+        switch (error.statusCode) {
+          case 400:
+            errorMessage = error.message || 'Invalid file format or size. Please check and try again.';
+            break;
+          case 401:
+            errorMessage = 'Authentication required. Please log in again.';
+            break;
+          case 403:
+            errorMessage = 'You do not have permission to upload receipt for this payment.';
+            break;
+          case 404:
+            errorMessage = 'Payment not found. Please refresh and try again.';
+            break;
+          case 413:
+            errorMessage = 'File too large. Maximum size is 5MB.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = error.message || `Upload failed (${error.statusCode}). Please try again.`;
+        }
+      } else if (error instanceof Error) {
+        if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('JSON') || error.message.includes('non-JSON')) {
+          errorMessage = 'Server returned an invalid response. The endpoint might be incorrect.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       set({
-        error: error instanceof Error ? error.message : 'Failed to upload receipt',
+        error: errorMessage,
         loading: false,
       });
       throw error; // Re-throw so component can handle it

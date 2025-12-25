@@ -183,8 +183,22 @@ export default function BankDetails({
       // Step 3: Upload receipt using paymentId (NOT bookingId!)
       // Endpoint: POST /api/v1/payments/:paymentId/upload-receipt-file
       // Important: Use payment.id from step 2, NOT bookingId or studentRefNumber
-      console.log("Uploading receipt for payment ID:", paymentId);
-      await uploadReceipt(paymentId, data.receipt[0]);
+      // Request: FormData with 'receipt' file
+      console.log("Uploading receipt for payment ID:", paymentId, "File:", data.receipt[0]?.name);
+      
+      if (!paymentId) {
+        toast.error("Payment ID is missing. Please initiate payment first.");
+        return;
+      }
+      
+      // Validate file before upload
+      const file = data.receipt[0];
+      if (!file) {
+        toast.error("Please select a file to upload.");
+        return;
+      }
+      
+      await uploadReceipt(paymentId, file);
       
       // Reset form after successful upload
       resetForm();

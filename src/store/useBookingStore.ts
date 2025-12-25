@@ -139,8 +139,17 @@ export const useBookingStore = create<BookingState>((set) => ({
     }
   },
 
-  fetchBookingById: async (id) => {
-    set({ loading: true, error: null });
+  fetchBookingById: async (id, silent = false) => {
+    // Prevent duplicate requests - if already loading for this booking, skip
+    const state = useBookingStore.getState();
+    if (state.loading && state.selectedBooking?.id === id && !silent) {
+      return; // Already fetching this booking, skip duplicate request
+    }
+    
+    // Only set loading for non-silent requests (initial fetches)
+    if (!silent) {
+      set({ loading: true, error: null });
+    }
     try {
       const response = await bookingApi.getById(id);
       
@@ -197,10 +206,19 @@ export const useBookingStore = create<BookingState>((set) => ({
         price: transformed.price,
         roomTitle: transformed.roomTitle,
       });
-      set({
-        selectedBooking: transformed,
-        loading: false,
-      });
+      // Update state - only set loading to false if it was set to true (non-silent mode)
+      if (silent) {
+        // Silent mode: update data without changing loading state
+        set({
+          selectedBooking: transformed,
+        });
+      } else {
+        // Normal mode: update data and set loading to false
+        set({
+          selectedBooking: transformed,
+          loading: false,
+        });
+      }
     } catch (error: unknown) {
       // Check if it's a 404 or empty response (booking not found)
       let errorMessage = 'Failed to fetch booking';
@@ -229,10 +247,16 @@ export const useBookingStore = create<BookingState>((set) => ({
         });
       }
       
-      set({
-        error: errorMessage,
-        loading: false,
-      });
+      if (!silent) {
+        set({
+          error: errorMessage,
+          loading: false,
+        });
+      } else {
+        set({
+          error: errorMessage,
+        });
+      }
     }
   },
 

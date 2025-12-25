@@ -22,7 +22,7 @@ interface PaymentState {
   uploadReceipt: (paymentId: string | number, receipt: File) => Promise<void>;
   verifyPayment: (paymentId: string | number, reference: string) => Promise<void>;
   verifyPaymentByReference: (reference: string) => Promise<Payment | null>;
-  fetchPaymentsByBookingId: (bookingId: string | number) => Promise<void>;
+  fetchPaymentsByBookingId: (bookingId: string | number, silent?: boolean) => Promise<void>;
   setCurrentPayment: (payment: Payment | null) => void;
   clearError: () => void;
 }
@@ -161,8 +161,17 @@ export const usePaymentStore = create<PaymentState>((set) => ({
     }
   },
 
-  fetchPaymentsByBookingId: async (bookingId) => {
-    set({ loading: true, error: null });
+  fetchPaymentsByBookingId: async (bookingId, silent = false) => {
+    // Prevent duplicate requests - if already loading, skip
+    const state = usePaymentStore.getState();
+    if (state.loading && !silent) {
+      return; // Already fetching, skip duplicate request
+    }
+    
+    // Only set loading for non-silent requests (initial fetches)
+    if (!silent) {
+      set({ loading: true, error: null });
+    }
     try {
       const response = await paymentApi.getByBookingId(bookingId);
       
@@ -197,35 +206,63 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // Convert single payment to array for consistency with UI
       const paymentsArray = payment ? [payment] : [];
       
-      set({
-        payments: paymentsArray,
-        currentPayment: payment,
-        loading: false,
-        error: null,
-      });
+      // Update state - only set loading to false if it was set to true (non-silent mode)
+      if (silent) {
+        // Silent mode: update data without changing loading state
+        set({
+          payments: paymentsArray,
+          currentPayment: payment,
+          error: null,
+        });
+      } else {
+        // Normal mode: update data and set loading to false
+        set({
+          payments: paymentsArray,
+          currentPayment: payment,
+          loading: false,
+          error: null,
+        });
+      }
     } catch (error: unknown) {
       // If it's a 404, treat it as no payment found (not an error)
       if (error instanceof ApiError) {
         if (error.statusCode === 404) {
           // No payment found for this booking - this is normal, not an error
-          set({
-            payments: [],
-            currentPayment: null,
-            loading: false,
-            error: null,
-          });
+          if (silent) {
+            set({
+              payments: [],
+              currentPayment: null,
+              error: null,
+            });
+          } else {
+            set({
+              payments: [],
+              currentPayment: null,
+              loading: false,
+              error: null,
+            });
+          }
           return;
         }
       }
       
       // For other errors, log but don't show error to user (empty state is handled in UI)
       console.warn('Failed to fetch payment for booking:', bookingId, error);
-      set({
-        payments: [],
-        currentPayment: null,
-        loading: false,
-        error: null, // Don't set error - let UI show "No payment attempts" message
-      });
+      if (silent) {
+        // Silent mode: don't update loading state
+        set({
+          payments: [],
+          currentPayment: null,
+          error: null, // Don't set error - let UI show "No payment attempts" message
+        });
+      } else {
+        set({
+          payments: [],
+          currentPayment: null,
+          loading: false,
+          error: null, // Don't set error - let UI show "No payment attempts" message
+        });
+      }
     }
   },
 

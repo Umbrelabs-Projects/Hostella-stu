@@ -39,12 +39,13 @@ export default function BookingDetails({
   const { currentPayment, fetchPaymentsByBookingId } = usePaymentStore();
   const { fetchBookingById, selectedBooking } = useBookingStore();
   
-  // Fetch payment for this booking
+  // Fetch payment for this booking (only once on mount or when booking.id changes)
   useEffect(() => {
     if (booking.id) {
       fetchPaymentsByBookingId(booking.id);
     }
-  }, [booking.id, fetchPaymentsByBookingId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking.id]); // Only depend on booking.id to avoid re-fetching on function changes
 
   // Poll payment status every 30 seconds when payment is AWAITING_VERIFICATION
   // According to guide: Poll GET /payments/booking/:bookingId every 30 seconds when payment is AWAITING_VERIFICATION
@@ -57,14 +58,15 @@ export default function BookingDetails({
     
     if (!isAwaitingVerification) return;
 
-    // Poll every 30 seconds
+    // Poll every 30 seconds (silent mode - don't show loading)
     const interval = setInterval(() => {
-      fetchPaymentsByBookingId(booking.id);
+      fetchPaymentsByBookingId(booking.id, true); // true = silent mode
     }, 30000); // 30 seconds
 
     // Cleanup interval on unmount or when payment status changes
     return () => clearInterval(interval);
-  }, [booking.id, currentPayment?.status, fetchPaymentsByBookingId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking.id, currentPayment?.status]); // Remove function dependency
 
   // Track if we've already refreshed for this payment confirmation
   const [hasRefreshedForConfirmed, setHasRefreshedForConfirmed] = useState(false);
@@ -128,7 +130,8 @@ export default function BookingDetails({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [booking.id, booking.status, currentPayment?.status, fetchBookingById, onBookingUpdate, hasRefreshedForConfirmed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking.id, booking.status, currentPayment?.status, hasRefreshedForConfirmed]); // Remove function dependencies
 
   // Poll booking status every 30 seconds when payment is CONFIRMED
   // This detects when booking status automatically changes to "pending approval"
@@ -141,10 +144,10 @@ export default function BookingDetails({
     
     if (!isConfirmed) return;
 
-    // Poll every 30 seconds to check for booking status update
+    // Poll every 30 seconds to check for booking status update (silent mode - don't show loading)
     const interval = setInterval(async () => {
       try {
-        await fetchBookingById(booking.id);
+        await fetchBookingById(booking.id, true); // true = silent mode
         // Update parent component if callback provided
         // Use a small delay to ensure selectedBooking is updated
         setTimeout(() => {
@@ -163,7 +166,8 @@ export default function BookingDetails({
 
     // Cleanup interval on unmount or when payment status changes
     return () => clearInterval(interval);
-  }, [booking.id, currentPayment?.status, fetchBookingById, onBookingUpdate, selectedBooking]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking.id, currentPayment?.status]); // Remove function dependencies to prevent re-renders
   
   // Check if booking is cancelled - show delete option instead of full details
   const isCancelled = booking.status.toLowerCase() === 'cancelled';
@@ -430,11 +434,19 @@ export default function BookingDetails({
             })()}
           </div>
 
-          {/* Payment History - Hide if payment is AWAITING_VERIFICATION (shown in dialog instead) */}
+          {/* Payment History - Hide if:
+              1. Payment is AWAITING_VERIFICATION (shown in dialog instead)
+              2. Booking status is "pending approval" (payment already confirmed, no need to show history)
+              3. Booking status is "approved" (payment already confirmed, no need to show history)
+          */}
           {booking.id && 
            (!currentPayment || 
-            currentPayment.status !== 'AWAITING_VERIFICATION' && 
-            currentPayment.status !== 'awaiting_verification') && 
+            (currentPayment.status !== 'AWAITING_VERIFICATION' && 
+             currentPayment.status !== 'awaiting_verification')) &&
+           (() => {
+             const normalizedStatus = booking.status.toLowerCase().replace(/_/g, ' ');
+             return normalizedStatus !== 'pending approval' && normalizedStatus !== 'approved';
+           })() && 
            <PaymentHistory bookingId={booking.id} />}
           {/* Actions */}
           <BookingActions booking={booking} onBack={onBack} />

@@ -45,13 +45,8 @@ export default function BookingActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
-  // Fetch payment for this booking to check if payment exists
-  // According to guide: "Proceed to Payment" only shows if payment === null
-  useEffect(() => {
-    if (booking.id) {
-      fetchPaymentsByBookingId(booking.id);
-    }
-  }, [booking.id, fetchPaymentsByBookingId]);
+  // Note: Payment is already fetched by BookingDetails component
+  // We just use the currentPayment from the store to avoid duplicate API calls
 
   const handleCancelConfirm = async () => {
     try {
@@ -291,14 +286,13 @@ export default function BookingActions({
 
       case "approved":
         return (
-          <div className="flex flex-col gap-2">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800 flex items-center gap-2">
-              <CheckCircle size={18} className="text-green-600" />
-              <span>
-                <strong>Booking Approved!</strong> Your payment has been verified. Waiting for room assignment.
-              </span>
-            </div>
-          </div>
+          <button
+            onClick={() => router.push(`/dashboard/booking/success/${booking.id}`)}
+            className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
+          >
+            <FileText size={18} />
+            View Receipt
+          </button>
         );
 
       case "room_allocated":

@@ -204,82 +204,93 @@ export default function BankDetails({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Payment Note - Compact */}
-      <motion.div
-        className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg shadow-md p-3 border border-amber-200"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.5 }}
-      >
-        <div className="flex items-start gap-2">
-          <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-            <AlertTriangle className="w-4 h-4 text-white" />
-          </div>
-          <p className="text-xs text-amber-900 leading-relaxed">
-            Please make payment to the account below. Hostella won&apos;t be responsible for any wrong transaction.
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Bank Account Details - Compact */}
-      <motion.div
-        className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        <motion.h3
-          className="text-sm font-bold mb-3 text-gray-900 flex items-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-            <CreditCard className="w-4 h-4 text-white" />
-          </div>
-          Bank Account Details
-        </motion.h3>
-
-        <div className="space-y-2">
-          {BankDetails.map((detail, index) => (
-            <motion.div
-              className={`flex items-center justify-between p-2 rounded ${
-                detail.title === "Amount" 
-                  ? "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200" 
-                  : "bg-gray-50 border border-gray-100"
-              }`}
-              key={detail.title}
-              initial={{ opacity: 0, x: -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + index * 0.05, duration: 0.3 }}
-            >
-              <div className="flex items-center gap-2">
-                <div className={`w-5 h-5 rounded flex items-center justify-center ${
-                  detail.title === "Amount" 
-                    ? "bg-yellow-500" 
-                    : "bg-gray-200"
-                }`}>
-                  {detail.title === "Amount" ? (
-                    <DollarSign className="w-3 h-3 text-white" />
-                  ) : (
-                    <CreditCard className="w-3 h-3 text-gray-600" />
-                  )}
-                </div>
-                <span className={`text-xs font-medium ${detail.title === "Amount" ? "text-gray-700" : "text-gray-600"}`}>
-                  {detail.title}
-                </span>
+      {/* Payment Note and Bank Account Details - Hide when upload form is showing */}
+      {/* Show only when payment doesn't exist or payment is not in INITIATED status without receipt */}
+      {!currentPayment || 
+       !(currentPayment.status === 'INITIATED' || 
+         currentPayment.status === 'initiated' ||
+         currentPayment.status === 'PENDING' || 
+         currentPayment.status === 'pending' ||
+         !currentPayment.receiptUrl) ? (
+        <>
+          {/* Payment Note - Compact */}
+          <motion.div
+            className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg shadow-md p-3 border border-amber-200"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+          >
+            <div className="flex items-start gap-2">
+              <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                <AlertTriangle className="w-4 h-4 text-white" />
               </div>
-              <span className={`text-xs font-semibold ${
-                detail.title === "Amount" 
-                  ? "text-yellow-700" 
-                  : "text-gray-900"
-              }`}>
-                {detail.value}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+              <p className="text-xs text-amber-900 leading-relaxed">
+                Please make payment to the account below. Hostella won&apos;t be responsible for any wrong transaction.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Bank Account Details - Compact */}
+          <motion.div
+            className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <motion.h3
+              className="text-sm font-bold mb-3 text-gray-900 flex items-center gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-white" />
+              </div>
+              Bank Account Details
+            </motion.h3>
+
+            <div className="space-y-2">
+              {BankDetails.map((detail, index) => (
+                <motion.div
+                  className={`flex items-center justify-between p-2 rounded ${
+                    detail.title === "Amount" 
+                      ? "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200" 
+                      : "bg-gray-50 border border-gray-100"
+                  }`}
+                  key={detail.title}
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + index * 0.05, duration: 0.3 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center ${
+                      detail.title === "Amount" 
+                        ? "bg-yellow-500" 
+                        : "bg-gray-200"
+                    }`}>
+                      {detail.title === "Amount" ? (
+                        <DollarSign className="w-3 h-3 text-white" />
+                      ) : (
+                        <CreditCard className="w-3 h-3 text-gray-600" />
+                      )}
+                    </div>
+                    <span className={`text-xs font-medium ${detail.title === "Amount" ? "text-gray-700" : "text-gray-600"}`}>
+                      {detail.title}
+                    </span>
+                  </div>
+                  <span className={`text-xs font-semibold ${
+                    detail.title === "Amount" 
+                      ? "text-yellow-700" 
+                      : "text-gray-900"
+                  }`}>
+                    {detail.value}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </>
+      ) : null}
 
       {/* Payment Status Badge */}
       {currentPayment && (

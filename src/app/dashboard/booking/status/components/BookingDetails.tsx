@@ -66,33 +66,69 @@ export default function BookingDetails({
     return () => clearInterval(interval);
   }, [booking.id, currentPayment?.status, fetchPaymentsByBookingId]);
 
+  // Track if we've already refreshed for this payment confirmation
+  const [hasRefreshedForConfirmed, setHasRefreshedForConfirmed] = useState(false);
+
   // Refresh booking when payment status changes to CONFIRMED
   // According to guide: When payment status becomes CONFIRMED, booking status automatically changes to "pending approval"
   // We need to refresh the booking to see the updated status
   useEffect(() => {
-    if (!booking.id || !currentPayment) return;
+    if (!booking.id || !currentPayment) {
+      setHasRefreshedForConfirmed(false);
+      return;
+    }
     
     const isConfirmed = 
       currentPayment.status === 'CONFIRMED' || 
       currentPayment.status === 'confirmed';
     
-    if (!isConfirmed) return;
+    // Reset refresh flag if payment is no longer confirmed
+    if (!isConfirmed) {
+      setHasRefreshedForConfirmed(false);
+      return;
+    }
+
+    // Only refresh once when payment becomes confirmed
+    if (hasRefreshedForConfirmed) return;
+
+    // Only refresh if booking status is still "pending payment"
+    // If it's already "pending approval", the backend has already updated it
+    const normalizedStatus = booking.status.toLowerCase().replace(/_/g, ' ');
+    if (normalizedStatus === 'pending approval') {
+      // Already updated, no need to refresh
+      setHasRefreshedForConfirmed(true);
+      return;
+    }
 
     // Refresh booking to get updated status (should be "pending approval" now)
     const refreshBooking = async () => {
       try {
         await fetchBookingById(booking.id);
+        setHasRefreshedForConfirmed(true);
         // If onBookingUpdate callback is provided, update the parent component
-        if (onBookingUpdate && selectedBooking) {
-          onBookingUpdate(selectedBooking);
-        }
+        // Use a small delay to ensure selectedBooking is updated
+        setTimeout(() => {
+          if (onBookingUpdate) {
+            const updatedBooking = useBookingStore.getState().selectedBooking;
+            if (updatedBooking) {
+              onBookingUpdate(updatedBooking);
+            }
+          }
+        }, 100);
       } catch (error) {
-        console.error('Failed to refresh booking:', error);
+        // Silently handle errors - don't spam console
+        // The error is already logged by apiFetch, but we'll mark as refreshed to prevent loops
+        setHasRefreshedForConfirmed(true); // Mark as refreshed to prevent retry loops
       }
     };
 
-    refreshBooking();
-  }, [booking.id, currentPayment?.status, fetchBookingById, onBookingUpdate, selectedBooking]);
+    // Add a small delay to avoid race conditions
+    const timeoutId = setTimeout(() => {
+      refreshBooking();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [booking.id, booking.status, currentPayment?.status, fetchBookingById, onBookingUpdate, hasRefreshedForConfirmed]);
 
   // Poll booking status every 30 seconds when payment is CONFIRMED
   // This detects when booking status automatically changes to "pending approval"
@@ -110,11 +146,18 @@ export default function BookingDetails({
       try {
         await fetchBookingById(booking.id);
         // Update parent component if callback provided
-        if (onBookingUpdate && selectedBooking) {
-          onBookingUpdate(selectedBooking);
-        }
+        // Use a small delay to ensure selectedBooking is updated
+        setTimeout(() => {
+          if (onBookingUpdate) {
+            const updatedBooking = useBookingStore.getState().selectedBooking;
+            if (updatedBooking) {
+              onBookingUpdate(updatedBooking);
+            }
+          }
+        }, 100);
       } catch (error) {
-        console.error('Failed to poll booking status:', error);
+        // Silently handle errors - don't spam console
+        // The error is already logged by apiFetch
       }
     }, 30000); // 30 seconds
 

@@ -28,12 +28,10 @@ describe('useBookingStore', () => {
 
   it('should set selected booking', () => {
     const { result } = renderHook(() => useBookingStore());
-    const mockBooking: Partial<Booking> = {
-      id: 1,
-      userId: 1,
-      hostelId: 1,
-      roomId: 1,
-      status: 'pending_payment',
+    const mockBooking: Booking = {
+      id: '1',
+      bookingId: 'BK-1',
+      status: 'pending payment',
     };
     act(() => {
       result.current.setSelectedBooking(mockBooking);

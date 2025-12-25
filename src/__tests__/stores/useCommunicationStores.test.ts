@@ -32,7 +32,7 @@ describe('useChatStore', () => {
 
   it('should set selected chat', () => {
     const { result } = renderHook(() => useChatStore());
-    const mockChat: Partial<Chat> = {
+    const mockChat: Chat = {
       id: 1,
       lastMessage: 'Hello',
       lastMessageTime: '',

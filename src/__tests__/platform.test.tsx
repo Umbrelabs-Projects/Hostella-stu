@@ -180,12 +180,10 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected booking', () => {
       const { result } = renderHook(() => useBookingStore());
-      const mockBooking: Partial<Booking> = {
-        id: 1,
-        userId: 1,
-        hostelId: 1,
-        roomId: 1,
-        status: 'pending_payment',
+      const mockBooking: Booking = {
+        id: '1',
+        bookingId: 'BK-1',
+        status: 'pending payment',
       };
       act(() => {
         result.current.setSelectedBooking(mockBooking);
@@ -214,11 +212,20 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected hostel', () => {
       const { result } = renderHook(() => useHostelStore());
-      const mockHostel: Partial<Hostel> = {
-        id: 1,
+      const mockHostel: Hostel = {
+        id: '1',
         name: 'Test Hostel',
         location: 'Test Location',
         rating: 4.5,
+        campus: null,
+        description: null,
+        image: null,
+        images: [],
+        amenities: [],
+        priceRange: { min: 0, max: 0 },
+        availableRooms: 0,
+        totalRooms: 0,
+        createdAt: '2024-01-01T00:00:00Z',
       };
       act(() => {
         result.current.setSelectedHostel(mockHostel);
@@ -239,12 +246,15 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected room', () => {
       const { result } = renderHook(() => useRoomStore());
-      const mockRoom: Partial<Room> = {
-        id: 1,
-        hostelId: 1,
+      const mockRoom: Room = {
+        id: '1',
+        hostelId: '1',
         title: 'Deluxe Room',
-        type: 'Private',
+        type: 'SINGLE',
         price: 50,
+        description: 'Test room',
+        available: 1,
+        capacity: 1,
       };
       act(() => {
         result.current.setSelectedRoom(mockRoom);
@@ -284,7 +294,7 @@ describe('Hostella Platform - Comprehensive Test Suite', () => {
 
     it('should set selected chat', () => {
       const { result } = renderHook(() => useChatStore());
-      const mockChat: Partial<Chat> = {
+      const mockChat: Chat = {
         id: 1,
         lastMessage: 'Hello',
         lastMessageTime: '',

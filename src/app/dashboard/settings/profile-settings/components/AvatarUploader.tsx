@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Upload, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface AvatarUploaderProps {
   avatar?: string | null;
@@ -44,7 +45,7 @@ export default function AvatarUploader({
       // Validate file size (5MB max)
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       if (file.size > maxSize) {
-        alert("Avatar image must be less than 5MB");
+        toast.error("Avatar image must be less than 5MB");
         e.target.value = ""; // Clear input
         return;
       }
@@ -52,7 +53,7 @@ export default function AvatarUploader({
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        alert("Only image files (JPEG, JPG, PNG, GIF, WEBP) are allowed");
+        toast.error("Only image files (JPEG, JPG, PNG, GIF, WEBP) are allowed");
         e.target.value = ""; // Clear input
         return;
       }

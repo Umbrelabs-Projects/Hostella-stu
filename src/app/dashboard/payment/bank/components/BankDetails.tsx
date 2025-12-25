@@ -13,6 +13,7 @@ import { usePaymentStore } from "@/store/usePaymentStore";
 import { useBookingStore } from "@/store/useBookingStore";
 import { AlertTriangle, CreditCard, DollarSign, Loader2, CheckCircle, Eye, Info, Clock } from "lucide-react";
 import PaymentStatusBadge from "../../components/PaymentStatusBadge";
+import { toast } from "sonner";
 
 // Define Zod Schema
 const paymentSchema = z.object({
@@ -154,7 +155,7 @@ export default function BankDetails({
           selectedBooking: selectedBooking?.id,
           extraDetails: extraBookingDetails.bookingId,
         });
-        alert("Booking ID not found. Please navigate back and try again, or refresh the page.");
+        toast.error("Booking ID not found. Please navigate back and try again, or refresh the page.");
         return;
       }
 
@@ -169,7 +170,7 @@ export default function BankDetails({
         // Response structure: { payment, bankDetails?, isNewPayment }
         const result = await initiatePayment(finalBookingId, 'BANK_TRANSFER');
         if (!result || !result.payment || !result.payment.id) {
-          alert("Failed to initiate payment. Please try again.");
+          toast.error("Failed to initiate payment. Please try again.");
           return;
         }
         // Save paymentId from response - this is what we'll use to upload receipt
@@ -192,7 +193,7 @@ export default function BankDetails({
       router.push("/dashboard/payment/paymentCompleted");
     } catch (error: unknown) {
       console.error("Receipt upload failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to submit receipt. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to submit receipt. Please try again.");
       // Form will automatically reset isSubmitting state when error is thrown
     }
   };
@@ -421,7 +422,7 @@ export default function BankDetails({
                   }
                 } catch (error) {
                   console.error('Failed to initiate payment:', error);
-                  alert('Failed to initiate payment. Please try again.');
+                  toast.error('Failed to initiate payment. Please try again.');
                 }
               }}
               disabled={loading}

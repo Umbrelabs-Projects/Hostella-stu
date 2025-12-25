@@ -302,7 +302,7 @@ export default function BookingDetails({
                   Contact Support for Refund Status
                 </p>
                 <p className="text-xs text-amber-700">
-                  If you've made a payment, please contact support to check your refund status.
+                  If you&apos;ve made a payment, please contact support to check your refund status.
                 </p>
               </div>
             </div>

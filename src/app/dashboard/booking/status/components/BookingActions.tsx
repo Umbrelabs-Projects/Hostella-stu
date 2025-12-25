@@ -376,7 +376,7 @@ export default function BookingActions({
                 setIsDownloadingReceipt(true);
                 try {
                   // Import and call printBookingDetails
-                  const { printBookingDetails } = await import('@/utils/printBooking');
+                  const { printBookingDetails } = await import('../../../../../utils/printBooking');
                   printBookingDetails(booking);
                   // Reset after a short delay to allow download to start
                   setTimeout(() => setIsDownloadingReceipt(false), 500);

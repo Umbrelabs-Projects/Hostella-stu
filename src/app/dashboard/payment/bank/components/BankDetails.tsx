@@ -458,7 +458,7 @@ export default function BankDetails({
                 <strong className="text-blue-900 block mb-1">Receipt Uploaded</strong>
                 <p className="text-sm text-blue-800">
                   Your receipt has been uploaded. The admin has been notified and will review it shortly. 
-                  You'll be notified once your payment is verified.
+                  You&apos;ll be notified once your payment is verified.
                 </p>
                 {currentPayment.receiptUrl && (
                   <div className="mt-3">

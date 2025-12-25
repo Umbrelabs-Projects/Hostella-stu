@@ -369,8 +369,7 @@ export default function BookingDetails({
               ) {
                 return (
                   <RoomAllocationInfo
-                    allocatedRoomNumber={booking.allocatedRoomNumber}
-                    bookingDate={booking.date}
+                    booking={booking}
                     showAllocationMessage={
                       normalizedStatus === "room_allocated" ||
                       normalizedStatus === "room allocated"

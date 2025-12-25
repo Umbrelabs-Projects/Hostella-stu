@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Booking } from "@/types/bookingStatus";
 import { useBookingStore } from "@/store/useBookingStore";
 import { usePaymentStore } from "@/store/usePaymentStore";
-import { printBookingDetails } from "../../../../../../utils/printBooking";
+import { generateRoomDetailsPDF } from "@/utils/roomDetailsPDF";
+import MoveInInstructions from "./MoveInInstructions";
 import { toast } from "sonner";
 import { FileText, Download, MessageCircle, Home, AlertCircle, RefreshCw, CheckCircle, Trash2, DollarSign, Calendar, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
@@ -300,19 +301,20 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => printBookingDetails(booking)}
+              onClick={() => {
+                try {
+                  generateRoomDetailsPDF(booking);
+                } catch (error) {
+                  console.error('Failed to generate PDF:', error);
+                  toast.error('Failed to generate PDF. Please try again.');
+                }
+              }}
               className="bg-green-600 cursor-pointer hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
             >
               <Download size={18} />
               Download Room Details
             </button>
-            <button
-              onClick={() => printBookingDetails(booking)}
-              className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
-            >
-              <Home size={18} />
-              View Move-in Instructions
-            </button>
+            <MoveInInstructions booking={booking} />
           </>
         );
 

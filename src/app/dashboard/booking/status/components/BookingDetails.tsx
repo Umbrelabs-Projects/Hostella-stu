@@ -53,8 +53,7 @@ export default function BookingDetails({
     if (!booking.id || !currentPayment) return;
     
     const isAwaitingVerification = 
-      currentPayment.status === 'AWAITING_VERIFICATION' || 
-      currentPayment.status === 'awaiting_verification';
+      currentPayment.status === 'AWAITING_VERIFICATION';
     
     if (!isAwaitingVerification) return;
 
@@ -82,7 +81,7 @@ export default function BookingDetails({
     
     const isConfirmed = 
       currentPayment.status === 'CONFIRMED' || 
-      currentPayment.status === 'confirmed';
+      currentPayment.status === 'completed';
     
     // Reset refresh flag if payment is no longer confirmed
     if (!isConfirmed) {
@@ -140,7 +139,7 @@ export default function BookingDetails({
     
     const isConfirmed = 
       currentPayment.status === 'CONFIRMED' || 
-      currentPayment.status === 'confirmed';
+      currentPayment.status === 'completed';
     
     if (!isConfirmed) return;
 
@@ -332,7 +331,7 @@ export default function BookingDetails({
               {/* Status Badge - Show "Awaiting Verification" if payment is AWAITING_VERIFICATION */}
               <BookingStatusBadge 
                 status={
-                  currentPayment?.status === 'AWAITING_VERIFICATION' || currentPayment?.status === 'awaiting_verification'
+                  currentPayment?.status === 'AWAITING_VERIFICATION'
                     ? 'AWAITING_VERIFICATION'
                     : booking.status
                 } 
@@ -441,8 +440,7 @@ export default function BookingDetails({
           */}
           {booking.id && 
            (!currentPayment || 
-            (currentPayment.status !== 'AWAITING_VERIFICATION' && 
-             currentPayment.status !== 'awaiting_verification')) &&
+            currentPayment.status !== 'AWAITING_VERIFICATION') &&
            (() => {
              const normalizedStatus = booking.status.toLowerCase().replace(/_/g, ' ');
              return normalizedStatus !== 'pending approval' && normalizedStatus !== 'approved';

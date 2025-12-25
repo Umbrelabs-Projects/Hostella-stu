@@ -111,7 +111,7 @@ export default function BookingActions({
           }
           
           // If payment is AWAITING_VERIFICATION, show dialog with payment details
-          if (currentPayment.status === 'AWAITING_VERIFICATION' || currentPayment.status === 'awaiting_verification') {
+          if (currentPayment.status === 'AWAITING_VERIFICATION') {
             return (
               <>
                 <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>

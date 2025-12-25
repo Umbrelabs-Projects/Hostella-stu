@@ -33,7 +33,7 @@ export default function ReceiptPage() {
       // Only generate receipt if payment is confirmed
       const isPaymentConfirmed = 
         currentPayment.status === 'CONFIRMED' || 
-        currentPayment.status === 'confirmed' ||
+        currentPayment.status === 'completed' ||
         selectedBooking.status === 'approved' ||
         selectedBooking.status === 'pending approval';
 
@@ -78,9 +78,9 @@ export default function ReceiptPage() {
     const addText = (text: string, fontSize: number, isBold: boolean = false, align: 'left' | 'center' | 'right' = 'left', color: [number, number, number] = [0, 0, 0]) => {
       doc.setFontSize(fontSize);
       if (isBold) {
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
       } else {
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
       }
       doc.setTextColor(color[0], color[1], color[2]);
       
@@ -123,10 +123,10 @@ export default function ReceiptPage() {
     drawRect(margin, yPos - 5, contentWidth, headerHeight, [37, 99, 235]); // Blue background
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('PAYMENT RECEIPT', pageWidth / 2, yPos + 8, { align: 'center' });
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Hostella Booking System', pageWidth / 2, yPos + 15, { align: 'center' });
     yPos += headerHeight + 10;
     doc.setTextColor(0, 0, 0);
@@ -160,10 +160,10 @@ export default function ReceiptPage() {
     customerInfo.forEach((info, index) => {
       checkPageBreak(10);
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(107, 114, 128); // Gray
       doc.text(info.label + ':', margin, yPos);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text(info.value, margin + 80, yPos);
       yPos += 6;
@@ -185,10 +185,10 @@ export default function ReceiptPage() {
     doc.setFillColor(249, 250, 251);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
     doc.text('Base Charge', margin + 5, yPos + 3);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text(formatCurrency(receiptData.breakdown.baseAmount), pageWidth - margin - 5, yPos + 3, { align: 'right' });
     doc.setFontSize(9);
     doc.setTextColor(107, 114, 128);
@@ -199,7 +199,7 @@ export default function ReceiptPage() {
     doc.setFillColor(239, 246, 255); // Light blue
     doc.rect(margin, yPos - 3, contentWidth, 40, 'F');
     doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
     doc.text('Statutory Charges', margin + 5, yPos + 3);
     yPos += 8;
@@ -213,7 +213,7 @@ export default function ReceiptPage() {
     statutoryCharges.forEach((charge) => {
       checkPageBreak(10);
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
       doc.text(charge.label, margin + 10, yPos);
       doc.text(formatCurrency(charge.amount), pageWidth - margin - 5, yPos, { align: 'right' });
@@ -225,7 +225,7 @@ export default function ReceiptPage() {
     doc.setFillColor(240, 253, 244); // Light green
     doc.rect(margin, yPos - 3, contentWidth, 40, 'F');
     doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
     doc.text('Fixed Charges', margin + 5, yPos + 3);
     yPos += 8;
@@ -239,7 +239,7 @@ export default function ReceiptPage() {
     fixedCharges.forEach((charge) => {
       checkPageBreak(10);
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
       doc.text(charge.label, margin + 10, yPos);
       doc.text(formatCurrency(charge.amount), pageWidth - margin - 5, yPos, { align: 'right' });
@@ -262,7 +262,7 @@ export default function ReceiptPage() {
     summaryItems.forEach((item) => {
       checkPageBreak(10);
       doc.setFontSize(10);
-      doc.setFont(undefined, item.bold ? 'bold' : 'normal');
+      doc.setFont('helvetica', item.bold ? 'bold' : 'normal');
       doc.setTextColor(107, 114, 128);
       doc.text(item.label, margin, yPos);
       doc.setTextColor(0, 0, 0);
@@ -281,7 +281,7 @@ export default function ReceiptPage() {
     doc.setFillColor(37, 99, 235); // Blue background
     doc.rect(margin, yPos - 5, contentWidth, 18, 'F');
     doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.text('Grand Total Paid (GHS)', margin + 5, yPos + 5);
     doc.text(formatCurrency(receiptData.breakdown.grandTotal), pageWidth - margin - 5, yPos + 5, { align: 'right' });
@@ -297,13 +297,13 @@ export default function ReceiptPage() {
     yPos += 8;
 
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(34, 197, 94); // Green
     doc.text('Payment Status: PAID', pageWidth / 2, yPos, { align: 'center' });
     yPos += 6;
 
     doc.setFontSize(8);
-    doc.setFont(undefined, 'italic');
+    doc.setFont('helvetica', 'italic');
     doc.setTextColor(107, 114, 128);
     doc.text('This is a system-generated receipt and does not require a signature.', pageWidth / 2, yPos, { align: 'center' });
     yPos += 5;
@@ -325,7 +325,7 @@ export default function ReceiptPage() {
   const isPaymentConfirmed = 
     currentPayment && (
       currentPayment.status === 'CONFIRMED' || 
-      currentPayment.status === 'confirmed' ||
+      currentPayment.status === 'completed' ||
       selectedBooking.status === 'approved' ||
       selectedBooking.status === 'pending approval'
     );

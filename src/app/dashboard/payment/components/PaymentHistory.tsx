@@ -70,7 +70,7 @@ export default function PaymentHistory({ bookingId }: PaymentHistoryProps) {
                   {/* Show correct status: If AWAITING_VERIFICATION but no receipt, show as INITIATED */}
                   <PaymentStatusBadge 
                     status={
-                      (payment.status === 'AWAITING_VERIFICATION' || payment.status === 'awaiting_verification') && !payment.receiptUrl
+                      payment.status === 'AWAITING_VERIFICATION' && !payment.receiptUrl
                         ? 'INITIATED'
                         : (payment.status || 'PENDING')
                     } 

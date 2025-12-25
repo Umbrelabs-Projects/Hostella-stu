@@ -56,7 +56,7 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // If payment status is AWAITING_VERIFICATION but receiptUrl is null,
       // automatically change status to INITIATED
       if (payment && 
-          (payment.status === 'AWAITING_VERIFICATION' || payment.status === 'awaiting_verification') &&
+          payment.status === 'AWAITING_VERIFICATION' &&
           !payment.receiptUrl) {
         payment = {
           ...payment,
@@ -102,7 +102,7 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // If payment status is AWAITING_VERIFICATION but receiptUrl is null,
       // automatically change status to INITIATED (shouldn't happen after upload, but defensive)
       if (payment && 
-          (payment.status === 'AWAITING_VERIFICATION' || payment.status === 'awaiting_verification') &&
+          payment.status === 'AWAITING_VERIFICATION' &&
           !payment.receiptUrl) {
         payment = {
           ...payment,
@@ -195,7 +195,7 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // If payment status is AWAITING_VERIFICATION but receiptUrl is null,
       // automatically change status to INITIATED
       if (payment && 
-          (payment.status === 'AWAITING_VERIFICATION' || payment.status === 'awaiting_verification') &&
+          payment.status === 'AWAITING_VERIFICATION' &&
           !payment.receiptUrl) {
         payment = {
           ...payment,

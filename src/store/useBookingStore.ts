@@ -16,7 +16,7 @@ interface BookingState {
 
   fetchBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
   fetchUserBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
-  fetchBookingById: (id: string) => Promise<void>;
+  fetchBookingById: (id: string, silent?: boolean) => Promise<void>;
   createBooking: (data: CreateBookingData) => Promise<Booking | null>;
   updateBooking: (id: string, data: Partial<Booking>) => Promise<void>;
   cancelBooking: (id: string, reason?: string) => Promise<void>;

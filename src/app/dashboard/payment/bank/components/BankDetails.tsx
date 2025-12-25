@@ -333,7 +333,7 @@ export default function BankDetails({
                 <div className="flex-1 text-left">
                   <strong className="text-amber-900 block mb-1">Initiate Payment</strong>
                   <p className="text-sm text-amber-800">
-                    Click the button below to initiate your bank transfer payment. After initiation, you'll be able to upload your receipt.
+                    Click the button below to initiate your bank transfer payment. After initiation, you&apos;ll be able to upload your receipt.
                   </p>
                 </div>
               </div>

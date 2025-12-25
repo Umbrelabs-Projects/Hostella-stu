@@ -25,6 +25,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
     } else {
       title = "Payment";
     }
+  } else if (segments.includes("receipt")) {
+    title = "Payment Receipt";
   } else if (segments.includes("success")) {
     title = "Booking Successful";
   } else if (segments.includes("rooms") && segments.length > 0) {

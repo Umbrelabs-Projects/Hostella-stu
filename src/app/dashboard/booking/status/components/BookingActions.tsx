@@ -274,7 +274,7 @@ export default function BookingActions({
         return (
           <>
             <button
-              onClick={() => router.push(`/dashboard/booking/success/${booking.id}`)}
+              onClick={() => router.push(`/dashboard/booking/receipt/${booking.id}`)}
               className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
             >
               <FileText size={18} />
@@ -287,7 +287,7 @@ export default function BookingActions({
       case "approved":
         return (
           <button
-            onClick={() => router.push(`/dashboard/booking/success/${booking.id}`)}
+            onClick={() => router.push(`/dashboard/booking/receipt/${booking.id}`)}
             className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2"
           >
             <FileText size={18} />

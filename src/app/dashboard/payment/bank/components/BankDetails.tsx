@@ -14,6 +14,7 @@ import { useBookingStore } from "@/store/useBookingStore";
 import { AlertTriangle, CreditCard, DollarSign, Loader2, CheckCircle, Eye, Info, Clock } from "lucide-react";
 import PaymentStatusBadge from "../../components/PaymentStatusBadge";
 import { toast } from "sonner";
+import { Payment, BankDetails as BankDetailsType } from "@/types/api";
 
 // Define Zod Schema
 const paymentSchema = z.object({
@@ -214,7 +215,9 @@ export default function BankDetails({
 
   // ✅ CORRECT FLOW: Check payment status first, then show appropriate UI
   // Get bank details from payment response (stored when payment is initiated)
-  const bankDetailsFromPayment = currentPayment?.bankDetails as any;
+  // Note: bankDetails is attached to payment at runtime but not in the type definition
+  type PaymentWithBankDetails = Payment & { bankDetails?: BankDetailsType };
+  const bankDetailsFromPayment = (currentPayment as PaymentWithBankDetails)?.bankDetails;
   
   // Build bank details array - use payment bank details if available, otherwise use props/fallbacks
   const displayBankDetails = bankDetailsFromPayment ? [
@@ -241,13 +244,13 @@ export default function BankDetails({
         <>
           {/* Payment Note */}
           <motion.div
-            className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg shadow-md p-3 border border-amber-200"
+            className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-lg shadow-md p-3 border border-amber-200"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
             <div className="flex items-start gap-2">
-              <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center shrink-0 mt-0.5">
                 <AlertTriangle className="w-4 h-4 text-white" />
               </div>
               <p className="text-xs text-amber-900 leading-relaxed">
@@ -280,7 +283,7 @@ export default function BankDetails({
                 <motion.div
                   className={`flex items-center justify-between p-2 rounded ${
                     detail.title === "Amount" 
-                      ? "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200" 
+                      ? "bg-linear-to-r from-yellow-50 to-yellow-100 border border-yellow-200" 
                       : "bg-gray-50 border border-gray-100"
                   }`}
                   key={detail.title}
@@ -329,7 +332,7 @@ export default function BankDetails({
           <div className="text-center space-y-4">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="flex-1 text-left">
                   <strong className="text-amber-900 block mb-1">Initiate Payment</strong>
                   <p className="text-sm text-amber-800">
@@ -395,7 +398,7 @@ export default function BankDetails({
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   Initiating Payment...
                 </>
               ) : (
@@ -435,7 +438,7 @@ export default function BankDetails({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
             >
-              <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <strong className="text-amber-900 block mb-1">Payment Pending</strong>
                 <p className="text-sm text-amber-800">
@@ -453,7 +456,7 @@ export default function BankDetails({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
             >
-              <Eye className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <Eye className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <strong className="text-blue-900 block mb-1">Receipt Uploaded</strong>
                 <p className="text-sm text-blue-800">
@@ -481,7 +484,7 @@ export default function BankDetails({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
             >
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <strong className="text-green-900 block mb-1">Payment Confirmed</strong>
                 <p className="text-sm text-green-800">

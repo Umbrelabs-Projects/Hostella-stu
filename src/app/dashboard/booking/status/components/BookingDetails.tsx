@@ -20,7 +20,6 @@ import { usePaymentStore } from "@/store/usePaymentStore";
 import { useBookingStore } from "@/store/useBookingStore";
 import StatusMessageBox from "./StatusMessageBox";
 import RoomAllocationInfo from "./RoomAllocationInfo";
-import PaymentHistory from "@/app/dashboard/payment/components/PaymentHistory";
 
 interface BookingDetailsProps {
   booking: Booking;
@@ -433,19 +432,6 @@ export default function BookingDetails({
             })()}
           </div>
 
-          {/* Payment History - Hide if:
-              1. Payment is AWAITING_VERIFICATION (shown in dialog instead)
-              2. Booking status is "pending approval" (payment already confirmed, no need to show history)
-              3. Booking status is "approved" (payment already confirmed, no need to show history)
-          */}
-          {booking.id && 
-           (!currentPayment || 
-            currentPayment.status !== 'AWAITING_VERIFICATION') &&
-           (() => {
-             const normalizedStatus = booking.status.toLowerCase().replace(/_/g, ' ');
-             return normalizedStatus !== 'pending approval' && normalizedStatus !== 'approved';
-           })() && 
-           <PaymentHistory bookingId={booking.id} />}
           {/* Actions */}
           <BookingActions booking={booking} onBack={onBack} />
         </div>

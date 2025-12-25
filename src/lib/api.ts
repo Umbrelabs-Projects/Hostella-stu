@@ -260,27 +260,84 @@ export async function apiFetch<T>(
         );
       } else {
         const text = await res.text();
-        // Only log detailed error if there's actual content (not empty response)
-        if (text && text.trim().length > 0) {
-          console.error('API Error Response (non-JSON):', {
+        const trimmedText = text?.trim() || '';
+        const hasContent = trimmedText.length > 0;
+        
+        // Always log error details in development for debugging
+        // In production, only log if there's content or it's a server error (5xx)
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const isServerError = res.status >= 500;
+        const shouldLogError = isDevelopment || hasContent || isServerError;
+        
+        if (shouldLogError) {
+          const errorDetails: Record<string, any> = {
             status: res.status,
             statusText: res.statusText,
             url: `${baseUrl}${endpoint}`,
             method: options.method || 'GET',
-            requestBody: typeof options.body === 'string' ? options.body : JSON.stringify(options.body),
-            text,
-            textLength: text?.length,
-          });
-        } else {
-          // Empty response - just log minimal info
-          console.warn('API Error Response (empty):', {
-            status: res.status,
-            statusText: res.statusText,
-            url: `${baseUrl}${endpoint}`,
-            method: options.method || 'GET',
-          });
+          };
+          
+          // Only include request body if it's not too large (for security)
+          if (options.body) {
+            const bodyStr = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+            if (bodyStr.length < 1000) {
+              errorDetails.requestBody = bodyStr;
+            } else {
+              errorDetails.requestBody = '[Body too large to log]';
+            }
+          }
+          
+          if (hasContent) {
+            errorDetails.responseText = trimmedText;
+            errorDetails.textLength = trimmedText.length;
+          } else {
+            errorDetails.responseText = '[Empty response body]';
+          }
+          
+          if (isDevelopment || isServerError) {
+            console.error('API Error Response (non-JSON):', errorDetails);
+          } else {
+            console.warn('API Error Response (non-JSON):', errorDetails);
+          }
         }
-        throw new ApiError(text || `API error: ${res.status} - ${res.statusText}`, res.status);
+        
+        // Create meaningful error message based on status code
+        let errorMessage = trimmedText;
+        if (!errorMessage) {
+          switch (res.status) {
+            case 400:
+              errorMessage = 'Bad request. Please check your input and try again.';
+              break;
+            case 401:
+              errorMessage = 'Authentication required. Please log in again.';
+              break;
+            case 403:
+              errorMessage = 'You do not have permission to perform this action.';
+              break;
+            case 404:
+              errorMessage = 'Resource not found. Please check the URL and try again.';
+              break;
+            case 409:
+              errorMessage = 'Conflict. This resource may already exist.';
+              break;
+            case 422:
+              errorMessage = 'Validation error. Please check your input.';
+              break;
+            case 500:
+              errorMessage = 'Internal server error. Please try again later.';
+              break;
+            case 502:
+              errorMessage = 'Bad gateway. The server is temporarily unavailable.';
+              break;
+            case 503:
+              errorMessage = 'Service unavailable. Please try again later.';
+              break;
+            default:
+              errorMessage = `API error: ${res.status} ${res.statusText || 'Unknown error'}`;
+          }
+        }
+        
+        throw new ApiError(errorMessage, res.status);
       }
     }
 
@@ -527,15 +584,16 @@ export const bookingApi = {
 // See: STUDENT_PAYMENT_FLOW_GUIDE.md for complete payment flow documentation
 export const paymentApi = {
   // Initiate payment
-  // Endpoint: POST /api/v1/payments/initiate
-  // Body: { bookingId: string, provider: "BANK_TRANSFER" | "PAYSTACK" }
+  // Endpoint: POST /api/v1/payments/booking/:bookingId
+  // Body: { provider: "BANK_TRANSFER" | "PAYSTACK" }
   // Response: { payment: Payment, bankDetails?: BankDetails, authorizationUrl?: string, isNewPayment: boolean, message: string }
   // ⚠️ CRITICAL: Only call this when user explicitly clicks "Proceed to Payment" button
   // ⚠️ DO NOT call this automatically on page load - use GET /payments/booking/:bookingId instead
+  // ⚠️ Backend returns existing payment if it exists (doesn't create duplicate)
   initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string) =>
-    apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/initiate`, {
+    apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/booking/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ bookingId, provider, ...(payerPhone && { payerPhone }) }),
+      body: JSON.stringify({ provider, ...(payerPhone && { payerPhone }) }),
     }),
 
   // Upload receipt using paymentId (from initiate payment response)

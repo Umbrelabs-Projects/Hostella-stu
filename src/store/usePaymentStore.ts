@@ -68,6 +68,14 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         };
       }
       
+      // Attach bankDetails to payment object for easy access in components
+      if (payment && bankDetails) {
+        payment = {
+          ...payment,
+          bankDetails: bankDetails as any,
+        };
+      }
+      
       set({
         currentPayment: payment,
         loading: false,
@@ -89,13 +97,52 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         message
       };
     } catch (error: unknown) {
-      // Backend returns 200 with existing payment if payment already exists
-      // Only handle actual errors (network, validation, etc.)
+      // Handle different error types with user-friendly messages
+      let errorMessage = 'Failed to initiate payment. Please try again.';
+      
+      if (error instanceof ApiError) {
+        // Handle specific status codes
+        switch (error.statusCode) {
+          case 400:
+            errorMessage = error.message || 'Invalid booking or payment details. Please check and try again.';
+            break;
+          case 401:
+            errorMessage = 'Authentication required. Please log in again.';
+            break;
+          case 403:
+            errorMessage = 'You do not have permission to initiate this payment.';
+            break;
+          case 404:
+            errorMessage = 'Booking not found. Please refresh and try again.';
+            break;
+          case 409:
+            // Payment might already exist
+            errorMessage = 'Payment already exists for this booking.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = error.message || `Payment initiation failed (${error.statusCode}). Please try again.`;
+        }
+      } else if (error instanceof Error) {
+        // Handle network errors or other errors
+        if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('JSON') || error.message.includes('non-JSON')) {
+          errorMessage = 'Server returned an invalid response. Please try again or contact support.';
+        } else {
+          errorMessage = error.message || 'Failed to initiate payment. Please try again.';
+        }
+      }
+      
       set({
-        error: error instanceof Error ? error.message : 'Failed to initiate payment',
+        error: errorMessage,
         loading: false,
       });
-      return null;
+      
+      // Re-throw error so component can handle it if needed
+      throw new Error(errorMessage);
     }
   },
 

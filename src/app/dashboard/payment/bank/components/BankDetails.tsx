@@ -198,6 +198,23 @@ export default function BankDetails({
     }
   };
 
+  // ✅ CORRECT FLOW: Check payment status first, then show appropriate UI
+  // Get bank details from payment response (stored when payment is initiated)
+  const bankDetailsFromPayment = currentPayment?.bankDetails as any;
+  
+  // Build bank details array - use payment bank details if available, otherwise use props/fallbacks
+  const displayBankDetails = bankDetailsFromPayment ? [
+    { title: "Amount", value: bankDetailsFromPayment.amount || price },
+    { title: "Bank Name", value: bankDetailsFromPayment.bankName || bankName },
+    { title: "Account Name", value: bankDetailsFromPayment.accountName || accountName },
+    { title: "Account Number", value: bankDetailsFromPayment.accountNumber || accountNumber },
+    ...(bankDetailsFromPayment.branch || branch ? [{ title: "Branch", value: bankDetailsFromPayment.branch || branch }] : []),
+    { title: "Payment Reference", value: bankDetailsFromPayment.reference || paymentReference },
+  ] : BankDetails;
+
+  // Check if upload form should be shown (payment exists and status is INITIATED)
+  const showUploadForm = currentPayment && currentPayment.status === 'INITIATED';
+  
   return (
     <motion.div
       className="flex flex-col gap-3 w-full"
@@ -205,16 +222,10 @@ export default function BankDetails({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Payment Note and Bank Account Details - Hide when upload form is showing */}
-      {/* Show only when payment doesn't exist or payment is not in INITIATED status without receipt */}
-      {!currentPayment || 
-       !(currentPayment.status === 'INITIATED' || 
-         currentPayment.status === 'initiated' ||
-         currentPayment.status === 'PENDING' || 
-         currentPayment.status === 'pending' ||
-         !currentPayment.receiptUrl) ? (
+      {/* ✅ Show bank details only when upload form is NOT shown */}
+      {bookingId && bookingId !== "" && !showUploadForm && (
         <>
-          {/* Payment Note - Compact */}
+          {/* Payment Note */}
           <motion.div
             className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg shadow-md p-3 border border-amber-200"
             initial={{ opacity: 0, y: 20 }}
@@ -231,7 +242,7 @@ export default function BankDetails({
             </div>
           </motion.div>
 
-          {/* Bank Account Details - Compact */}
+          {/* Bank Account Details */}
           <motion.div
             className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
             initial={{ opacity: 0, y: 20 }}
@@ -251,7 +262,7 @@ export default function BankDetails({
             </motion.h3>
 
             <div className="space-y-2">
-              {BankDetails.map((detail, index) => (
+              {displayBankDetails.map((detail, index) => (
                 <motion.div
                   className={`flex items-center justify-between p-2 rounded ${
                     detail.title === "Amount" 
@@ -291,106 +302,9 @@ export default function BankDetails({
             </div>
           </motion.div>
         </>
-      ) : null}
-
-      {/* Payment Status Badge */}
-      {currentPayment && (
-        <motion.div
-          className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Payment Status:</span>
-            <PaymentStatusBadge status={currentPayment.status || 'PENDING'} />
-          </div>
-        </motion.div>
       )}
 
-      {/* Status Messages */}
-      {currentPayment && (
-        <>
-          {/* Only show "Receipt Uploaded" if status is AWAITING_VERIFICATION AND receiptUrl exists */}
-          {currentPayment.status === 'AWAITING_VERIFICATION' && currentPayment.receiptUrl && (
-            <motion.div
-              className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <Eye className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <strong className="text-blue-900 block mb-1">Receipt Uploaded</strong>
-                <p className="text-sm text-blue-800">
-                  Your receipt has been uploaded. The admin has been notified and will review it shortly. 
-                  You'll be notified once your payment is verified.
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Show "Payment Pending" for INITIATED, PENDING status, or AWAITING_VERIFICATION without receiptUrl */}
-          {/* Show upload button when: status === "INITIATED" OR receiptUrl === null */}
-          {((currentPayment.status === 'INITIATED' || 
-             currentPayment.status === 'initiated' ||
-             currentPayment.status === 'PENDING' || 
-             currentPayment.status === 'pending' || 
-             (currentPayment.status === 'AWAITING_VERIFICATION' && !currentPayment.receiptUrl)) ||
-            !currentPayment.receiptUrl) && (
-            <motion.div
-              className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <strong className="text-amber-900 block mb-1">Payment Pending</strong>
-                <p className="text-sm text-amber-800">
-                  Please make the bank transfer using the details above and upload your receipt to complete the payment.
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {currentPayment.status === 'CONFIRMED' && (
-            <motion.div
-              className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <strong className="text-green-900 block mb-1">Payment Confirmed</strong>
-                <p className="text-sm text-green-800">
-                  Your payment has been verified and confirmed. Your booking is now being processed.
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </>
-      )}
-
-      {/* Debug Info - Only show if booking ID is missing */}
-      {(!bookingId || bookingId === "") && (
-        <motion.div
-          className="bg-red-50 border border-red-200 rounded-lg p-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <p className="text-sm text-red-800 font-medium mb-2">⚠️ Booking ID Missing</p>
-          <div className="text-xs text-red-700 space-y-1">
-            <p>Query Params: {bookingIdFromQuery || "Not found"}</p>
-            <p>Selected Booking: {bookingIdFromBooking || "Not found"}</p>
-            <p>Extra Details: {bookingIdFromExtra || "Not found"}</p>
-            <p className="mt-2">Please navigate back and try again, or refresh the page.</p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Show initiate payment button if payment not initiated yet */}
+      {/* ✅ NO PAYMENT - Show initiate payment button */}
       {bookingId && bookingId !== "" && !currentPayment && !loading && (
         <motion.div
           className="bg-white rounded-xl shadow-xl p-6 border border-gray-200"
@@ -413,16 +327,53 @@ export default function BankDetails({
             
             <button
               onClick={async () => {
-                if (!bookingId) return;
+                if (!bookingId || bookingId === '') {
+                  toast.error('Booking ID is missing. Please refresh the page and try again.');
+                  return;
+                }
+                
                 try {
                   const result = await initiatePayment(bookingId, 'BANK_TRANSFER');
+                  
                   if (result?.payment) {
-                    // Payment initiated successfully, upload form will appear
-                    // The component will re-render and show the upload form
+                    toast.success(result.isNewPayment 
+                      ? 'Payment initiated successfully! You can now upload your receipt.'
+                      : 'Payment already exists. Showing bank details.');
+                    // Refresh payment to ensure state is updated
+                    await fetchPaymentsByBookingId(bookingId, true);
+                  } else {
+                    // Payment might already exist - refresh to get current state
+                    await fetchPaymentsByBookingId(bookingId, true);
+                    toast.info('Payment already exists. You can now upload your receipt.');
                   }
                 } catch (error) {
                   console.error('Failed to initiate payment:', error);
-                  toast.error('Failed to initiate payment. Please try again.');
+                  let errorMessage = 'Failed to initiate payment. Please try again.';
+                  
+                  if (error instanceof Error) {
+                    if (error.message.includes('404') || error.message.includes('not found')) {
+                      errorMessage = 'Booking not found. Please refresh the page and try again.';
+                    } else if (error.message.includes('401') || error.message.includes('Authentication')) {
+                      errorMessage = 'Your session has expired. Please log in again.';
+                    } else if (error.message.includes('403') || error.message.includes('permission')) {
+                      errorMessage = 'You do not have permission to initiate this payment.';
+                    } else if (error.message.includes('400') || error.message.includes('Bad request')) {
+                      errorMessage = 'Invalid booking details. Please refresh and try again.';
+                    } else if (error.message.includes('500') || error.message.includes('Server error')) {
+                      errorMessage = 'Server error. Please try again in a few moments.';
+                    } else {
+                      errorMessage = error.message;
+                    }
+                  }
+                  
+                  toast.error(errorMessage);
+                  
+                  // Try to fetch existing payment in case it was created despite the error
+                  try {
+                    await fetchPaymentsByBookingId(bookingId, true);
+                  } catch (fetchError) {
+                    console.warn('Failed to fetch payment after initiation error:', fetchError);
+                  }
                 }
               }}
               disabled={loading}
@@ -444,15 +395,93 @@ export default function BankDetails({
         </motion.div>
       )}
 
-      {/* Upload Receipt - Main Focus */}
-      {/* Show upload form when: payment exists AND (status === "INITIATED" OR receiptUrl === null) */}
-      {/* According to guide: Upload form only shows after payment is initiated */}
+      {/* ✅ PAYMENT EXISTS - Show based on status */}
+      {currentPayment && (
+        <>
+          {/* Payment Status Badge */}
+          <motion.div
+            className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Payment Status:</span>
+              <PaymentStatusBadge status={currentPayment.status || 'PENDING'} />
+            </div>
+          </motion.div>
+
+
+          {/* Status Messages */}
+          {/* Show "Payment Pending" message for INITIATED status */}
+          {currentPayment.status === 'INITIATED' && (
+            <motion.div
+              className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-amber-900 block mb-1">Payment Pending</strong>
+                <p className="text-sm text-amber-800">
+                  Please make the bank transfer using the details above and upload your receipt to complete the payment.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Show "Receipt Uploaded" if status is AWAITING_VERIFICATION */}
+          {currentPayment.status === 'AWAITING_VERIFICATION' && (
+            <motion.div
+              className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <Eye className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-blue-900 block mb-1">Receipt Uploaded</strong>
+                <p className="text-sm text-blue-800">
+                  Your receipt has been uploaded. The admin has been notified and will review it shortly. 
+                  You'll be notified once your payment is verified.
+                </p>
+                {currentPayment.receiptUrl && (
+                  <div className="mt-3">
+                    <img 
+                      src={currentPayment.receiptUrl} 
+                      alt="Uploaded receipt" 
+                      className="max-w-full h-auto rounded border border-blue-200"
+                    />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Show "Payment Confirmed" if status is CONFIRMED */}
+          {currentPayment.status === 'CONFIRMED' && (
+            <motion.div
+              className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-green-900 block mb-1">Payment Confirmed</strong>
+                <p className="text-sm text-green-800">
+                  Your payment has been verified and confirmed. Your booking is now being processed.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+
+      {/* ✅ Show receipt upload ONLY if payment exists AND status is INITIATED */}
       {bookingId && bookingId !== "" && currentPayment && 
-       (currentPayment.status === 'INITIATED' || 
-        currentPayment.status === 'initiated' ||
-        currentPayment.status === 'PENDING' || 
-        currentPayment.status === 'pending' ||
-        !currentPayment.receiptUrl) && (
+       currentPayment.status === 'INITIATED' && (
         <motion.form
           onSubmit={(e) => {
             e.preventDefault();
@@ -495,6 +524,23 @@ export default function BankDetails({
             </Button>
           </motion.div>
         </motion.form>
+      )}
+
+      {/* Debug Info - Only show if booking ID is missing */}
+      {(!bookingId || bookingId === "") && (
+        <motion.div
+          className="bg-red-50 border border-red-200 rounded-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="text-sm text-red-800 font-medium mb-2">⚠️ Booking ID Missing</p>
+          <div className="text-xs text-red-700 space-y-1">
+            <p>Query Params: {bookingIdFromQuery || "Not found"}</p>
+            <p>Selected Booking: {bookingIdFromBooking || "Not found"}</p>
+            <p>Extra Details: {bookingIdFromExtra || "Not found"}</p>
+            <p className="mt-2">Please navigate back and try again, or refresh the page.</p>
+          </div>
+        </motion.div>
       )}
     </motion.div>
   );

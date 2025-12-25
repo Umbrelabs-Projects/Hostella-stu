@@ -1,10 +1,13 @@
 import { jsPDF } from 'jspdf';
 import { Booking } from '@/types/api';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /**
  * Generate and download PDF with complete room details and move-in instructions
  */
 export const generateRoomDetailsPDF = (booking: Booking) => {
+  // Get user from store to access student ID
+  const user = useAuthStore.getState().user;
   if (booking.status !== 'room_allocated') {
     throw new Error('Room not yet allocated');
   }
@@ -79,10 +82,13 @@ export const generateRoomDetailsPDF = (booking: Booking) => {
   drawLine(yPos, [229, 231, 235]);
   yPos += 8;
 
+  // Get student ID from booking or user store (same pattern as other components)
+  const studentId = booking.studentId || user?.studentRefNumber || (user as { studentId?: string })?.studentId || 'N/A';
+
   const bookingInfo = [
     { label: 'Booking ID', value: booking.bookingId || 'N/A' },
     { label: 'Student Name', value: `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'N/A' },
-    { label: 'Student ID', value: booking.studentId || 'N/A' },
+    { label: 'Student ID', value: studentId },
     { label: 'Email', value: booking.email || 'N/A' },
     { label: 'Phone', value: booking.phone || 'N/A' },
     { label: 'Booking Date', value: booking.date ? new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },

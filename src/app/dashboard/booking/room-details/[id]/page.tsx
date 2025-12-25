@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useBookingStore } from "@/store/useBookingStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Download, ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SkeletonCard } from "@/components/ui/skeleton";
@@ -15,6 +16,7 @@ export default function RoomDetailsPage() {
   const router = useRouter();
   const bookingId = params?.id as string;
   const { selectedBooking, loading: bookingLoading, fetchBookingById } = useBookingStore();
+  const { user } = useAuthStore();
   const [pdfDataUrl, setPdfDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function RoomDetailsPage() {
     if (selectedBooking && selectedBooking.status === 'room_allocated') {
       // Generate PDF and convert to data URL for viewing
       try {
-        const doc = generateRoomDetailsPDFForView(selectedBooking);
+        const doc = generateRoomDetailsPDFForView(selectedBooking, user);
         const pdfBlob = doc.output('blob');
         const url = URL.createObjectURL(pdfBlob);
         setPdfDataUrl(url);
@@ -35,7 +37,7 @@ export default function RoomDetailsPage() {
         console.error('Failed to generate PDF:', error);
       }
     }
-  }, [selectedBooking]);
+  }, [selectedBooking, user]);
 
   const handleDownloadPDF = () => {
     if (selectedBooking) {
@@ -103,7 +105,7 @@ export default function RoomDetailsPage() {
 }
 
 // Helper function to generate PDF for viewing (returns jsPDF instance instead of downloading)
-function generateRoomDetailsPDFForView(booking: Booking) {
+function generateRoomDetailsPDFForView(booking: Booking, user?: { studentRefNumber?: string; studentId?: string } | null) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -174,10 +176,13 @@ function generateRoomDetailsPDFForView(booking: Booking) {
   drawLine(yPos, [229, 231, 235]);
   yPos += 8;
 
+  // Get student ID from booking or user store (same pattern as other components)
+  const studentId = booking.studentId || user?.studentRefNumber || (user as { studentId?: string })?.studentId || 'N/A';
+
   const bookingInfo = [
     { label: 'Booking ID', value: booking.bookingId || 'N/A' },
     { label: 'Student Name', value: `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'N/A' },
-    { label: 'Student ID', value: booking.studentId || 'N/A' },
+    { label: 'Student ID', value: studentId },
     { label: 'Email', value: booking.email || 'N/A' },
     { label: 'Phone', value: booking.phone || 'N/A' },
     { label: 'Booking Date', value: booking.date ? new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },

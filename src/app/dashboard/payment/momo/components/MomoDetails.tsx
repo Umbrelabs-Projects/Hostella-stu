@@ -13,7 +13,7 @@ import PayButton from "./momoDetails/PayButton";
 import { validateMobileNumber } from "./validation/validateMobileNumber";
 import { useRouter, useSearchParams } from "next/navigation";
 import PaymentStatusBadge from "../../components/PaymentStatusBadge";
-import { CheckCircle, Info } from "lucide-react";
+import { CheckCircle, Info, XCircle } from "lucide-react";
 
 const MomoDetails: React.FC = () => {
   const router = useRouter();
@@ -24,7 +24,7 @@ const MomoDetails: React.FC = () => {
 
   const { extraBookingDetails, updateExtraBookingDetails, user } = useAuthStore();
   const { selectedBooking } = useBookingStore();
-  const { initiatePayment, loading, currentPayment, verifyPaymentByReference } = usePaymentStore();
+  const { initiatePayment, loading, currentPayment, fetchPaymentsByBookingId } = usePaymentStore();
   
   // Get booking ID from query params, selected booking, or extraBookingDetails
   const bookingIdFromQuery = searchParams?.get("bookingId");
@@ -52,6 +52,14 @@ const MomoDetails: React.FC = () => {
       });
     }
   }, [bookingIdFromQuery, bookingIdFromBooking, priceFromBooking, extraBookingDetails.price, updateExtraBookingDetails]);
+
+  // CRITICAL FIX: Check for existing payment on mount (per guide)
+  // Use GET endpoint to check existing payment, don't reinitiate
+  useEffect(() => {
+    if (bookingId) {
+      fetchPaymentsByBookingId(bookingId, true); // true = silent mode
+    }
+  }, [bookingId, fetchPaymentsByBookingId]);
 
   const colorThemes = {
     MTN: {
@@ -91,9 +99,26 @@ const MomoDetails: React.FC = () => {
       return;
     }
 
+    if (!bookingId) {
+      setError("Booking ID is missing. Please refresh the page and try again.");
+      return;
+    }
+
     setError("");
     
     try {
+      // CRITICAL FIX: Check if payment already exists and is INITIATED
+      // If payment exists with authorization URL, redirect directly (per guide)
+      if (currentPayment && currentPayment.status === 'INITIATED' && currentPayment.provider === 'PAYSTACK') {
+        const authUrl = currentPayment.gatewayResponse?.data?.authorization_url || 
+                       (currentPayment as any).authorizationUrl;
+        if (authUrl) {
+          console.log('Redirecting to existing Paystack payment:', authUrl);
+          window.location.href = authUrl;
+          return;
+        }
+      }
+
       // Call the payment store to initiate payment with PAYSTACK provider
       // Response structure: { payment, authorizationUrl?, isNewPayment, message }
       // Note: If authorizationUrl is present, the store will automatically redirect
@@ -104,36 +129,30 @@ const MomoDetails: React.FC = () => {
         return; // Redirect already handled by store
       }
       
+      // Check if we have authorization URL but redirect didn't happen (shouldn't happen, but handle gracefully)
+      if (result.authorizationUrl) {
+        console.log('Redirecting to Paystack:', result.authorizationUrl);
+        window.location.href = result.authorizationUrl;
+        return;
+      }
+      
       if (!result.payment) {
-        setError("Failed to initiate payment");
+        setError("Failed to initiate payment. Authorization URL not received from Paystack. Please try again.");
         return;
       }
       
       // If we get here, no redirect happened (shouldn't happen for Paystack, but handle gracefully)
-      router.push("/dashboard/payment/paymentCompleted");
+      setError("Payment initiated but redirect failed. Please contact support.");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to initiate payment");
+      const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment. Please try again.";
+      setError(errorMessage);
+      console.error('Payment initiation error:', err);
     }
   };
 
-  // Handle Paystack callback - verify payment when returning from Paystack
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const reference = urlParams.get('reference');
-    
-    if (reference) {
-      // Verify payment using the reference from Paystack callback
-      // Endpoint: GET /api/v1/payments/verify/:reference
-      verifyPaymentByReference(reference).then((payment) => {
-        if (payment) {
-          console.log('Payment verified successfully:', payment);
-          // Payment status will be updated in the store
-        }
-      }).catch((error) => {
-        console.error('Payment verification failed:', error);
-      });
-    }
-  }, [verifyPaymentByReference]);
+  // Note: Payment status is checked via fetchPaymentsByBookingId
+  // Students should NOT verify payments - only check status
+  // Verification is done by admins via webhook
 
   return (
     <motion.div
@@ -189,6 +208,22 @@ const MomoDetails: React.FC = () => {
         </motion.div>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <motion.div
+          className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 mt-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.5 }}
+        >
+          <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <strong className="text-red-900 block mb-1">Payment Error</strong>
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Status Messages */}
       {currentPayment && (
         <>
@@ -214,6 +249,37 @@ const MomoDetails: React.FC = () => {
             </motion.div>
           )}
 
+          {currentPayment.status === 'INITIATED' && currentPayment.provider === 'PAYSTACK' && (
+            <motion.div
+              className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 mt-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+            >
+              <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-amber-900 block mb-1">Payment Initiated</strong>
+                <p className="text-sm text-amber-800 mb-2">
+                  Your payment has been initiated. Click the button below to complete payment on Paystack.
+                </p>
+                {(currentPayment.gatewayResponse?.data?.authorization_url || (currentPayment as any).authorizationUrl) && (
+                  <button
+                    onClick={() => {
+                      const authUrl = currentPayment.gatewayResponse?.data?.authorization_url || 
+                                     (currentPayment as any).authorizationUrl;
+                      if (authUrl) {
+                        window.location.href = authUrl;
+                      }
+                    }}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Complete Payment on Paystack
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {currentPayment.status === 'AWAITING_VERIFICATION' && (
             <motion.div
               className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 mt-6"
@@ -227,6 +293,29 @@ const MomoDetails: React.FC = () => {
                 <p className="text-sm text-blue-800">
                   Your payment is being processed. Please wait for confirmation.
                 </p>
+              </div>
+            </motion.div>
+          )}
+
+          {currentPayment.status === 'FAILED' && (
+            <motion.div
+              className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 mt-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+            >
+              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="text-red-900 block mb-1">Payment Failed</strong>
+                <p className="text-sm text-red-800 mb-2">
+                  Your payment failed. Please try again.
+                </p>
+                <button
+                  onClick={handlePay}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Retry Payment
+                </button>
               </div>
             </motion.div>
           )}

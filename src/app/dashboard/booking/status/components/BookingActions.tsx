@@ -67,6 +67,18 @@ export default function BookingActions({
   };
 
   const handleProceedPayment = () => {
+    // CRITICAL FIX: Check if payment exists and is INITIATED (especially for Paystack)
+    // If payment exists with authorization URL, redirect directly to Paystack
+    if (currentPayment && currentPayment.status === 'INITIATED' && currentPayment.provider === 'PAYSTACK') {
+      const authUrl = currentPayment.gatewayResponse?.data?.authorization_url || 
+                     (currentPayment as any).authorizationUrl;
+      if (authUrl) {
+        console.log('Redirecting to existing Paystack payment:', authUrl);
+        window.location.href = authUrl;
+        return;
+      }
+    }
+    
     if (onProceedPayment) {
       onProceedPayment();
     } else {

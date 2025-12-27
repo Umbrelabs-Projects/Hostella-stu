@@ -41,13 +41,20 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // ⚠️ CRITICAL: This endpoint CREATES a payment record
       // Only call this when user explicitly clicks "Proceed to Payment" button
       // DO NOT call this automatically on page load
-      const response = await paymentApi.initiate(bookingId, provider, payerPhone);
+      // Set callback URL for Paystack payments - include bookingId for callback page
+      const callbackUrl = provider === 'PAYSTACK' 
+        ? `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/payment/callback?bookingId=${bookingId}`
+        : undefined;
+      const response = await paymentApi.initiate(bookingId, provider, payerPhone, callbackUrl);
       
       // Response structure: { success: true, data: { payment: Payment, bankDetails?: BankDetails, authorizationUrl?: string, isNewPayment: boolean, message: string } }
       const responseData = response.data as any;
       let payment = responseData?.payment;
       const bankDetails = responseData?.bankDetails;
-      const authorizationUrl = responseData?.authorizationUrl;
+      // Check multiple paths for authorization URL (per guide)
+      const authorizationUrl = responseData?.authorizationUrl || 
+                              payment?.gatewayResponse?.data?.authorization_url ||
+                              responseData?.payment?.gatewayResponse?.data?.authorization_url;
       const isNewPayment = responseData?.isNewPayment ?? true;
       const message = responseData?.message;
       
@@ -82,10 +89,16 @@ export const usePaymentStore = create<PaymentState>((set) => ({
         error: null,
       });
       
-      // Handle Paystack redirect
-      if (provider === 'PAYSTACK' && authorizationUrl) {
-        window.location.href = authorizationUrl;
-        return null; // Don't return data if redirecting
+      // Handle Paystack redirect - CRITICAL: Must redirect, don't just show success
+      if (provider === 'PAYSTACK') {
+        if (authorizationUrl) {
+          console.log('Redirecting to Paystack:', authorizationUrl);
+          window.location.href = authorizationUrl;
+          return null; // Don't return data if redirecting
+        } else {
+          // If no authorization URL, throw error (per guide)
+          throw new Error('Authorization URL not received from Paystack. Please try again.');
+        }
       }
       
       // Return payment with metadata

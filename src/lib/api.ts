@@ -591,10 +591,14 @@ export const paymentApi = {
   // ⚠️ CRITICAL: Only call this when user explicitly clicks "Proceed to Payment" button
   // ⚠️ DO NOT call this automatically on page load - use GET /payments/booking/:bookingId instead
   // ⚠️ Backend returns existing payment if it exists (doesn't create duplicate)
-  initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string) =>
+  initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string, callbackUrl?: string) =>
     apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/booking/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ provider, ...(payerPhone && { payerPhone }) }),
+      body: JSON.stringify({ 
+        provider, 
+        ...(payerPhone && { payerPhone }),
+        ...(callbackUrl && { callback_url: callbackUrl })
+      }),
     }),
 
   // Upload receipt using paymentId (from initiate payment response)

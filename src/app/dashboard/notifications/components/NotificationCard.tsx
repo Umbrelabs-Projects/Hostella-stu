@@ -19,7 +19,6 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   deleteNotification,
   onNavigate,
 }) => {
-  const router = useRouter();
   const config = typeConfig[notification.type as keyof typeof typeConfig] ?? typeConfig['system-alert'];
 
   const containerClass = useMemo(

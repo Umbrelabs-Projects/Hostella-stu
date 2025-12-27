@@ -17,7 +17,6 @@ const NotificationsPage: React.FC = () => {
     markAllAsRead,
     fetchNotifications,
     setFilters,
-    filters,
     loading,
     error,
   } = useNotificationsStore();
@@ -88,12 +87,12 @@ const NotificationsPage: React.FC = () => {
     };
   }, [fetchNotifications, filter]);
 
-  const handleMarkAsRead = (id: string) => {
-    markAsRead(id).catch(() => {});
+  const handleMarkAsRead = async (id: string) => {
+    await markAsRead(id).catch(() => {});
   };
 
-  const handleDelete = (id: string) => {
-    deleteNotification(id).catch(() => {});
+  const handleDelete = async (id: string) => {
+    await deleteNotification(id).catch(() => {});
   };
 
   const handleMarkAll = () => markAllAsRead().catch(() => {});
@@ -108,10 +107,10 @@ const NotificationsPage: React.FC = () => {
     if (!notification.relatedId) return;
 
     const routes: Record<string, (id: string) => void> = {
-      "payment-received": (id) => router.push(`/dashboard/payments`),
+      "payment-received": () => router.push(`/dashboard/payments`),
       "complaint-received": (id) => router.push(`/dashboard/complaints/${id}`),
       "new-booking": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
-      "broadcast": (id) => router.push(`/dashboard/broadcast`),
+      "broadcast": () => router.push(`/dashboard/broadcast`),
       "booking-approved": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "booking-rejected": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "booking-cancelled": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),

@@ -64,12 +64,14 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
 
     const routes: Record<string, (id: string) => void> = {
       "payment-received": () => router.push(`/dashboard/payment`),
+      "complaint-received": (id) => router.push(`/dashboard/complaints/${id}`),
       "new-booking": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
+      "broadcast": () => router.push(`/dashboard/notifications`),
       "booking-approved": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "booking-rejected": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "booking-cancelled": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "room-allocated": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
-      "broadcast": () => router.push(`/dashboard/notifications`),
+      "complaint-resolved": (id) => router.push(`/dashboard/complaints/${id}`),
     };
 
     const handler = routes[notification.type];

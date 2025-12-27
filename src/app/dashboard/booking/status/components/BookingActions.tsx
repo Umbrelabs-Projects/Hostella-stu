@@ -418,16 +418,14 @@ export default function BookingActions({
         if (showDeleteOnly) {
           return (
             <>
-              <div className="space-y-4 w-full">
-                <button
-                  onClick={handleDeleteClick}
-                  disabled={isDeleting || loading}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-md hover:shadow-lg font-medium"
-                >
-                  <Trash2 size={20} />
-                  Delete This Booking
-                </button>
-              </div>
+              <button
+                onClick={handleDeleteClick}
+                disabled={isDeleting || loading}
+                className="flex-1 md:flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-md hover:shadow-lg font-medium"
+              >
+                <Trash2 size={20} />
+                Delete This Booking
+              </button>
 
               <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <DialogContent>
@@ -564,7 +562,7 @@ export default function BookingActions({
   };
 
   return (
-    <div className="mt-6 flex flex-wrap gap-3 items-center">
+    <div className={`mt-6 flex gap-3 items-center ${showDeleteOnly ? 'w-full flex-wrap md:flex-nowrap' : 'flex-wrap'}`}>
       {/* Back Button */}
       <button
         onClick={onBack}

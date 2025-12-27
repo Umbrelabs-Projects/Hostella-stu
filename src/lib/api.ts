@@ -173,11 +173,19 @@ export async function apiFetch<T>(
         
         // Only log detailed error if errorData has meaningful content
         const errorDataKeys = Object.keys(errorData || {});
+        const hasMessage = !!(errorData?.message || errorData?.error || errorData?.statusText);
+        const hasErrors = Array.isArray(errorData?.errors) && errorData.errors.length > 0;
+        const isEmptyObject = errorDataKeys.length === 0;
         
         // Don't log empty error responses - they're usually 404s or permission errors
-        const shouldLogError = (errorDataKeys.length > 0 || errorData?.message || errorData?.error);
+        // Only log if there's actual error content (message, error field, or errors array)
+        const shouldLogError = hasMessage || hasErrors || (!isEmptyObject && errorDataKeys.length > 0);
         
-        if (shouldLogError) {
+        // For 404 errors, don't log at all (expected for missing resources)
+        const isNotFound = res.status === 404;
+        
+        // Only log errors with meaningful content, and never log 404s
+        if (shouldLogError && !isNotFound && !isEmptyObject) {
           console.error('API Error Response:', {
             status: res.status,
             statusText: res.statusText,
@@ -187,15 +195,8 @@ export async function apiFetch<T>(
             errorData,
             errorDataKeys,
           });
-        } else if (process.env.NODE_ENV === 'development') {
-          // Log empty error responses only in development
-          console.warn('API Error Response (empty):', {
-            status: res.status,
-            statusText: res.statusText,
-            url: `${baseUrl}${endpoint}`,
-            method: options.method || 'GET',
-          });
         }
+        // Suppress logging for empty error responses and 404s
         
         // Handle different error response formats
         // Backend returns: { success: false, status: "fail", message: "...", errors: [{ field, message }], statusCode: 400 }

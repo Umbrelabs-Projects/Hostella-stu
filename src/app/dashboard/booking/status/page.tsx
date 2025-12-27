@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useBookingStore } from "@/store/useBookingStore";
 import BookingDetails from "./components/BookingDetails";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export default function BookingStatusPage() {
+function BookingStatusContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const bookingId = searchParams.get("bookingId");
@@ -94,6 +94,22 @@ export default function BookingStatusPage() {
         <SkeletonCard />
       </div>
     </div>
+  );
+}
+
+export default function BookingStatusPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="md:mx-[5%] space-y-12 mb-9">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <SkeletonCard />
+          </div>
+        </div>
+      }
+    >
+      <BookingStatusContent />
+    </Suspense>
   );
 }
 

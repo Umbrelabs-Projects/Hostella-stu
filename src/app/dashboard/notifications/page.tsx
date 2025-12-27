@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { NotificationList } from "./components/NotificationList";
 import { useNotificationsStore } from "@/store/useNotificationsStore";
-import { CardSkeleton } from "@/components/ui/skeleton";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { Notification } from "@/types/notifications";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -169,7 +169,7 @@ const NotificationsPage: React.FC = () => {
       {(loading && !isInitialized) && notifications.length === 0 ? (
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <CardSkeleton key={i} />
+            <SkeletonCard key={i} />
           ))}
         </div>
       ) : (

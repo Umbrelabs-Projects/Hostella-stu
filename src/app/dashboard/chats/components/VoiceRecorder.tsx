@@ -86,7 +86,7 @@ export function VoiceRecorder({ onSendVoice, onCancel }: VoiceRecorderProps) {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 w-full">
+    <div className="flex items-center gap-3 bg-linear-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 w-full">
       <div className="flex items-center gap-3 flex-1">
         {isRecording ? (
           <>

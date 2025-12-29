@@ -19,9 +19,9 @@ export default function ChatHeader() {
     window.location.href = `tel:${phoneNumber}`;
   };
   return (
-    <div className="bg-white fixed z-10 left-0 md:left-[21%] right-[0] md:right-[1%] top-[6%] md:top-[9%] shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div className="bg-white fixed z-10 left-0 md:left-[21%] right-0 md:right-[1%] top-[6%] md:top-[9%] shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+        <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
           A
         </div>
         <div>

@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Expose environment variables to client-side
+  env: {
+    API_URL: process.env.API_URL,
+  },
   // PWA configuration
   async headers() {
     return [

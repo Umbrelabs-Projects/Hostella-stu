@@ -107,7 +107,7 @@ export const useBookingStore = create<BookingState>((set) => ({
           // Ensure required fields are present
           id: rawBooking.id || '',
           bookingId: rawBooking.bookingId || '',
-          status: normalizedStatus,
+          status: normalizedStatus as Booking['status'],
           // Use transformed values or fallback to database fields
           price: price,
           roomTitle: roomTitle,
@@ -199,7 +199,7 @@ export const useBookingStore = create<BookingState>((set) => ({
         // Ensure required fields are present
         id: booking.id || id,
         bookingId: booking.bookingId || '',
-        status: normalizedStatus,
+        status: normalizedStatus as Booking['status'],
         // Use transformed values or fallback to database fields
         price: price,
         roomTitle: roomTitle,

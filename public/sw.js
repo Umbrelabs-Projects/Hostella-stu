@@ -13,7 +13,8 @@ const STATIC_ASSETS = [
 // URLs/patterns to NEVER cache
 const NO_CACHE_PATTERNS = [
   /\/api\/v1\//,           // API endpoints
-  /localhost:5000/,        // Backend API
+  /railway\.app/,          // Backend API (Railway production)
+  /localhost:5000/,        // Backend API (local dev)
   /127\.0\.0\.1:5000/,     // Backend API (alternative)
   /\.json$/,               // JSON files (likely API responses)
   /\/_next\/data\//,       // Next.js data routes

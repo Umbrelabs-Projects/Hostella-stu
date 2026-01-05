@@ -26,7 +26,7 @@ export default function ChatPage() {
 
   // Socket.io connection
   useEffect(() => {
-    const socket = io("http://localhost:5000"); // TODO: Use env for backend URL
+    const socket = io(process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "https://hostella-backend-production.up.railway.app");
     socketRef.current = socket;
 
     // Join room when chat is selected

@@ -173,11 +173,19 @@ export async function apiFetch<T>(
         
         // Only log detailed error if errorData has meaningful content
         const errorDataKeys = Object.keys(errorData || {});
+        const hasMessage = !!(errorData?.message || errorData?.error || errorData?.statusText);
+        const hasErrors = Array.isArray(errorData?.errors) && errorData.errors.length > 0;
+        const isEmptyObject = errorDataKeys.length === 0;
         
         // Don't log empty error responses - they're usually 404s or permission errors
-        const shouldLogError = (errorDataKeys.length > 0 || errorData?.message || errorData?.error);
+        // Only log if there's actual error content (message, error field, or errors array)
+        const shouldLogError = hasMessage || hasErrors || (!isEmptyObject && errorDataKeys.length > 0);
         
-        if (shouldLogError) {
+        // For 404 errors, don't log at all (expected for missing resources)
+        const isNotFound = res.status === 404;
+        
+        // Only log errors with meaningful content, and never log 404s
+        if (shouldLogError && !isNotFound && !isEmptyObject) {
           console.error('API Error Response:', {
             status: res.status,
             statusText: res.statusText,
@@ -187,15 +195,8 @@ export async function apiFetch<T>(
             errorData,
             errorDataKeys,
           });
-        } else if (process.env.NODE_ENV === 'development') {
-          // Log empty error responses only in development
-          console.warn('API Error Response (empty):', {
-            status: res.status,
-            statusText: res.statusText,
-            url: `${baseUrl}${endpoint}`,
-            method: options.method || 'GET',
-          });
         }
+        // Suppress logging for empty error responses and 404s
         
         // Handle different error response formats
         // Backend returns: { success: false, status: "fail", message: "...", errors: [{ field, message }], statusCode: 400 }
@@ -590,10 +591,14 @@ export const paymentApi = {
   // ⚠️ CRITICAL: Only call this when user explicitly clicks "Proceed to Payment" button
   // ⚠️ DO NOT call this automatically on page load - use GET /payments/booking/:bookingId instead
   // ⚠️ Backend returns existing payment if it exists (doesn't create duplicate)
-  initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string) =>
+  initiate: (bookingId: string | number, provider: 'BANK_TRANSFER' | 'PAYSTACK', payerPhone?: string, callbackUrl?: string) =>
     apiFetch<ApiResponse<PaymentInitiationResponse>>(`/payments/booking/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ provider, ...(payerPhone && { payerPhone }) }),
+      body: JSON.stringify({ 
+        provider, 
+        ...(payerPhone && { payerPhone }),
+        ...(callbackUrl && { callback_url: callbackUrl })
+      }),
     }),
 
   // Upload receipt using paymentId (from initiate payment response)
@@ -691,21 +696,37 @@ export const notificationApi = {
 // CHAT API ENDPOINTS
 // ============================================
 export const chatApi = {
-  getChats: () => apiFetch<ApiResponse<Chat[]>>('/chats'),
+  // List chats for the current user (student/admin per role)
+  getChats: () => apiFetch<ApiResponse<Chat[]>>('/chat/my-chats'),
 
-  getMessages: (chatId: number, params?: { page?: number; limit?: number }) =>
-    apiFetch<PaginatedResponse<ChatMessage>>(
-      `/chats/${chatId}/messages?${buildQueryString(params)}`
-    ),
+  // Get paginated messages for a chat
+  getMessages: (chatId: number, params?: { page?: number; limit?: number }) => {
+    const qs = buildQueryString(params);
+    const suffix = qs ? `?${qs}` : '';
+    return apiFetch<PaginatedResponse<ChatMessage>>(`/chat/${chatId}/messages${suffix}`);
+  },
 
-  sendMessage: (chatId: number, content: string, type: 'text' | 'image' | 'voice' | 'file' = 'text', file?: FormData) =>
-    apiFetch<ApiResponse<ChatMessage>>(`/chats/${chatId}/messages`, {
+  // Send a text/image/voice/file message. When a file is provided, hit the attachments endpoint with field name "attachment".
+  sendMessage: (chatId: number, content: string, type: 'text' | 'image' | 'voice' | 'file' = 'text', file?: File) => {
+    if (file) {
+      const formData = new FormData();
+      formData.append('attachment', file);
+      if (content) formData.append('message', content);
+      return apiFetch<ApiResponse<ChatMessage>>(`/chat/${chatId}/attachments`, {
+        method: 'POST',
+        body: formData,
+      });
+    }
+
+    return apiFetch<ApiResponse<ChatMessage>>(`/chat/${chatId}/messages`, {
       method: 'POST',
-      body: file || JSON.stringify({ content, type }),
-    }),
+      body: JSON.stringify({ message: content, type }),
+    });
+  },
 
+  // Mark messages as read (kept path aligned with existing backend handler if present)
   markAsRead: (chatId: number, messageIds: number[]) =>
-    apiFetch<ApiResponse<{ message: string }>>(`/chats/${chatId}/read`, {
+    apiFetch<ApiResponse<{ message: string }>>(`/chat/${chatId}/read`, {
       method: 'PUT',
       body: JSON.stringify({ messageIds }),
     }),

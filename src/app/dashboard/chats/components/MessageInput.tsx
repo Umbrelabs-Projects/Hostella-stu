@@ -13,6 +13,7 @@ interface MessageInputProps {
   setIsRecording: (value: boolean) => void;
   onSend: () => void;
   onSendVoice: (audioBlob: Blob) => void;
+  selectedChatId?: number;
   repliedTo?: { sender: string; content: string };
   onCancelReply?: () => void;
 }
@@ -26,12 +27,46 @@ export default function MessageInput({
   onSendVoice,
   repliedTo,
   onCancelReply,
+  selectedChatId,
 }: MessageInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileAttach = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileAttach = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) console.log("File selected:", file.name);
+    if (!file) return;
+    // Supported file types
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/quicktime', 'video/x-msvideo',
+      'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Unsupported file type.');
+      return;
+    }
+    // Max video size 10MB
+    if (file.type.startsWith('video') && file.size > 10 * 1024 * 1024) {
+      alert('Video file too large (max 10MB).');
+      return;
+    }
+    // Use selectedChatId from props
+    const chatId = selectedChatId;
+    if (!chatId) {
+      alert('No chat selected.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('attachment', file);
+    // Optionally add a message
+    if (input) formData.append('message', input);
+    try {
+      await fetch(`/api/v1/chat/${chatId}/attachments`, {
+        method: 'POST',
+        body: formData,
+      });
+    } catch (err) {
+      alert('Failed to upload attachment.');
+    }
   };
 
   return (
@@ -91,6 +126,7 @@ export default function MessageInput({
               ref={fileInputRef}
               type="file"
               className="hidden"
+              accept=".jpeg,.jpg,.png,.gif,.webp,.mp4,.mov,.avi,.pdf,.doc,.docx"
               onChange={handleFileAttach}
             />
 
@@ -112,7 +148,7 @@ export default function MessageInput({
               className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500"
             />
 
-            <motion.div whileTap={{ scale: 0.9 }} className="flex-shrink-0">
+            <motion.div whileTap={{ scale: 0.9 }} className="shrink-0">
               <Button
                 onClick={onSend}
                 size="icon"

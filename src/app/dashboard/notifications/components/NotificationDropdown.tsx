@@ -64,12 +64,14 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
 
     const routes: Record<string, (id: string) => void> = {
       "payment-received": () => router.push(`/dashboard/payment`),
+      "complaint-received": (id) => router.push(`/dashboard/complaints/${id}`),
       "new-booking": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
+      "broadcast": () => router.push(`/dashboard/notifications`),
       "booking-approved": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "booking-rejected": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "booking-cancelled": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
       "room-allocated": (id) => router.push(`/dashboard/booking/status?bookingId=${id}`),
-      "broadcast": () => router.push(`/dashboard/notifications`),
+      "complaint-resolved": (id) => router.push(`/dashboard/complaints/${id}`),
     };
 
     const handler = routes[notification.type];
@@ -95,7 +97,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
     return (
       <div
         ref={dropdownRef}
-        className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-hidden"
+        className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-125 overflow-hidden"
       >
         <div className="p-4 text-center text-gray-500 dark:text-gray-400">
           <div className="animate-pulse">Loading notifications...</div>
@@ -110,7 +112,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-hidden flex flex-col"
+      className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-125 overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
@@ -155,7 +157,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full ${config.color} flex-shrink-0`}>
+                      <div className={`p-2 rounded-full ${config.color} shrink-0`}>
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -170,7 +172,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
                             {notification.title}
                           </p>
                           {!notification.isRead && (
-                            <span className="ml-2 h-2 w-2 bg-blue-600 rounded-full flex-shrink-0"></span>
+                            <span className="ml-2 h-2 w-2 bg-blue-600 rounded-full shrink-0"></span>
                           )}
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
@@ -185,7 +187,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
                           e.stopPropagation();
                           deleteNotification(notification.id).catch(() => {});
                         }}
-                        className="ml-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 flex-shrink-0 transition-colors"
+                        className="ml-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 shrink-0 transition-colors"
                         aria-label="Delete notification"
                       >
                         <XIcon className="h-4 w-4" />

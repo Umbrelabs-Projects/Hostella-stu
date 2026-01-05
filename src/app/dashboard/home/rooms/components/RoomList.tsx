@@ -12,26 +12,26 @@ export default function RoomList() {
   const hostelId = params?.id as string;
   const { selectedHostel, loading, error } = useHostelStore();
 
-  const handleBook = (roomType: 'SINGLE' | 'DOUBLE') => {
+  const handleBook = (roomType: 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'TP') => {
     router.push(`/dashboard/home/extra-booking-details/${hostelId}?type=${roomType}`);
   };
 
   // Show loading skeleton while loading or if no data yet
-  // Use regular section to avoid hydration issues with motion components
   if (loading || !selectedHostel || error) {
     return (
       <section className="min-h-screen py-12 px-4 md:px-8 flex flex-col items-center">
-        <SkeletonRoomTypeGrid count={2} />
+        <SkeletonRoomTypeGrid count={3} />
       </section>
     );
   }
 
   // Get room types from hostel data
   const roomTypes = selectedHostel.roomTypes || [];
-  
-  // Find One-in-one and Two-in-one room types
-  const oneInOne = roomTypes.find(rt => rt.type === 'One-in-one' || rt.title === 'One-in-one');
-  const twoInOne = roomTypes.find(rt => rt.type === 'Two-in-one' || rt.title === 'Two-in-one');
+
+  // Find One-in-one, Two-in-one, and Three-in-one room types
+  const oneInOne = roomTypes.find(rt => rt.type === 'One-in-one' || rt.title === 'One-in-one' || rt.value === 'SINGLE');
+  const twoInOne = roomTypes.find(rt => rt.type === 'Two-in-one' || rt.title === 'Two-in-one' || rt.value === 'DOUBLE');
+  const threeInOne = roomTypes.find(rt => rt.type === 'Three-in-one' || rt.title === 'Three-in-one' || rt.value === 'TRIPLE' || rt.value === 'TP');
 
   return (
     <motion.section
@@ -42,7 +42,7 @@ export default function RoomList() {
     >
       {/* Rooms Grid */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-6xl"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 w-full max-w-6xl"
         variants={{
           hidden: {},
           visible: { transition: { staggerChildren: 0.1 } },
@@ -67,7 +67,15 @@ export default function RoomList() {
               onBook={handleBook}
             />
           )}
-          {!oneInOne && !twoInOne && (
+          {threeInOne && (
+            <RoomTypeCard
+              key="three-in-one"
+              roomType="TRIPLE"
+              roomTypeData={threeInOne}
+              onBook={handleBook}
+            />
+          )}
+          {!oneInOne && !twoInOne && !threeInOne && (
             <motion.div
               key="no-rooms"
               className="text-center col-span-full py-12"

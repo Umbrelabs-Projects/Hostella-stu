@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Booking, CreateBookingData } from '@/types/api';
+import { normalizeBookingStatus } from '@/utils/bookingStatus';
 import { bookingApi, ApiError } from '@/lib/api';
 
 interface BookingState {
@@ -97,12 +98,16 @@ export const useBookingStore = create<BookingState>((set) => ({
           (rawBooking.preferredRoomType === 'SINGLE' ? 'One-in-one' : 
            rawBooking.preferredRoomType === 'DOUBLE' ? 'Two-in-one' : null);
         
+        const normalizedStatus = rawBooking.status
+          ? normalizeBookingStatus(String(rawBooking.status))
+          : 'pending payment';
+
         const transformed: Booking = {
           ...rawBooking, // This spread includes all fields from API response
           // Ensure required fields are present
           id: rawBooking.id || '',
           bookingId: rawBooking.bookingId || '',
-          status: rawBooking.status || 'pending payment',
+          status: normalizedStatus as Booking['status'],
           // Use transformed values or fallback to database fields
           price: price,
           roomTitle: roomTitle,
@@ -185,12 +190,16 @@ export const useBookingStore = create<BookingState>((set) => ({
         (booking.preferredRoomType === 'SINGLE' ? 'One-in-one' : 
          booking.preferredRoomType === 'DOUBLE' ? 'Two-in-one' : null);
 
+      const normalizedStatus = booking.status
+        ? normalizeBookingStatus(String(booking.status))
+        : 'pending payment';
+
       const transformed: Booking = {
         ...booking, // This spread includes all fields from API response
         // Ensure required fields are present
         id: booking.id || id,
         bookingId: booking.bookingId || '',
-        status: booking.status || 'pending payment',
+        status: normalizedStatus as Booking['status'],
         // Use transformed values or fallback to database fields
         price: price,
         roomTitle: roomTitle,

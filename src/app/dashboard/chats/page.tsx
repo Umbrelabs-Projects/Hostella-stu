@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { io, Socket } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import ChatHeader from "./components/ChatHeader";
 import MessageList from "./components/MessageList";
@@ -8,20 +9,52 @@ import MessageInput from "./components/MessageInput";
 import ReplyPreview from "./components/ReplyPreview";
 import { ChatMessageType } from "@/types/chatType";
 import { useChatStore } from "@/store/useChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { ErrorState } from "@/components/ui/error";
 import { SkeletonList } from "@/components/ui/skeleton";
-
 export default function ChatPage() {
-  const { messages, selectedChat, loading, error, fetchChats, fetchMessages, sendMessage } = useChatStore();
+  const { messages, selectedChat, loading, error, fetchChats, fetchMessages, sendMessage, addMessage, chats } = useChatStore();
+  const { user } = useAuthStore();
   const [repliedTo, setRepliedTo] = useState<ChatMessageType | null>(null);
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-
+  const [typingUsers, setTypingUsers] = useState<{ userId: string; firstName: string }[]>([]);
+  const socketRef = useRef<Socket | null>(null);
+  const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : '';
+  const firstName = typeof window !== 'undefined' ? localStorage.getItem('firstName') || '' : '';
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Socket.io connection
   useEffect(() => {
-    fetchChats();
-  }, [fetchChats]);
+    const socket = io(process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "https://hostella-backend-production.up.railway.app");
+    socketRef.current = socket;
+
+    // Join room when chat is selected
+    if (selectedChat) {
+      socket.emit("join_room", selectedChat.id);
+    }
+
+    // Listen for new messages
+    socket.on("new_message", (msg: any) => {
+      addMessage(msg);
+    });
+
+    // Listen for typing events
+    socket.on("user_typing", (data: { userId: string; firstName: string }) => {
+      setTypingUsers((prev) => {
+        if (prev.some((u) => u.userId === data.userId)) return prev;
+        return [...prev, data];
+      });
+    });
+    socket.on("user_stop_typing", (data: { userId: string }) => {
+      setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChat]);
 
   // When chat is selected, fetch messages
   useEffect(() => {
@@ -30,33 +63,67 @@ export default function ChatPage() {
     }
   }, [selectedChat, fetchMessages]);
 
+  // Filter chats based on access rules
+  const getFilteredChats = () => {
+    if (!user) return [];
+    if (user.role === "SUPERADMIN") {
+      return chats;
+    }
+    if (user.role === "ADMIN") {
+      // Only chats for students in their assigned hostels
+      // Ensure type compatibility and safe access
+      return chats.filter(chat => {
+        // Ensure campus property exists on chat object
+        const chatHostelId = chat.hostelId?.toString();
+        const userHostelId = (user as any)?.hostelId?.toString();
+        const chatCampus = (chat as { campus?: string }).campus ?? null;
+        return chatHostelId === userHostelId || (chatCampus && user.campus && chatCampus === user.campus);
+      });
+    }
+    if (user.role === "STUDENT") {
+      // Only chat with admin of current hostel or hostel with active booking
+      // Ensure type compatibility
+      return chats.filter(chat => chat.userId?.toString() === user.id?.toString());
+    }
+    return [];
+  };
+
   // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!input.trim() || !selectedChat) return;
-
-    try {
-      await sendMessage(selectedChat.id, input, "text");
-      setInput("");
-      setRepliedTo(null);
-    } catch (err) {
-      console.error("Failed to send message", err);
-    }
+    if (!selectedChat || !input.trim()) return;
+    await sendMessage(selectedChat.id, input, 'text');
+    setInput("");
+    setRepliedTo(null);
   };
 
   const handleSendVoice = async (audioBlob: Blob) => {
     if (!selectedChat) return;
     setIsRecording(false);
-
     try {
-      // Convert Blob to File
-      const file = new File([audioBlob], "audio.webm", { type: audioBlob.type });
-      await sendMessage(selectedChat.id, "[Voice message]", "voice", file);
+      const formData = new FormData();
+      formData.append("attachment", audioBlob, "audio.webm");
+      formData.append("message", "[Voice message]");
+      await fetch(`/api/v1/chat/${selectedChat.id}/attachments`, {
+        method: "POST",
+        body: formData,
+      });
     } catch (err) {
       console.error("Failed to send voice message", err);
+    }
+  };
+  // Typing indicator handlers
+  const handleInputChange = (val: string) => {
+    setInput(val);
+    if (socketRef.current && selectedChat) {
+      if (val) {
+        socketRef.current.emit("typing", { roomId: selectedChat.id, userId, firstName });
+      } else {
+        socketRef.current.emit("stop_typing", { roomId: selectedChat.id, userId });
+      }
     }
   };
 
@@ -94,7 +161,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input bar + Reply preview */}
-      <div className="border-t fixed z-10 left-0 md:left-[21%] right-[0] md:right-[1%] bottom-0 bg-white p-3 sm:p-4 flex flex-col">
+      <div className="border-t fixed z-10 left-0 md:left-[21%] right-0 md:right-[1%] bottom-0 bg-white p-3 sm:p-4 flex flex-col">
         <AnimatePresence>
           {repliedTo && (
             <motion.div
@@ -114,12 +181,19 @@ export default function ChatPage() {
 
         <MessageInput
           input={input}
-          setInput={setInput}
+          setInput={handleInputChange}
           isRecording={isRecording}
           setIsRecording={setIsRecording}
           onSend={handleSendMessage}
           onSendVoice={handleSendVoice}
+          selectedChatId={selectedChat?.id}
         />
+        {/* Typing indicator */}
+        {typingUsers.length > 0 && (
+          <div className="text-xs text-slate-500 px-4 pb-2">
+            {typingUsers.map((u) => u.firstName).join(", ")} typing...
+          </div>
+        )}
       </div>
     </div>
   );

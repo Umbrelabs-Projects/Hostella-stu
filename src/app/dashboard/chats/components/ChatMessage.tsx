@@ -44,7 +44,7 @@ export function ChatMessage({
         onContextMenu={handleContextMenu}
       >
         {!isStudent && (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
             A
           </div>
         )}
@@ -74,7 +74,7 @@ export function ChatMessage({
           </p>
         </div>
         {isStudent && (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-400 to-green-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
             S
           </div>
         )}

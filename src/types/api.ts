@@ -2,9 +2,9 @@
 // IMPORTANT: All prices and monetary amounts are in Ghana Cedis (GHC)
 
 export interface RoomType {
-  type: 'One-in-one' | 'Two-in-one';
+  type: 'One-in-one' | 'Two-in-one' | 'Three-in-one';
   title: string;
-  value?: 'SINGLE' | 'DOUBLE'; // API value for booking creation (required by backend)
+  value?: 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'TP'; // API value for booking creation (required by backend)
   total: number;
   available: number;
   price: number | { min: number; max: number };
@@ -46,7 +46,7 @@ export interface Room {
   roomNumber?: number | string;
   floorNumber?: number | null;
   title: string;
-  type: 'SINGLE' | 'DOUBLE' | 'shared_4' | 'shared_6' | 'dormitory';
+  type: 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'TP' | 'shared_4' | 'shared_6' | 'dormitory';
   price: number;
   description: string;
   available: number;
@@ -93,6 +93,16 @@ export interface Booking {
   date?: string; // ISO date string
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface User {
+  id: string | number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
+  hostelId?: string | number; // Hostel the student became a member in
+  // ...other user fields as needed
 }
 
 // Response structure for getUserBookings
@@ -196,6 +206,8 @@ export interface Chat {
   unreadCount: number;
   adminName?: string;
   adminAvatar?: string;
+  hostelId?: number;
+  campus?: string | null;
 }
 
 export interface ChatMessage {
@@ -235,7 +247,7 @@ export interface ContactMessage {
 // Type for creating a new booking (simplified)
 export interface CreateBookingData {
   hostelId: string;
-  preferredRoomType: 'SINGLE' | 'DOUBLE';
+  preferredRoomType: 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'TP';
   // Optional - backend auto-sets to academic year
   startMonth?: number; // 1-12
   startYear?: number; // 2024+

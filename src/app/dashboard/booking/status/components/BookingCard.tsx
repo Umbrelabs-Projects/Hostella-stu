@@ -114,7 +114,7 @@ export default function BookingCard({
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           onError={() => setHostelImage("/placeholder.jpg")}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
@@ -134,9 +134,21 @@ export default function BookingCard({
         <div className="flex items-center text-sm text-gray-700 gap-2">
           <DoorOpen size={16} className="text-gray-500" />
           <span className="font-medium">
-            {booking.roomTitle && booking.roomTitle.trim() !== '' 
-              ? booking.roomTitle 
-              : "Room Type"}
+            {(() => {
+              // Prefer explicit room type if available
+              if (booking.room && (booking.room.type === 'TRIPLE' || booking.room.type === 'TP')) {
+                return `Triple Room${booking.room.capacity ? ` (Capacity: ${booking.room.capacity})` : ''}`;
+              }
+              if (
+                booking.roomTitle &&
+                (booking.roomTitle.toLowerCase().includes('triple') || booking.roomTitle.toLowerCase().includes('tp'))
+              ) {
+                return `Triple Room`;
+              }
+              return booking.roomTitle && booking.roomTitle.trim() !== ''
+                ? booking.roomTitle
+                : "Room Type";
+            })()}
           </span>
         </div>
 
@@ -170,7 +182,7 @@ export default function BookingCard({
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onViewDetails(booking)}
-            className="w-full cursor-pointer bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 text-white py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+            className="w-full cursor-pointer bg-linear-to-r from-yellow-400 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 text-white py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
           >
             View Details
           </motion.button>

@@ -71,13 +71,20 @@ export default function ChatPage() {
     }
     if (user.role === "ADMIN") {
       // Only chats for students in their assigned hostels
-      // Assuming user.campus or user.hostelId is the admin's assigned hostel
-      return chats.filter(chat => chat.hostelId === user.hostelId || chat.campus === user.campus);
+      // Ensure type compatibility and safe access
+      return chats.filter(chat => {
+        // Ensure campus property exists on chat object
+        const chatHostelId = chat.hostelId?.toString();
+        const userHostelId = (user as any)?.hostelId?.toString();
+        // @ts-ignore: campus is present on Chat type
+        const chatCampus = (chat as any).campus ?? null;
+        return chatHostelId === userHostelId || (chatCampus && user.campus && chatCampus === user.campus);
+      });
     }
     if (user.role === "STUDENT") {
       // Only chat with admin of current hostel or hostel with active booking
-      // Assuming chat.userId is the student's id
-      return chats.filter(chat => chat.userId === user.id);
+      // Ensure type compatibility
+      return chats.filter(chat => chat.userId?.toString() === user.id?.toString());
     }
     return [];
   };

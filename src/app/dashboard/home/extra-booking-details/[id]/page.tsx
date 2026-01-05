@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { AlertCircle, Settings, ArrowRight, CheckCircle2 } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/skeleton";
 
-type RoomType = 'SINGLE' | 'DOUBLE';
+type RoomType = 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'TP';
 
 function ExtraBookingDetailsContent() {
   const { id } = useParams();
@@ -73,26 +73,37 @@ function ExtraBookingDetailsContent() {
   // Get room type data from hostel
   const roomTypes = selectedHostel?.roomTypes || [];
   const selectedRoomType = roomTypes.find(
-    rt => (roomTypeParam === 'SINGLE' && (rt.type === 'One-in-one' || rt.title === 'One-in-one' || rt.value === 'SINGLE')) ||
-          (roomTypeParam === 'DOUBLE' && (rt.type === 'Two-in-one' || rt.title === 'Two-in-one' || rt.value === 'DOUBLE'))
+    rt =>
+      (roomTypeParam === 'SINGLE' && (rt.type === 'One-in-one' || rt.title === 'One-in-one' || rt.value === 'SINGLE')) ||
+      (roomTypeParam === 'DOUBLE' && (rt.type === 'Two-in-one' || rt.title === 'Two-in-one' || rt.value === 'DOUBLE')) ||
+      (roomTypeParam === 'TRIPLE' || roomTypeParam === 'TP') &&
+        (rt.type === 'Three-in-one' || rt.title === 'Three-in-one' || rt.value === 'TRIPLE' || rt.value === 'TP')
   );
 
   // Use the 'value' field from roomTypes (required by backend) or map from type/title
   // Backend requires "SINGLE" or "DOUBLE" - must use the value field from roomTypes array
   // If value is not available, map from type: "One-in-one" → "SINGLE", "Two-in-one" → "DOUBLE"
-  let preferredRoomTypeValue: 'SINGLE' | 'DOUBLE';
+  let preferredRoomTypeValue: RoomType;
   if (selectedRoomType?.value) {
-    preferredRoomTypeValue = selectedRoomType.value as 'SINGLE' | 'DOUBLE';
+    preferredRoomTypeValue = selectedRoomType.value as RoomType;
   } else if (selectedRoomType?.type === 'One-in-one' || selectedRoomType?.title === 'One-in-one') {
     preferredRoomTypeValue = 'SINGLE';
   } else if (selectedRoomType?.type === 'Two-in-one' || selectedRoomType?.title === 'Two-in-one') {
     preferredRoomTypeValue = 'DOUBLE';
+  } else if (selectedRoomType?.type === 'Three-in-one' || selectedRoomType?.title === 'Three-in-one') {
+    preferredRoomTypeValue = 'TRIPLE';
   } else {
-    // Fallback to roomTypeParam (should already be 'SINGLE' or 'DOUBLE')
+    // Fallback to roomTypeParam (should already be 'SINGLE', 'DOUBLE', 'TRIPLE', or 'TP')
     preferredRoomTypeValue = roomTypeParam;
   }
 
-  const roomTitle = selectedRoomType?.title || (roomTypeParam === 'SINGLE' ? 'One-in-one' : 'Two-in-one');
+  let roomTitle = selectedRoomType?.title;
+  if (!roomTitle) {
+    if (roomTypeParam === 'SINGLE') roomTitle = 'One-in-one';
+    else if (roomTypeParam === 'DOUBLE') roomTitle = 'Two-in-one';
+    else if (roomTypeParam === 'TRIPLE' || roomTypeParam === 'TP') roomTitle = 'Three-in-one';
+    else roomTitle = 'Room';
+  }
   const price = typeof selectedRoomType?.price === 'number' 
     ? selectedRoomType.price.toString() 
     : selectedRoomType?.price?.min?.toString() || '0';
@@ -210,7 +221,7 @@ function ExtraBookingDetailsContent() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-200 rounded-xl shadow-lg"
+            className="relative overflow-hidden bg-linear-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-200 rounded-xl shadow-lg"
           >
             {/* Decorative background pattern */}
             <div className="absolute inset-0 opacity-5">
@@ -223,8 +234,8 @@ function ExtraBookingDetailsContent() {
             <div className="relative p-6">
               <div className="flex items-start gap-4">
                 {/* Icon with background */}
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
+                <div className="shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
                     <AlertCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
@@ -253,7 +264,7 @@ function ExtraBookingDetailsContent() {
                   {/* Action button */}
                   <button
                     onClick={() => router.push("/dashboard/settings?incomplete=true")}
-                    className="group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                    className="group inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Go to Settings</span>
@@ -273,7 +284,7 @@ function ExtraBookingDetailsContent() {
           transition={{ duration: 0.5 }}
         >
           {/* Header with Image */}
-          <div className="relative h-48 md:h-64 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600">
+          <div className="relative h-48 md:h-64 bg-linear-to-br from-yellow-400 via-yellow-500 to-yellow-600">
             {selectedHostel.image && (
               <Image
                 src={selectedHostel.image}
@@ -282,7 +293,7 @@ function ExtraBookingDetailsContent() {
                 className="object-cover opacity-90"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6">
               <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
                 {selectedHostel.name}
@@ -341,7 +352,7 @@ function ExtraBookingDetailsContent() {
                 className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg ${
                   loading || !profileStatus.isComplete
                     ? 'bg-gray-300 cursor-not-allowed text-gray-500 shadow-none'
-                    : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 hover:shadow-xl transform hover:scale-[1.02]'
+                    : 'bg-linear-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 hover:shadow-xl transform hover:scale-[1.02]'
                 }`}
               >
                 {loading ? (

@@ -70,8 +70,7 @@ export default function BookingActions({
     // CRITICAL FIX: Check if payment exists and is INITIATED (especially for Paystack)
     // If payment exists with authorization URL, redirect directly to Paystack
     if (currentPayment && currentPayment.status === 'INITIATED' && currentPayment.provider === 'PAYSTACK') {
-      const authUrl = currentPayment.gatewayResponse?.data?.authorization_url || 
-                     (currentPayment as any).authorizationUrl;
+      const authUrl = currentPayment.authorizationUrl;
       if (authUrl) {
         console.log('Redirecting to existing Paystack payment:', authUrl);
         window.location.href = authUrl;
@@ -143,7 +142,7 @@ export default function BookingActions({
                       View Payment
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
+                  <DialogContent className="sm:max-w-125">
                     <DialogHeader>
                       <DialogTitle>Payment History</DialogTitle>
                     </DialogHeader>
@@ -267,7 +266,7 @@ export default function BookingActions({
                   Cancel Booking
                 </button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-106.25">
                 <DialogHeader>
                   <DialogTitle>Cancel Booking</DialogTitle>
                   <DialogDescription>

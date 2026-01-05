@@ -82,7 +82,21 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
       </div>
 
       <p className="text-gray-700 text-xs md:text-base mt-1 dark:text-gray-300">
-        {notification.description}
+        {(() => {
+          // Try to extract triple room info from description if present
+          if (
+            notification.description &&
+            (notification.description.toLowerCase().includes('triple') || notification.description.toLowerCase().includes('tp'))
+          ) {
+            // Optionally, extract capacity if present (e.g., "Triple Room (Capacity: 3)")
+            const match = notification.description.match(/triple room.*?(capacity:?\s*\d+)?/i);
+            if (match) {
+              return match[0];
+            }
+            return notification.description;
+          }
+          return notification.description;
+        })()}
       </p>
       <div>
         <span className="text-gray-500 text-xs dark:text-gray-400">

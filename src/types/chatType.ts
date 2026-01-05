@@ -1,4 +1,3 @@
-export type Sender = "student" | "admin";
 
 export type MessageType = "text" | "voice";
 
@@ -9,4 +8,5 @@ export interface ChatMessageType {
   timestamp: string;
   type: MessageType;
   audio?: Blob;
+  hostelId?: number;
 }

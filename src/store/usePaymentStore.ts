@@ -113,7 +113,8 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       // Handle different error types with user-friendly messages
       let errorMessage = 'Failed to initiate payment. Please try again.';
       
-      if (error instanceof ApiError) {
+      // Accept both real ApiError and test mocks with statusCode
+      if (error && typeof error === 'object' && 'statusCode' in error) {
         // Handle specific status codes
         switch (error.statusCode) {
           case 400:

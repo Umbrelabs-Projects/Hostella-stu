@@ -18,6 +18,7 @@ import roomBanner from "../../public/rooms/rooms-banner.png";
 import roomBannerBg from "../../public/rooms/room-banner-bg.png";
 import oneInRoom from "../../public/rooms/one-in-a-room.png";
 import twoInRoom from "../../public/rooms/two-in-a-room.png";
+import threeInRoom from "../../public/rooms/three-in-a-room.jpeg";
 import bookingDetails from "../../public/booking/bookingDetails.png";
 import bookingDetailsBg from "../../public/booking/bookingDetailsBg.png";
 import bookingSuccessful from "../../public/booking/bookingSuccessful.png";
@@ -51,6 +52,7 @@ export const images = {
   roomBannerBg,
   oneInRoom,
   twoInRoom,
+  threeInRoom,
   bookingDetails,
   bookingDetailsBg,
   bookingSuccessful,

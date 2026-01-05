@@ -247,7 +247,7 @@ function PaymentCallbackContent() {
             Payment Pending
           </h2>
           <p className="text-sm sm:text-base text-gray-500 mb-4">
-            Your payment is being processed. You will receive a notification once it's confirmed.
+            Your payment is being processed. You will receive a notification once it&apos;s confirmed.
           </p>
           
           {payment && (

@@ -1,6 +1,6 @@
 // utils/printBookingDetails.ts
 
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 // Note: If you see a 'Cannot find module qrcode' error, ensure 'qrcode' is installed and available in node_modules.
 // @ts-ignore
 import QRCode from "qrcode";

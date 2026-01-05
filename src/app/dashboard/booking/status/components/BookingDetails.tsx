@@ -296,7 +296,7 @@ export default function BookingDetails({
           {/* Info Message */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 w-full">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm text-amber-800 font-medium mb-1">
                   Contact Support for Refund Status
@@ -359,7 +359,18 @@ export default function BookingDetails({
               <div className="flex items-center text-gray-600 gap-2">
                 <DoorOpen size={18} className="text-gray-500" />
                 <span className="font-medium">
-                  {booking.roomTitle || "Room Type"}
+                  {(() => {
+                    if (booking.room && (booking.room.type === 'TRIPLE' || booking.room.type === 'TP')) {
+                      return `Triple Room${booking.room.capacity ? ` (Capacity: ${booking.room.capacity})` : ''}`;
+                    }
+                    if (
+                      booking.roomTitle &&
+                      (booking.roomTitle.toLowerCase().includes('triple') || booking.roomTitle.toLowerCase().includes('tp'))
+                    ) {
+                      return `Triple Room`;
+                    }
+                    return booking.roomTitle || "Room Type";
+                  })()}
                 </span>
               </div>
               <div className="flex items-center gap-2">

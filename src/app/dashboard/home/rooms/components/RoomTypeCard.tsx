@@ -1,16 +1,3 @@
-"use client";
-
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Users, CheckCircle } from "lucide-react";
-import { RoomType } from "@/types/api";
-import { images } from "@/lib/images";
-
-interface RoomTypeCardProps {
-  roomType: 'SINGLE' | 'DOUBLE';
-  roomTypeData: RoomType;
-  onBook: (roomType: 'SINGLE' | 'DOUBLE') => void;
-}
 
 export default function RoomTypeCard({ roomType, roomTypeData, onBook }: RoomTypeCardProps) {
   // Get availability from roomTypeData
@@ -18,13 +5,21 @@ export default function RoomTypeCard({ roomType, roomTypeData, onBook }: RoomTyp
   const totalRooms = roomTypeData.total || 0;
 
   // Get price - handle both number and object formats
-  const price = typeof roomTypeData.price === 'number' 
-    ? roomTypeData.price 
+  const price = typeof roomTypeData.price === 'number'
+    ? roomTypeData.price
     : roomTypeData.price?.min || 0;
 
   // Use the title from roomTypeData or default labels
-  const typeLabel = roomTypeData.title || (roomType === 'SINGLE' ? 'One-in-one' : 'Two-in-one');
-  const capacity = roomType === 'SINGLE' ? 1 : 2;
+  let typeLabel = roomTypeData.title;
+  if (!typeLabel) {
+    if (roomType === 'SINGLE') typeLabel = 'One-in-one';
+    else if (roomType === 'DOUBLE') typeLabel = 'Two-in-one';
+    else if (roomType === 'TRIPLE' || roomType === 'TP') typeLabel = 'Three-in-one';
+    else typeLabel = 'Room';
+  }
+  let capacity = 1;
+  if (roomType === 'DOUBLE') capacity = 2;
+  else if (roomType === 'TRIPLE' || roomType === 'TP') capacity = 3;
 
   return (
     <motion.div
@@ -38,7 +33,13 @@ export default function RoomTypeCard({ roomType, roomTypeData, onBook }: RoomTyp
       {/* Image */}
       <div className="relative w-full h-64 md:h-72 lg:h-80">
         <Image
-          src={roomType === 'SINGLE' ? images.oneInRoom : images.twoInRoom}
+          src={
+            roomType === 'SINGLE'
+              ? images.oneInRoom
+              : roomType === 'DOUBLE'
+              ? images.twoInRoom
+              : images.threeInRoom
+          }
           alt={typeLabel}
           fill
           className="object-cover"
@@ -99,5 +100,12 @@ export default function RoomTypeCard({ roomType, roomTypeData, onBook }: RoomTyp
     </motion.div>
   );
 }
+
+
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Users, CheckCircle } from "lucide-react";
+import { images } from "@/lib/images";
 
 

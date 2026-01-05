@@ -1,4 +1,19 @@
 
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Users, CheckCircle } from "lucide-react";
+import { images } from "@/lib/images";
+import { RoomType } from "@/types/api";
+
+type RoomValue = 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'TP';
+
+type RoomTypeCardProps = {
+  roomType: RoomValue;
+  roomTypeData: RoomType & { value?: RoomValue };
+  onBook: (roomType: RoomValue) => void;
+};
+
 export default function RoomTypeCard({ roomType, roomTypeData, onBook }: RoomTypeCardProps) {
   // Get availability from roomTypeData
   const totalAvailable = roomTypeData.available || 0;
@@ -100,12 +115,5 @@ export default function RoomTypeCard({ roomType, roomTypeData, onBook }: RoomTyp
     </motion.div>
   );
 }
-
-
-import React from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Users, CheckCircle } from "lucide-react";
-import { images } from "@/lib/images";
 
 

@@ -1,5 +1,6 @@
 
 export type MessageType = "text" | "voice";
+export type Sender = "student" | "admin";
 
 export interface ChatMessageType {
   id: number;

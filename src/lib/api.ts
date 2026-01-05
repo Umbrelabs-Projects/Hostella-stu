@@ -696,21 +696,37 @@ export const notificationApi = {
 // CHAT API ENDPOINTS
 // ============================================
 export const chatApi = {
-  getChats: () => apiFetch<ApiResponse<Chat[]>>('/chats'),
+  // List chats for the current user (student/admin per role)
+  getChats: () => apiFetch<ApiResponse<Chat[]>>('/chat/my-chats'),
 
-  getMessages: (chatId: number, params?: { page?: number; limit?: number }) =>
-    apiFetch<PaginatedResponse<ChatMessage>>(
-      `/chats/${chatId}/messages?${buildQueryString(params)}`
-    ),
+  // Get paginated messages for a chat
+  getMessages: (chatId: number, params?: { page?: number; limit?: number }) => {
+    const qs = buildQueryString(params);
+    const suffix = qs ? `?${qs}` : '';
+    return apiFetch<PaginatedResponse<ChatMessage>>(`/chat/${chatId}/messages${suffix}`);
+  },
 
-  sendMessage: (chatId: number, content: string, type: 'text' | 'image' | 'voice' | 'file' = 'text', file?: FormData) =>
-    apiFetch<ApiResponse<ChatMessage>>(`/chats/${chatId}/messages`, {
+  // Send a text/image/voice/file message. When a file is provided, hit the attachments endpoint with field name "attachment".
+  sendMessage: (chatId: number, content: string, type: 'text' | 'image' | 'voice' | 'file' = 'text', file?: File) => {
+    if (file) {
+      const formData = new FormData();
+      formData.append('attachment', file);
+      if (content) formData.append('message', content);
+      return apiFetch<ApiResponse<ChatMessage>>(`/chat/${chatId}/attachments`, {
+        method: 'POST',
+        body: formData,
+      });
+    }
+
+    return apiFetch<ApiResponse<ChatMessage>>(`/chat/${chatId}/messages`, {
       method: 'POST',
-      body: file || JSON.stringify({ content, type }),
-    }),
+      body: JSON.stringify({ message: content, type }),
+    });
+  },
 
+  // Mark messages as read (kept path aligned with existing backend handler if present)
   markAsRead: (chatId: number, messageIds: number[]) =>
-    apiFetch<ApiResponse<{ message: string }>>(`/chats/${chatId}/read`, {
+    apiFetch<ApiResponse<{ message: string }>>(`/chat/${chatId}/read`, {
       method: 'PUT',
       body: JSON.stringify({ messageIds }),
     }),

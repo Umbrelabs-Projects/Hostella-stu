@@ -68,15 +68,7 @@ export const useChatStore = create<ChatState>((set) => ({
   sendMessage: async (chatId, content, type = 'text', file) => {
     set({ loading: true, error: null });
     try {
-      let formData: FormData | undefined;
-      if (file) {
-        formData = new FormData();
-        formData.append('file', file);
-        formData.append('content', content);
-        formData.append('type', type);
-      }
-
-      const response = await chatApi.sendMessage(chatId, content, type, formData);
+      const response = await chatApi.sendMessage(chatId, content, type, file);
       set((state) => ({
         messages: [...state.messages, response.data],
         loading: false,

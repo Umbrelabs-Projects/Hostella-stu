@@ -76,8 +76,7 @@ export default function ChatPage() {
         // Ensure campus property exists on chat object
         const chatHostelId = chat.hostelId?.toString();
         const userHostelId = (user as any)?.hostelId?.toString();
-        // @ts-ignore: campus is present on Chat type
-        const chatCampus = (chat as any).campus ?? null;
+        const chatCampus = (chat as { campus?: string }).campus ?? null;
         return chatHostelId === userHostelId || (chatCampus && user.campus && chatCampus === user.campus);
       });
     }

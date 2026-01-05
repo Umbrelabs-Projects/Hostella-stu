@@ -110,7 +110,8 @@ const MomoDetails: React.FC = () => {
       // CRITICAL FIX: Check if payment already exists and is INITIATED
       // If payment exists with authorization URL, redirect directly (per guide)
       if (currentPayment && currentPayment.status === 'INITIATED' && currentPayment.provider === 'PAYSTACK') {
-        const authUrl = currentPayment.gatewayResponse?.data?.authorization_url || 
+        const gatewayResponse = (currentPayment as any)?.gatewayResponse;
+        const authUrl = gatewayResponse?.data?.authorization_url || 
                        (currentPayment as any).authorizationUrl;
         if (authUrl) {
           console.log('Redirecting to existing Paystack payment:', authUrl);
@@ -262,10 +263,11 @@ const MomoDetails: React.FC = () => {
                 <p className="text-sm text-amber-800 mb-2">
                   Your payment has been initiated. Click the button below to complete payment on Paystack.
                 </p>
-                {(currentPayment.gatewayResponse?.data?.authorization_url || (currentPayment as any).authorizationUrl) && (
+                {(((currentPayment as any)?.gatewayResponse?.data?.authorization_url) || (currentPayment as any).authorizationUrl) && (
                   <button
                     onClick={() => {
-                      const authUrl = currentPayment.gatewayResponse?.data?.authorization_url || 
+                      const gatewayResponse = (currentPayment as any)?.gatewayResponse;
+                      const authUrl = gatewayResponse?.data?.authorization_url || 
                                      (currentPayment as any).authorizationUrl;
                       if (authUrl) {
                         window.location.href = authUrl;

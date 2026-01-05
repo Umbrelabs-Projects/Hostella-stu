@@ -30,7 +30,10 @@ function PaymentCallbackContent() {
     if (!bookingId || !currentPayment) return;
     
     // Only process if payment matches this booking
-    if (currentPayment.bookingId === bookingId || currentPayment.bookingId?.toString() === bookingId) {
+    const bookingIdStr = bookingId.toString();
+    const paymentBookingId = currentPayment.bookingId?.toString?.() ?? String(currentPayment.bookingId);
+
+    if (paymentBookingId === bookingIdStr) {
       setPayment(currentPayment);
 
       switch (currentPayment.status) {

@@ -115,10 +115,11 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       
       // Accept both real ApiError and test mocks with statusCode
       if (error && typeof error === 'object' && 'statusCode' in error) {
+        const errObj = error as { statusCode?: number; message?: string };
         // Handle specific status codes
-        switch (error.statusCode) {
+        switch (errObj.statusCode) {
           case 400:
-            errorMessage = error.message || 'Invalid booking or payment details. Please check and try again.';
+            errorMessage = errObj.message || 'Invalid booking or payment details. Please check and try again.';
             break;
           case 401:
             errorMessage = 'Authentication required. Please log in again.';
@@ -137,7 +138,7 @@ export const usePaymentStore = create<PaymentState>((set) => ({
             errorMessage = 'Server error. Please try again later.';
             break;
           default:
-            errorMessage = error.message || `Payment initiation failed (${error.statusCode}). Please try again.`;
+            errorMessage = errObj.message || `Payment initiation failed (${errObj.statusCode}). Please try again.`;
         }
       } else if (error instanceof Error) {
         // Handle network errors or other errors
